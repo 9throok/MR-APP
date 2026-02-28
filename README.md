@@ -33,14 +33,32 @@ CREATE TABLE dcr (
 
 ## Run
 
-Development mode:
+### Local Development
 ```bash
 npm run dev
 ```
 
-Production mode:
+### Production
 ```bash
 npm start
+```
+
+### Docker
+
+Build and run with Docker:
+```bash
+docker build -t zenapp-backend .
+docker run -p 3001:3001 --env-file .env zenapp-backend
+```
+
+Or use Docker Compose:
+```bash
+docker-compose up -d
+```
+
+Stop Docker Compose:
+```bash
+docker-compose down
 ```
 
 ## API Endpoints
