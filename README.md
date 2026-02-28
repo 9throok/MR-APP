@@ -46,20 +46,3 @@ Stop Docker Compose:
 docker-compose down
 ```
 
-## API Endpoints
-
-### POST /api/dcr
-Create a new DCR entry.
-
-Request body:
-```json
-{
-  "name": "MedPlus Pharmacy",
-  "date": "February 27, 2026",
-  "product": "Derise 20mg",
-  "samples": [{"id": 1, "name": "Sample A - Cardiovascular", "quantity": 120}],
-  "callSummary": "Test call",
-  "rating": 4,
-  "user_id": "1"
-}
-```
