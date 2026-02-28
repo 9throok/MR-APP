@@ -16,21 +16,6 @@ SUPABASE_URL=your_supabase_url
 SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
 
-3. Create the DCR table in Supabase:
-```sql
-CREATE TABLE dcr (
-  id BIGSERIAL PRIMARY KEY,
-  name TEXT NOT NULL,
-  date TEXT NOT NULL,
-  product TEXT NOT NULL,
-  samples JSONB,
-  call_summary TEXT,
-  rating INTEGER,
-  user_id TEXT,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-```
-
 ## Run
 
 ### Local Development
