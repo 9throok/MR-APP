@@ -16,21 +16,6 @@ SUPABASE_URL=your_supabase_url
 SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
 
-3. Create the DCR table in Supabase:
-```sql
-CREATE TABLE dcr (
-  id BIGSERIAL PRIMARY KEY,
-  name TEXT NOT NULL,
-  date TEXT NOT NULL,
-  product TEXT NOT NULL,
-  samples JSONB,
-  call_summary TEXT,
-  rating INTEGER,
-  user_id TEXT,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-```
-
 ## Run
 
 ### Local Development
@@ -61,20 +46,3 @@ Stop Docker Compose:
 docker-compose down
 ```
 
-## API Endpoints
-
-### POST /api/dcr
-Create a new DCR entry.
-
-Request body:
-```json
-{
-  "name": "MedPlus Pharmacy",
-  "date": "February 27, 2026",
-  "product": "Derise 20mg",
-  "samples": [{"id": 1, "name": "Sample A - Cardiovascular", "quantity": 120}],
-  "callSummary": "Test call",
-  "rating": 4,
-  "user_id": "1"
-}
-```
