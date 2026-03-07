@@ -38,11 +38,21 @@ docker run -p 3001:3001 --env-file .env zenapp-backend
 
 Or use Docker Compose:
 ```bash
-docker-compose up -d
-```
+# Start services
+docker compose up -d
 
-Stop Docker Compose:
-```bash
-docker-compose down
+# Stop services
+docker compose down
+
+# Rebuild and restart (after code changes)
+docker compose down
+docker compose build --no-cache
+docker compose up -d
+
+# View logs
+docker compose logs app
+
+# Follow logs in real-time
+docker compose logs -f app
 ```
 
