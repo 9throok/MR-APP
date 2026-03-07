@@ -1,54 +1,36 @@
 const express = require('express');
 const router = express.Router();
-const supabase = require('../config/supabase');
+const db = require('../config/db');
 
+// POST /api/dcr — MR submits a new Daily Call Report
 router.post('/', async (req, res) => {
   try {
     const { name, date, product, samples, callSummary, rating, user_id } = req.body;
 
-    const { data, error } = await supabase
-      .from('dcr')
-      .insert([
-        {
-          name,
-          date,
-          product,
-          samples,
-          call_summary: callSummary,
-          rating,
-          user_id
-        }
-      ])
-      .select();
-    console.log("🚀 ~ error:", error)
-    console.log("🚀 ~ data:", data)
+    const { rows } = await db.query(
+      `INSERT INTO dcr (user_id, name, date, product, samples, call_summary, rating)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       RETURNING *`,
+      [user_id, name, date, product, samples ?? 0, callSummary, rating]
+    );
 
-    if (error) {
-      return res.status(400).json({ error: error.message });
-    }
-
-    res.status(201).json({ success: true, data });
+    res.status(201).json({ success: true, data: rows[0] });
   } catch (err) {
-    console.log("🚀 ~ err:", err)
+    console.error('[DCR] POST error:', err.message);
     res.status(500).json({ error: err.message });
   }
 });
 
+// GET /api/dcr — Fetch all DCRs (most recent first)
 router.get('/', async (req, res) => {
   try {
-    const { data, error } = await supabase
-      .from('dcr')
-      .select('*')
-      .order('created_at', { ascending: false });
-    console.log("🚀 ~ error:", error)
-    console.log("🚀 ~ data:", data)
+    const { rows } = await db.query(
+      `SELECT * FROM dcr ORDER BY created_at DESC`
+    );
 
-    if (error) {
-      return res.status(400).json({ error: error.message });
-    }
-
-    res.status(200).json({ success: true, data });
+    res.status(200).json({ success: true, data: rows });
   } catch (err) {
+    console.error('[DCR] GET error:', err.message);
     res.status(500).json({ error: err.message });
   }
 });
