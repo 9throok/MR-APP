@@ -15,15 +15,17 @@ CREATE TABLE IF NOT EXISTS products (
 
 -- ── DCR (Daily Call Report) ───────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS dcr (
-  id            UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id       TEXT        NOT NULL,
-  name          TEXT        NOT NULL,
-  date          DATE        NOT NULL,
-  product       TEXT        NOT NULL,
-  samples       INTEGER     DEFAULT 0,
-  call_summary  TEXT,
-  rating        INTEGER     CHECK (rating BETWEEN 1 AND 5),
-  created_at    TIMESTAMPTZ DEFAULT NOW()
+  id              BIGSERIAL   PRIMARY KEY,
+  user_id         TEXT        NOT NULL,
+  name            TEXT        NOT NULL,
+  date            DATE,
+  visit_time      TIMESTAMPTZ,
+  product         TEXT        NOT NULL,
+  samples         JSONB,
+  call_summary    TEXT,
+  doctor_feedback TEXT,
+  edetailing      JSONB,
+  created_at      TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- ── Indexes ───────────────────────────────────────────────────────────────────
