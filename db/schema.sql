@@ -7,6 +7,12 @@
 -- ─────────────────────────────────────────────────────────────────────────────
 
 
+-- ── Products ─────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS products (
+  id    SERIAL      PRIMARY KEY,
+  name  VARCHAR(100) NOT NULL
+);
+
 -- ── DCR (Daily Call Report) ───────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS dcr (
   id            UUID        PRIMARY KEY DEFAULT gen_random_uuid(),

@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const dcrRoutes = require('./routes/dcr');
 const aiRoutes = require('./routes/ai');
+const productRoutes = require('./routes/product');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -12,6 +13,7 @@ app.use(express.json());
 
 app.use('/api/dcr', dcrRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/products', productRoutes);
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', message: 'Server is running' });

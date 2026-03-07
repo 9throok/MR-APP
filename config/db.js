@@ -5,8 +5,11 @@
  *
  * Works for both environments via DATABASE_URL:
  *   Local Docker:  postgresql://postgres:password@postgres:5432/zenapp
- *   Production:    Supabase direct connection string (from Supabase dashboard
- *                  → Project Settings → Database → Connection string → URI)
+ *   Production:    Supabase connection string (Session Pooler mode recommended)
+ *                  Get from: Supabase Dashboard → Project Settings → Database
+ *                  → Connect
+ *
+ * IMPORTANT: URL-encode special characters in password (@ becomes %40, etc.)
  *
  * Usage in routes:
  *   const db = require('../config/db');
@@ -19,15 +22,19 @@ if (!process.env.DATABASE_URL) {
   throw new Error('DATABASE_URL environment variable is required');
 }
 
+const isSupabase = process.env.DATABASE_URL.includes('supabase.co');
+
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  // SSL required for Supabase in production, not needed for local Docker
-  ssl: process.env.NODE_ENV === 'production'
-    ? { rejectUnauthorized: false }
-    : false,
-  max: 10,                // max pool connections
+  ssl: isSupabase ? { rejectUnauthorized: false } : false,
+  max: 10,
   idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 5000,
+  connectionTimeoutMillis: 20000,
+  // Supabase-specific settings
+  ...(isSupabase && {
+    statement_timeout: 15000,
+    query_timeout: 15000,
+  }),
 });
 
 pool.on('error', (err) => {
