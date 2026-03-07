@@ -31,12 +31,22 @@ router.post('/', async (req, res) => {
   }
 });
 
-// GET /api/dcr — Fetch all DCRs (most recent first)
+// GET /api/dcr — Fetch all DCRs (most recent first) or filter by user_id
 router.get('/', async (req, res) => {
   try {
-    const { rows } = await db.query(
-      `SELECT * FROM dcr ORDER BY created_at DESC`
-    );
+    const { user_id } = req.query;
+
+    let query = 'SELECT * FROM dcr';
+    let params = [];
+
+    if (user_id) {
+      query += ' WHERE user_id = $1';
+      params.push(user_id);
+    }
+
+    query += ' ORDER BY created_at DESC';
+
+    const { rows } = await db.query(query, params);
 
     res.status(200).json({ success: true, data: rows });
   } catch (err) {
