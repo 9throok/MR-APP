@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import Header from './Header'
 import Sidebar from './Sidebar'
+import { apiGet } from '../services/apiService'
 import './TerritoryGap.css'
 
 interface TerritoryGapProps {
@@ -53,13 +54,12 @@ function TerritoryGap({ onLogout, onBack, userName, onNavigate }: TerritoryGapPr
   const fetchData = (threshold: number) => {
     setLoading(true)
     setError(null)
-    fetch(`${import.meta.env.VITE_API_BASE_URL}/ai/territory-gap/${encodeURIComponent(userId)}?threshold_days=${threshold}`)
-      .then(r => { if (!r.ok) throw new Error(`Server error: ${r.status}`); return r.json() })
+    apiGet(`/ai/territory-gap/${encodeURIComponent(userId)}?threshold_days=${threshold}`)
       .then(json => {
         if (json.success) setData(json)
         else throw new Error('Analysis failed')
       })
-      .catch(err => setError(err.message))
+      .catch(err => setError(err instanceof Error ? err.message : 'Something went wrong'))
       .finally(() => setLoading(false))
   }
 

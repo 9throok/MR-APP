@@ -174,6 +174,40 @@ function Sidebar({ isOpen, onClose, userName, userEmail, userMobile, onNavigate,
             </svg>
             <span>Manager Insights</span>
           </button>
+
+          <div className="sidebar-divider"></div>
+          <div className="sidebar-section-label">AI Features</div>
+
+          <button onClick={() => handleNavClick('nba')} className={`sidebar-item ${currentPage === 'nba' ? 'sidebar-item-active' : ''}`}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            <span>AI Plan</span>
+          </button>
+          <button onClick={() => handleNavClick('follow-up-tasks')} className={`sidebar-item ${currentPage === 'follow-up-tasks' ? 'sidebar-item-active' : ''}`}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M9 11L12 14L22 4M21 12V19C21 20.1046 20.1046 21 19 21H5C3.89543 21 3 20.1046 3 19V5C3 3.89543 3.89543 3 5 3H16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            <span>Follow-up Tasks</span>
+          </button>
+          <button onClick={() => handleNavClick('adverse-events')} className={`sidebar-item ${currentPage === 'adverse-events' ? 'sidebar-item-active' : ''}`}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0zM12 9v4M12 17h.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            <span>Adverse Events</span>
+          </button>
+          <button onClick={() => handleNavClick('doctor-management')} className={`sidebar-item ${currentPage === 'doctor-management' ? 'sidebar-item-active' : ''}`}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2M12 11a3 3 0 100-6 3 3 0 000 6zM8 21v-1a4 4 0 018 0v1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            <span>Doctors</span>
+          </button>
+          <button onClick={() => handleNavClick('knowledge-upload')} className={`sidebar-item ${currentPage === 'knowledge-upload' ? 'sidebar-item-active' : ''}`}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M4 19.5A2.5 2.5 0 016.5 17H20M4 19.5A2.5 2.5 0 014 17V5a2 2 0 012-2h10l6 6v8a2 2 0 01-2 2H6.5A2.5 2.5 0 014 19.5zM14 3v6h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            <span>Knowledge Base</span>
+          </button>
           {onLogout && (
             <button onClick={() => { onLogout(); onClose(); }} className="sidebar-item sidebar-logout">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">

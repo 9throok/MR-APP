@@ -24,31 +24,28 @@ import MyDCRs from './components/MyDCRs'
 import TerritoryGap from './components/TerritoryGap'
 import ManagerInsights from './components/ManagerInsights'
 import Chatbot from './components/Chatbot'
+import FollowUpTasks from './components/FollowUpTasks'
+import KnowledgeUpload from './components/KnowledgeUpload'
+import AdverseEvents from './components/AdverseEvents'
+import NextBestAction from './components/NextBestAction'
+import DoctorManagement from './components/DoctorManagement'
+import { AuthProvider, useAuth } from './contexts/AuthContext'
 import './App.css'
 
-type Page = 'home' | 'clients' | 'tour-plans' | 'edetailing' | 'leaves' | 'inventory' | 'profile' | 'reports' | 'todays-plan' | 'dcr' | 'doctor360' | 'expense-claim' | 'create-expense-claim' | 'offline-requests' | 'enter-rcpa' | 'order-booking' | 'tour-plan-requests' | 'mr-list' | 'mr-detail' | 'my-dcrs' | 'territory-gap' | 'manager-insights'
+type Page = 'home' | 'clients' | 'tour-plans' | 'edetailing' | 'leaves' | 'inventory' | 'profile' | 'reports' | 'todays-plan' | 'dcr' | 'doctor360' | 'expense-claim' | 'create-expense-claim' | 'offline-requests' | 'enter-rcpa' | 'order-booking' | 'tour-plan-requests' | 'mr-list' | 'mr-detail' | 'my-dcrs' | 'territory-gap' | 'manager-insights' | 'follow-up-tasks' | 'knowledge-upload' | 'adverse-events' | 'nba' | 'doctor-management'
 
-function App() {
+const ALL_PAGES: string[] = ['home', 'clients', 'tour-plans', 'edetailing', 'leaves', 'inventory', 'profile', 'reports', 'todays-plan', 'dcr', 'doctor360', 'expense-claim', 'create-expense-claim', 'offline-requests', 'enter-rcpa', 'order-booking', 'tour-plan-requests', 'mr-list', 'mr-detail', 'my-dcrs', 'territory-gap', 'manager-insights', 'follow-up-tasks', 'knowledge-upload', 'adverse-events', 'nba', 'doctor-management']
+
+function AppContent() {
+  const { isAuthenticated, user, logout: authLogout, isLoading } = useAuth()
   const [showSplash, setShowSplash] = useState(true)
   const [splashComplete, setSplashComplete] = useState(false)
 
-  // Restore authentication state from localStorage
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
-    try {
-      if (typeof window !== 'undefined' && window.localStorage) {
-        const saved = localStorage.getItem('isAuthenticated')
-        return saved === 'true'
-      }
-    } catch (error) {
-      console.error('Error reading authentication state from localStorage:', error)
-    }
-    return false
-  })
   const [currentPage, setCurrentPage] = useState<Page>(() => {
     try {
       if (typeof window !== 'undefined' && window.localStorage) {
         const saved = localStorage.getItem('currentPage')
-        if (saved && ['home', 'clients', 'tour-plans', 'edetailing', 'leaves', 'inventory', 'profile', 'reports', 'todays-plan', 'dcr', 'doctor360', 'expense-claim', 'create-expense-claim', 'offline-requests', 'enter-rcpa', 'order-booking', 'tour-plan-requests', 'mr-list', 'mr-detail', 'my-dcrs', 'territory-gap', 'manager-insights'].includes(saved)) {
+        if (saved && ALL_PAGES.includes(saved)) {
           return saved as Page
         }
       }
@@ -57,52 +54,24 @@ function App() {
     }
     return 'home'
   })
-  const [userName] = useState<string>(() => {
-    try {
-      if (typeof window !== 'undefined' && window.localStorage) {
-        const saved = localStorage.getItem('userName')
-        return saved || 'Robert'
-      }
-    } catch (error) {
-      console.error('Error reading from localStorage:', error)
-    }
-    return 'Robert'
-  })
-  const [userEmail] = useState<string>(() => {
-    try {
-      if (typeof window !== 'undefined' && window.localStorage) {
-        const saved = localStorage.getItem('userEmail')
-        return saved || 'robert.johnson@zenrac.com'
-      }
-    } catch (error) {
-      console.error('Error reading from localStorage:', error)
-    }
-    return 'robert.johnson@zenrac.com'
-  })
-  const [userMobile] = useState<string>(() => {
-    try {
-      if (typeof window !== 'undefined' && window.localStorage) {
-        const saved = localStorage.getItem('userMobile')
-        return saved || '+91 98765 43210'
-      }
-    } catch (error) {
-      console.error('Error reading from localStorage:', error)
-    }
-    return '+91 98765 43210'
-  })
 
-  // Persist authentication state to localStorage
-  useEffect(() => {
-    if (splashComplete) {
+  const userName = user?.name || (() => {
     try {
-      if (typeof window !== 'undefined' && window.localStorage) {
-        localStorage.setItem('isAuthenticated', String(isAuthenticated))
-      }
-    } catch (error) {
-      console.error('Error writing to localStorage:', error)
-    }
-    }
-  }, [isAuthenticated, splashComplete])
+      return localStorage.getItem('userName') || 'Robert'
+    } catch { return 'Robert' }
+  })()
+
+  const userEmail = user?.email || (() => {
+    try {
+      return localStorage.getItem('userEmail') || 'robert.johnson@zenrac.com'
+    } catch { return 'robert.johnson@zenrac.com' }
+  })()
+
+  const userMobile = (() => {
+    try {
+      return localStorage.getItem('userMobile') || '+91 98765 43210'
+    } catch { return '+91 98765 43210' }
+  })()
 
   // Persist current page to localStorage
   useEffect(() => {
@@ -115,39 +84,30 @@ function App() {
     }
   }, [currentPage])
 
-  // Persist user name to localStorage
+  // Persist authentication state to localStorage (for splash screen)
   useEffect(() => {
-    try {
-      if (typeof window !== 'undefined' && window.localStorage) {
-        localStorage.setItem('userName', userName)
+    if (splashComplete) {
+      try {
+        if (typeof window !== 'undefined' && window.localStorage) {
+          localStorage.setItem('isAuthenticated', String(isAuthenticated))
+        }
+      } catch (error) {
+        console.error('Error writing to localStorage:', error)
       }
-    } catch (error) {
-      console.error('Error writing to localStorage:', error)
     }
-  }, [userName])
+  }, [isAuthenticated, splashComplete])
 
   const handleLogin = () => {
-    setIsAuthenticated(true)
     setCurrentPage('home')
   }
 
   const handleLogout = () => {
-    setIsAuthenticated(false)
+    authLogout()
     setCurrentPage('home')
-    // Clear authentication data from localStorage
-    try {
-      if (typeof window !== 'undefined' && window.localStorage) {
-        localStorage.removeItem('isAuthenticated')
-        localStorage.removeItem('currentPage')
-      }
-    } catch (error) {
-      console.error('Error clearing localStorage:', error)
-    }
   }
 
   const handleNavigate = (page: string) => {
-    if (['home', 'clients', 'tour-plans', 'edetailing', 'leaves', 'inventory', 'profile', 'reports', 'todays-plan', 'dcr', 'doctor360', 'expense-claim', 'create-expense-claim', 'offline-requests', 'enter-rcpa', 'order-booking', 'tour-plan-requests', 'mr-list', 'mr-detail', 'my-dcrs', 'territory-gap', 'manager-insights'].includes(page)) {
-      // Store previous page before navigating (especially for Doctor360, EnterRcpa, EDetailing, DCR, and MR Detail which are detail pages)
+    if (ALL_PAGES.includes(page)) {
       if (page === 'doctor360' || page === 'enter-rcpa' || page === 'edetailing' || page === 'dcr' || page === 'mr-detail') {
         try {
           if (typeof window !== 'undefined' && window.sessionStorage) {
@@ -170,6 +130,10 @@ function App() {
       setShowSplash(false)
       setSplashComplete(true)
     }} />
+  }
+
+  if (isLoading) {
+    return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>Loading...</div>
   }
 
   return (
@@ -218,6 +182,16 @@ function App() {
             <TerritoryGap onLogout={handleLogout} onBack={handleBack} userName={userName} onNavigate={handleNavigate} />
           ) : currentPage === 'manager-insights' ? (
             <ManagerInsights onLogout={handleLogout} onBack={handleBack} userName={userName} onNavigate={handleNavigate} />
+          ) : currentPage === 'follow-up-tasks' ? (
+            <FollowUpTasks onLogout={handleLogout} onBack={handleBack} userName={userName} onNavigate={handleNavigate} />
+          ) : currentPage === 'knowledge-upload' ? (
+            <KnowledgeUpload onLogout={handleLogout} onBack={handleBack} userName={userName} onNavigate={handleNavigate} />
+          ) : currentPage === 'adverse-events' ? (
+            <AdverseEvents onLogout={handleLogout} onBack={handleBack} userName={userName} onNavigate={handleNavigate} />
+          ) : currentPage === 'nba' ? (
+            <NextBestAction onLogout={handleLogout} onBack={handleBack} userName={userName} onNavigate={handleNavigate} />
+          ) : currentPage === 'doctor-management' ? (
+            <DoctorManagement onLogout={handleLogout} onBack={handleBack} userName={userName} onNavigate={handleNavigate} />
           ) : (
             <Home onLogout={handleLogout} onNavigate={handleNavigate} userName={userName} userEmail={userEmail} userMobile={userMobile} />
           )}
@@ -227,6 +201,14 @@ function App() {
         <Login onLogin={handleLogin} />
       )}
     </>
+  )
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   )
 }
 

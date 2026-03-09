@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import Header from './Header'
 import Sidebar from './Sidebar'
+import { apiPost, apiGet } from '../services/apiService'
 import './ManagerInsights.css'
 
 interface ManagerInsightsProps {
@@ -110,13 +111,7 @@ function ManagerInsights({ onLogout, onBack, userName, onNavigate }: ManagerInsi
       if (queryFromDate) body.from_date = queryFromDate
       if (queryToDate) body.to_date = queryToDate
 
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/ai/manager-query`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      })
-      if (!res.ok) throw new Error(`Server error: ${res.status}`)
-      const json: QueryResponse = await res.json()
+      const json = await apiPost('/ai/manager-query', body) as QueryResponse
       if (!json.success) throw new Error('Query failed')
       setQueryResult(json)
     } catch (err) {
@@ -145,9 +140,7 @@ function ManagerInsights({ onLogout, onBack, userName, onNavigate }: ManagerInsi
       if (sigUserIds.trim()) params.set('user_ids', sigUserIds.trim())
       const qs = params.toString() ? `?${params.toString()}` : ''
 
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/ai/product-signals${qs}`)
-      if (!res.ok) throw new Error(`Server error: ${res.status}`)
-      const json: SignalsResponse = await res.json()
+      const json = await apiGet(`/ai/product-signals${qs}`) as SignalsResponse
       if (!json.success) throw new Error('Signals fetch failed')
       setSigResult(json)
     } catch (err) {

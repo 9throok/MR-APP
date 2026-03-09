@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import Header from './Header'
 import Sidebar from './Sidebar'
+import { apiGet } from '../services/apiService'
 import './MyDCRs.css'
 
 interface MyDCRsProps {
@@ -44,9 +45,7 @@ function MyDCRs({ onLogout, onBack, userName, onNavigate }: MyDCRsProps) {
         const userId = (() => {
           try { return localStorage.getItem('userId') || localStorage.getItem('user_id') || 'mr_rahul_001' } catch { return 'mr_rahul_001' }
         })()
-        const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/dcr?user_id=${encodeURIComponent(userId)}`)
-        if (!res.ok) throw new Error(`Server error: ${res.status}`)
-        const json = await res.json()
+        const json = await apiGet(`/dcr?user_id=${encodeURIComponent(userId)}`)
         if (json.success) {
           setDcrs(json.data)
         } else {

@@ -4,6 +4,7 @@ import Sidebar from './Sidebar'
 import SpeechRecorder from './SpeechRecorder'
 import { extractDCRData } from '../services/openaiService'
 import { findBestProductMatch, findBestSampleMatch } from '../utils/textMatching'
+import { apiPost } from '../services/apiService'
 import './DCR.css'
 
 interface DCRProps {
@@ -170,12 +171,7 @@ function DCR({ onLogout, onBack, userName, onNavigate, selectedItem: propSelecte
     })()
     setBriefingLoading(true)
     setBriefing(null)
-    fetch(`${import.meta.env.VITE_API_BASE_URL}/ai/precall-briefing`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ user_id: userId, doctor_name: selectedItem.name })
-    })
-      .then(r => r.json())
+    apiPost('/ai/precall-briefing', { user_id: userId, doctor_name: selectedItem.name })
       .then(data => { if (data.success) setBriefing(data.briefing) })
       .catch(() => {})
       .finally(() => setBriefingLoading(false))
@@ -444,16 +440,7 @@ function DCR({ onLogout, onBack, userName, onNavigate, selectedItem: propSelecte
     }
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/dcr`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(dcrPayload),
-      })
-
-      if (!response.ok) {
-        const errorText = await response.text()
-        throw new Error(errorText || `Server error: ${response.status}`)
-      }
+      await apiPost('/dcr', dcrPayload)
 
       setIsSubmitting(false)
       setToast({ message: 'DCR submitted successfully!', type: 'success' })

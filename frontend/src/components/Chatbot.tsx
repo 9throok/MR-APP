@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import { apiPost } from '../services/apiService'
 import './Chatbot.css'
 
 interface Message {
@@ -6,12 +7,11 @@ interface Message {
   text: string
   isUser: boolean
   timestamp: Date
+  sources?: { filename: string; category: string }[]
 }
 
-interface FAQ {
+interface QuickQuestion {
   question: string
-  answer: string
-  keywords: string[]
 }
 
 function Chatbot() {
@@ -19,25 +19,14 @@ function Chatbot() {
   const [messages, setMessages] = useState<Message[]>([])
   const [inputValue, setInputValue] = useState('')
   const [showQuestions, setShowQuestions] = useState(true)
+  const [isTyping, setIsTyping] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  const faqs: FAQ[] = [
-    {
-      question: 'How do I create a DCR?',
-      answer: 'To create a DCR (Daily Call Report), go to Today\'s Plan page, select a doctor or pharmacy from your scheduled visits, and click the "DCR" button. Fill in the required details including samples distributed, products discussed, and any follow-up actions.',
-      keywords: ['dcr', 'create', 'daily call report', 'how to'],
-    },
-    {
-      question: 'What was my last discussion with Dr Anil Doshi?',
-      answer: 'To view your last discussion with Dr Anil Doshi, go to the Clients page, select "Doctors" tab, find Dr Anil Doshi, and click "View Details". In the doctor\'s profile, you can see the visit history section which shows all your previous discussions, products discussed, samples given, and notes from your last visit. You can also check the DCR (Daily Call Report) section for detailed records of your conversations.',
-      keywords: ['last discussion', 'dr anil doshi', 'anil doshi', 'previous visit', 'visit history', 'last conversation'],
-    },
-    {
-      question: 'I\'ve meeting with Dr Rajesh Kumar. Which medicine should I present?',
-      answer: 'For your meeting with Dr Rajesh Kumar, go to the Clients page, select "Doctors" tab, and view Dr Rajesh Kumar\'s details. Check his specialty (Orthopedic) and visit history to see which products were previously discussed. Based on his specialty and past interactions, you can present relevant medicines from the Samples page. You can also check the E-Detailing section for product presentations suitable for orthopedic specialists. Review his prescription patterns and preferences from previous visits to tailor your presentation.',
-      keywords: ['dr rajesh kumar', 'rajesh kumar', 'which medicine', 'what medicine', 'present medicine', 'meeting', 'orthopedic'],
-    },
+  const quickQuestions: QuickQuestion[] = [
+    { question: 'What are the contraindications of Derise?' },
+    { question: 'Compare Rilast Tablet vs Rilast Capsule' },
+    { question: 'What clinical trials support Bevaas?' },
   ]
 
   const scrollToBottom = () => {
@@ -48,63 +37,57 @@ function Chatbot() {
     scrollToBottom()
   }, [messages])
 
-  const findAnswer = (userInput: string): string => {
-    const lowerInput = userInput.toLowerCase().trim()
-    
-    // Check for exact question match first
-    const exactMatch = faqs.find(faq => 
-      faq.question.toLowerCase() === lowerInput
-    )
-    if (exactMatch) return exactMatch.answer
+  const handleSendMessage = async () => {
+    if (!inputValue.trim() || isTyping) return
 
-    // Check for keyword matches
-    const keywordMatch = faqs.find(faq =>
-      faq.keywords.some(keyword => lowerInput.includes(keyword))
-    )
-    if (keywordMatch) return keywordMatch.answer
-
-    // Default response
-    return 'I\'m here to help with questions about zenApp. You can ask me about:\n\n• Creating DCRs\n• Managing tour plans\n• Viewing doctor details\n• Distributing samples\n• Expense claims\n• Reports and analytics\n• Leave applications\n• E-Detailing\n• Performance tracking\n• Profile management\n\nTry asking: "How do I create a DCR?" or "What is E-Detailing?"'
-  }
-
-  const handleSendMessage = () => {
-    if (!inputValue.trim()) return
-
+    const query = inputValue.trim()
     const userMessage: Message = {
       id: messages.length + 1,
-      text: inputValue,
+      text: query,
       isUser: true,
       timestamp: new Date(),
     }
 
-    const botResponse: Message = {
-      id: messages.length + 2,
-      text: findAnswer(inputValue),
-      isUser: false,
-      timestamp: new Date(),
-    }
-
-    setMessages([...messages, userMessage, botResponse])
+    setMessages(prev => [...prev, userMessage])
     setInputValue('')
-    setShowQuestions(false) // Hide questions when message is sent
-    
-    // Show questions again after answer is displayed
-    setTimeout(() => {
+    setShowQuestions(false)
+    setIsTyping(true)
+
+    try {
+      const data = await apiPost('/knowledge/chat', { query })
+
+      const answerText = typeof data.answer === 'string'
+        ? data.answer
+        : data.answer?.answer || JSON.stringify(data.answer)
+
+      const botResponse: Message = {
+        id: messages.length + 2,
+        text: answerText,
+        isUser: false,
+        timestamp: new Date(),
+        sources: data.sources,
+      }
+
+      setMessages(prev => [...prev, botResponse])
+    } catch {
+      const errorResponse: Message = {
+        id: messages.length + 2,
+        text: 'Sorry, I couldn\'t process your question right now. Please make sure knowledge base files have been uploaded, or try again later.',
+        isUser: false,
+        timestamp: new Date(),
+      }
+      setMessages(prev => [...prev, errorResponse])
+    } finally {
+      setIsTyping(false)
       setShowQuestions(true)
-    }, 500)
-    
-    // Focus input after sending message to allow continuous questions
-    setTimeout(() => {
-      inputRef.current?.focus()
-    }, 100)
+      setTimeout(() => inputRef.current?.focus(), 100)
+    }
   }
 
   const handleQuickQuestion = (question: string) => {
     setInputValue(question)
-    setShowQuestions(false) // Hide questions immediately when clicked
-    setTimeout(() => {
-      handleSendMessage()
-    }, 100)
+    setShowQuestions(false)
+    setTimeout(() => handleSendMessage(), 100)
   }
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -149,7 +132,7 @@ function Chatbot() {
                   </svg>
                 </div>
                 <div className="chatbot-message-content">
-                  <p>Hello! I'm your ZenApp assistant. How can I help you today?</p>
+                  <p>Hello! I'm your Clinical Assistant. Ask me about drug information, prescribing details, or clinical data from our knowledge base.</p>
                 </div>
               </div>
             </div>
@@ -167,27 +150,44 @@ function Chatbot() {
                 </div>
               )}
               <div className="chatbot-message-content">
-                <p>{message.text}</p>
+                <p style={{ whiteSpace: 'pre-wrap' }}>{message.text}</p>
+                {message.sources && message.sources.length > 0 && (
+                  <div style={{ fontSize: '11px', color: '#64748b', marginTop: '4px' }}>
+                    Sources: {message.sources.map(s => s.filename).join(', ')}
+                  </div>
+                )}
                 <span className="chatbot-message-time">
                   {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </span>
               </div>
             </div>
           ))}
+          {isTyping && (
+            <div className="chatbot-message bot">
+              <div className="chatbot-message-avatar">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM13 17H11V15H13V17ZM13 13H11V7H13V13Z" fill="currentColor"/>
+                </svg>
+              </div>
+              <div className="chatbot-message-content">
+                <p style={{ color: '#94a3b8' }}>Searching knowledge base...</p>
+              </div>
+            </div>
+          )}
           <div ref={messagesEndRef} />
         </div>
 
-        {showQuestions && (
+        {showQuestions && !isTyping && (
           <div className="chatbot-quick-questions">
             <p className="quick-questions-title">Quick Questions:</p>
             <div className="quick-questions-grid">
-              {faqs.map((faq, index) => (
+              {quickQuestions.map((q, index) => (
                 <button
                   key={index}
                   className="quick-question-btn"
-                  onClick={() => handleQuickQuestion(faq.question)}
+                  onClick={() => handleQuickQuestion(q.question)}
                 >
-                  {faq.question}
+                  {q.question}
                 </button>
               ))}
             </div>

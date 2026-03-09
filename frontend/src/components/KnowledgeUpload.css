@@ -1,0 +1,173 @@
+.knowledge-page {
+  min-height: 100vh;
+  background: #f8fafc;
+}
+
+.knowledge-content {
+  padding: 16px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.upload-section {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+  border: 1px solid #e2e8f0;
+}
+
+.upload-section h3 {
+  font-size: 16px;
+  color: #1e293b;
+  margin: 0 0 16px 0;
+}
+
+.upload-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.form-row {
+  display: flex;
+  gap: 12px;
+}
+
+.form-select {
+  flex: 1;
+  padding: 10px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #334155;
+  background: white;
+}
+
+.file-input-wrapper {
+  border: 2px dashed #e2e8f0;
+  border-radius: 8px;
+  padding: 16px;
+  text-align: center;
+}
+
+.file-input-wrapper input[type="file"] {
+  font-size: 14px;
+}
+
+.file-hint {
+  font-size: 12px;
+  color: #94a3b8;
+  margin: 8px 0 0 0;
+}
+
+.upload-btn {
+  padding: 12px;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.upload-btn:disabled {
+  background: #94a3b8;
+  cursor: not-allowed;
+}
+
+.upload-message {
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  text-align: center;
+}
+
+.upload-message.success {
+  background: #ecfdf5;
+  color: #065f46;
+}
+
+.upload-message.error {
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+.entries-section h3 {
+  font-size: 16px;
+  color: #1e293b;
+  margin: 0 0 12px 0;
+}
+
+.knowledge-loading,
+.knowledge-empty {
+  text-align: center;
+  padding: 40px;
+  color: #94a3b8;
+}
+
+.entries-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.entry-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  background: white;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+}
+
+.entry-filename {
+  font-size: 14px;
+  font-weight: 500;
+  color: #1e293b;
+  margin-bottom: 4px;
+}
+
+.entry-meta {
+  display: flex;
+  gap: 10px;
+  font-size: 12px;
+}
+
+.entry-product {
+  color: #3b82f6;
+  font-weight: 500;
+}
+
+.entry-category {
+  color: #8b5cf6;
+  background: #f5f3ff;
+  padding: 1px 8px;
+  border-radius: 10px;
+}
+
+.entry-date {
+  color: #94a3b8;
+}
+
+.delete-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 6px;
+  transition: background 0.2s;
+}
+
+.delete-btn:hover {
+  background: #fef2f2;
+}
+
+@media (max-width: 480px) {
+  .form-row {
+    flex-direction: column;
+  }
+}
