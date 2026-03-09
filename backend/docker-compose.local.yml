@@ -33,7 +33,7 @@ services:
     ports:
       - "3001:3001"
     env_file:
-      - .env
+      - ../.env
     environment:
       # Override DATABASE_URL to point at the local postgres container
       DATABASE_URL: postgresql://postgres:password@postgres:5432/zenapp
