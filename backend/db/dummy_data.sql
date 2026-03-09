@@ -1,8 +1,3 @@
-CREATE TABLE products (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(100) NOT NULL
-);
-
 INSERT INTO products (name) VALUES
 ('Derise 10mg'),
 ('Derise 20mg'),
@@ -13,20 +8,6 @@ INSERT INTO products (name) VALUES
 ('Bevaas 5mg'),
 ('Bevaas 10mg'),
 ('Bevaas 20mg');
-
-CREATE TABLE IF NOT EXISTS dcr (
-  id              BIGSERIAL   PRIMARY KEY,
-  user_id         TEXT        NOT NULL,
-  name            TEXT        NOT NULL,
-  date            DATE,
-  visit_time      TIMESTAMPTZ,
-  product         TEXT        NOT NULL,
-  samples         JSONB,
-  call_summary    TEXT,
-  doctor_feedback TEXT,
-  edetailing      JSONB,
-  created_at      TIMESTAMPTZ DEFAULT NOW()
-);
 
 INSERT INTO dcr (user_id,name,date,product,samples,call_summary,doctor_feedback) VALUES
 
@@ -79,7 +60,7 @@ NULL),
 ('mr_rahul_001','Dr. Patil',(CURRENT_DATE-42),'Derise 10mg',
 '[{"id":1,"name":"Derise 10mg","quantity":3}]',
 'Follow-up visit regarding allergy patients.',
-NULL);
+NULL),
 
 -- Priya Mehta
 ('mr_priya_002','Dr. Shah',(CURRENT_DATE-1),'Derise 20mg',
@@ -120,7 +101,7 @@ NULL),
 ('mr_priya_002','Dr. Kulkarni',(CURRENT_DATE-48),'Rilast Syrup',
 '[{"id":8,"name":"Rilast Syrup","quantity":4}]',
 'Doctor treating paediatric asthma.',
-NULL'),
+NULL),
 
 -- Robert
 ('mr_robert_003','Dr. Reddy',(CURRENT_DATE-2),'Derise 10mg',
@@ -141,7 +122,7 @@ NULL),
 ('mr_robert_003','Dr. Kumar',(CURRENT_DATE-24),'Rilast Capsule',
 '[{"id":4,"name":"Rilast Capsule","quantity":3}]',
 'Doctor requested more clinical material.',
-NULL'),
+NULL),
 
 ('mr_robert_003','Dr. Mehta',(CURRENT_DATE-9),'Bevaas 5mg',
 '[{"id":5,"name":"Bevaas 5mg","quantity":5}]',
@@ -151,7 +132,7 @@ NULL'),
 ('mr_robert_003','Dr. Mehta',(CURRENT_DATE-31),'Bevaas 10mg',
 '[{"id":6,"name":"Bevaas 10mg","quantity":3}]',
 'Doctor evaluating BP reduction effectiveness.',
-NULL'),
+NULL),
 
 ('mr_robert_003','Dr. Rao',(CURRENT_DATE-6),'Bevaas 20mg',
 '[{"id":7,"name":"Bevaas 20mg","quantity":2}]',
@@ -161,7 +142,7 @@ NULL'),
 ('mr_robert_003','Dr. Rao',(CURRENT_DATE-29),'Derise 50mg',
 '[{"id":8,"name":"Derise 50mg","quantity":3}]',
 'Doctor treating severe allergic dermatitis.',
-NULL'),
+NULL),
 
 ('mr_robert_003','Dr. Thomas',(CURRENT_DATE-10),'Rilast Syrup',
 '[{"id":9,"name":"Rilast Syrup","quantity":4}]',

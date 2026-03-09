@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import zenracLogo from '../assets//images/ZenApp.png'
 import { useLanguage } from '../contexts/LanguageContext'
+import { useAuth } from '../contexts/AuthContext'
 import './Login.css'
 
 interface LoginProps {
@@ -9,16 +10,27 @@ interface LoginProps {
 
 function Login({ onLogin }: LoginProps) {
   const { t } = useLanguage()
-  const [email, setEmail] = useState('')
+  const { login } = useAuth()
+  const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const [error, setError] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Handle login logic here
-    console.log('Login attempt:', { email, password })
-    // On successful login, call onLogin callback
-    onLogin()
+    setError('')
+    setIsLoading(true)
+
+    const result = await login(username, password)
+
+    setIsLoading(false)
+
+    if (result.success) {
+      onLogin()
+    } else {
+      setError(result.error || 'Login failed')
+    }
   }
 
   return (
@@ -30,15 +42,17 @@ function Login({ onLogin }: LoginProps) {
         
         
         
+        {error && <div className="login-error" style={{ color: '#e74c3c', textAlign: 'center', marginBottom: '12px', fontSize: '14px' }}>{error}</div>}
+
         <form onSubmit={handleSubmit} className="login-form">
           <div className="input-group">
-            <label htmlFor="email">{t('email')}</label>
+            <label htmlFor="username">Username</label>
             <input
-              type="email"
-              id="email"
-              placeholder={t('email')}
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              type="text"
+              id="username"
+              placeholder="Enter username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
               required
             />
           </div>
@@ -73,11 +87,17 @@ function Login({ onLogin }: LoginProps) {
             <a href="#" className="forgot-password">{t('forgotPassword')}</a>
           </div>
 
-          <button type="submit" className="login-button">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M22 2L11 13M22 2L15 22L11 13M22 2L2 9L11 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-            <span>{t('login')}</span>
+          <button type="submit" className="login-button" disabled={isLoading}>
+            {isLoading ? (
+              <span>Logging in...</span>
+            ) : (
+              <>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M22 2L11 13M22 2L15 22L11 13M22 2L2 9L11 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                <span>{t('login')}</span>
+              </>
+            )}
           </button>
         </form>
 

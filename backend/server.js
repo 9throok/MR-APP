@@ -1,9 +1,16 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 const dcrRoutes = require('./routes/dcr');
 const aiRoutes = require('./routes/ai');
 const productRoutes = require('./routes/product');
+const authRoutes = require('./routes/auth');
+const taskRoutes = require('./routes/tasks');
+const knowledgeRoutes = require('./routes/knowledge');
+const adverseEventRoutes = require('./routes/adverse-events');
+const doctorRoutes = require('./routes/doctors');
+const { authenticateToken } = require('./middleware/auth');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -11,9 +18,20 @@ const PORT = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json());
 
-app.use('/api/dcr', dcrRoutes);
-app.use('/api/ai', aiRoutes);
-app.use('/api/products', productRoutes);
+// Static file serving for uploads
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Public routes
+app.use('/api/auth', authRoutes);
+
+// Protected routes
+app.use('/api/dcr', authenticateToken, dcrRoutes);
+app.use('/api/ai', authenticateToken, aiRoutes);
+app.use('/api/products', authenticateToken, productRoutes);
+app.use('/api/tasks', authenticateToken, taskRoutes);
+app.use('/api/knowledge', knowledgeRoutes);
+app.use('/api/adverse-events', authenticateToken, adverseEventRoutes);
+app.use('/api/doctors', authenticateToken, doctorRoutes);
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', message: 'Server is running' });
