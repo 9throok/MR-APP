@@ -1,0 +1,72 @@
+BEVAAS (Amlodipine) — Clinical Trial Summary
+==============================================
+
+TRIAL 1: ALLHAT (Antihypertensive and Lipid-Lowering Treatment to Prevent Heart Attack Trial)
+-----------------------------------------------------------------------------------------------
+Study Design: Randomized, double-blind, active-controlled
+Patients: 33,357 high-risk hypertensive patients aged >=55 years
+Duration: 4.9 years (mean follow-up)
+Arms: Amlodipine vs Chlorthalidone vs Lisinopril
+
+Key Results:
+- No significant difference in primary endpoint (fatal CHD or non-fatal MI) between groups
+- Amlodipine comparable to diuretic therapy for preventing major cardiovascular events
+- BP reduction: Amlodipine achieved 0.8 mmHg lower systolic BP than lisinopril
+- Heart failure risk slightly higher with amlodipine vs chlorthalidone (RR 1.38)
+- Stroke risk: Amlodipine showed 23% lower stroke risk vs lisinopril (p=0.003)
+- Conclusion: Amlodipine is effective first-line therapy for hypertension
+
+TRIAL 2: ASCOT-BPLA (Anglo-Scandinavian Cardiac Outcomes Trial)
+-----------------------------------------------------------------
+Study Design: Randomized, multicenter, open-label with blinded endpoints
+Patients: 19,257 hypertensive patients with >=3 cardiovascular risk factors
+Duration: 5.5 years (stopped early for benefit)
+Arms: Amlodipine (+/- perindopril) vs Atenolol (+/- bendroflumethiazide)
+
+Key Results:
+- Amlodipine regimen reduced all-cause mortality by 11% (p=0.025)
+- Cardiovascular mortality reduced by 24% (p=0.001)
+- Stroke reduced by 23% (p=0.003)
+- New-onset diabetes 30% lower with amlodipine regimen (p<0.001)
+- Trial stopped 18 months early because of clear superiority of amlodipine-based regimen
+- Conclusion: Amlodipine-based treatment is superior for high-risk hypertensives
+
+TRIAL 3: CAMELOT (Comparison of Amlodipine vs Enalapril to Limit Occurrences of Thrombosis)
+---------------------------------------------------------------------------------------------
+Study Design: Randomized, double-blind, placebo-controlled
+Patients: 1,991 patients with angiographically documented coronary artery disease and normal BP
+Duration: 2 years
+
+Key Results:
+- Amlodipine reduced cardiovascular events by 31% vs placebo (p=0.003)
+- IVUS substudy showed amlodipine slowed progression of coronary atherosclerosis
+- Enalapril showed a non-significant 15% reduction vs placebo
+- Amlodipine reduced hospitalizations for angina by 42% (p=0.002)
+- Conclusion: Amlodipine provides cardiovascular protection even in normotensive CAD patients
+
+TRIAL 4: Zenrac-BEV-002 — Real-World Effectiveness (India)
+------------------------------------------------------------
+Study Design: Prospective, observational, multicenter
+Patients: 1,800 Indian hypertensive patients
+Duration: 24 weeks
+Sites: 60 centers across India
+
+Key Results:
+- Bevaas 5mg: Mean SBP reduction of 18.2 mmHg at Week 12 (early-stage hypertension)
+- Bevaas 10mg: Mean SBP reduction of 24.6 mmHg at Week 12
+- Bevaas 20mg: Mean SBP reduction of 31.4 mmHg at Week 12 (resistant hypertension)
+- BP goal (<140/90 mmHg) achieved in 72% of patients by Week 24
+- Elderly subgroup (>65 years): Good tolerance, 68% achieved BP goal
+- Combination therapy (Bevaas + ACE-I or ARB): 85% achieved BP goal
+- Adverse events: Peripheral edema (8.2%), headache (3.1%), flushing (2.4%)
+- Edema was dose-dependent: 4.1% (5mg), 8.9% (10mg), 14.2% (20mg)
+- No serious cardiovascular adverse events attributed to treatment
+- BP stabilization observed across all dose groups
+
+SAFETY SUMMARY:
+- Well-established safety profile with >30 years of global clinical use
+- No increased risk of cancer (confirmed by meta-analysis of 150,000+ patients)
+- Safe in diabetic patients — does not affect glucose metabolism
+- Safe in patients with renal impairment
+- Peripheral edema is the most common dose-limiting side effect
+- Can be mitigated by combining with ACE-I or ARB (reduces edema by ~50%)

@@ -1,0 +1,81 @@
+RILAST (Montelukast) — Prescribing Information
+================================================
+
+BRAND NAME: Rilast
+GENERIC NAME: Montelukast Sodium
+MANUFACTURER: Zenrac Pharmaceuticals Pvt. Ltd.
+THERAPEUTIC CLASS: Leukotriene receptor antagonist (LTRA)
+
+AVAILABLE FORMULATIONS:
+- Rilast Tablet (10mg montelukast) — for adults and adolescents >=15 years
+- Rilast Capsule (10mg montelukast) — sustained-release formulation for adults
+- Rilast Syrup (4mg/5mL montelukast) — for paediatric patients aged 2-14 years
+
+INDICATIONS:
+- Prophylaxis and chronic treatment of asthma (adults and paediatric patients >= 2 years)
+- Prevention of exercise-induced bronchoconstriction
+- Relief of symptoms of seasonal and perennial allergic rhinitis
+- Chronic asthma management as add-on therapy to inhaled corticosteroids
+
+MECHANISM OF ACTION:
+Montelukast selectively blocks the cysteinyl leukotriene receptor CysLT1, preventing leukotriene D4 from binding. This reduces bronchoconstriction, mucus secretion, vascular permeability, and eosinophil recruitment in the airways. It provides both anti-inflammatory and bronchodilatory effects.
+
+DOSAGE AND ADMINISTRATION:
+- Rilast Tablet (10mg): One tablet once daily in the evening for adults and adolescents >=15 years. Can be taken with or without food.
+- Rilast Capsule (10mg): One capsule once daily in the evening. Sustained-release formulation provides steady plasma levels over 24 hours. Do not crush or chew.
+- Rilast Syrup (4mg/5mL): Paediatric dosing:
+  * Ages 2-5: 4mg (5mL) once daily in the evening
+  * Ages 6-14: 5mg (6.25mL) once daily in the evening
+  * Parents report improved breathing within 1-2 weeks of regular use
+
+RILAST TABLET vs RILAST CAPSULE — COMPARISON:
+| Feature              | Rilast Tablet      | Rilast Capsule           |
+|----------------------|--------------------|--------------------------|
+| Formulation          | Immediate-release  | Sustained-release        |
+| Onset of action      | 2-3 hours          | 3-4 hours                |
+| Duration             | 24 hours           | 24 hours (steadier)      |
+| Administration       | Can be crushed     | Must swallow whole       |
+| Peak plasma level    | 3-4 hours          | 5-6 hours                |
+| Patient preference   | General use        | Patients wanting steady  |
+|                      |                    | overnight bronchodilation|
+| Compliance           | High               | High                     |
+| Food interaction     | Minimal            | Minimal                  |
+| Price point          | Standard           | Slightly higher          |
+
+CONTRAINDICATIONS:
+- Known hypersensitivity to montelukast or any excipient
+- Not for acute asthma attacks or status asthmaticus (use rescue inhaler)
+- Phenylketonuria (chewable tablets contain phenylalanine — not applicable to Rilast formulations)
+- Severe hepatic impairment — use with caution
+
+ADVERSE EFFECTS:
+Common (>1%): Headache, abdominal pain, thirst
+Uncommon (0.1-1%): Dizziness, drowsiness, nausea, diarrhea, rash
+Rare (<0.1%): Agitation, depression, suicidal ideation (FDA boxed warning — monitor neuropsychiatric events), Churg-Strauss syndrome, elevated transaminases
+Post-marketing: Dream abnormalities, insomnia, irritability
+
+DRUG INTERACTIONS:
+- CYP3A4 inducers (phenobarbital, rifampicin): May reduce montelukast levels
+- CYP2C8 inhibitors (gemfibrozil): May increase montelukast levels — monitor
+- Inhaled corticosteroids: Safe to use concurrently — additive benefit
+- Beta-agonists: Compatible — complementary mechanism
+
+SPECIAL POPULATIONS:
+- Elderly: No dose adjustment required
+- Renal impairment: No dose adjustment needed
+- Hepatic impairment: Mild-moderate — no adjustment. Severe — limited data, use with caution
+- Pregnancy Category B: Use only if clearly needed
+- Lactation: Unknown if excreted in breast milk — use with caution
+
+CLINICAL ADVANTAGES:
+- Oral administration — no inhaler technique issues
+- Once-daily dosing in the evening for optimal nighttime and morning symptom control
+- Effective in both asthma and allergic rhinitis (dual benefit)
+- Good safety profile in paediatric patients
+- Can reduce need for rescue inhaler use
+- Positive response reported in chronic asthma patients
+- Parents report improved breathing in paediatric asthma cases with Rilast Syrup
+
+STORAGE:
+Tablets/Capsules: Store below 30°C. Protect from moisture and light.
+Syrup: Store below 25°C. Do not refrigerate. Use within 30 days of opening.

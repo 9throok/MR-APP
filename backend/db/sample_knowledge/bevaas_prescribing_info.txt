@@ -1,0 +1,77 @@
+BEVAAS (Amlodipine) — Prescribing Information
+===============================================
+
+BRAND NAME: Bevaas
+GENERIC NAME: Amlodipine Besylate
+MANUFACTURER: Zenrac Pharmaceuticals Pvt. Ltd.
+THERAPEUTIC CLASS: Calcium channel blocker (dihydropyridine)
+
+AVAILABLE STRENGTHS:
+- Bevaas 5mg tablets
+- Bevaas 10mg tablets
+- Bevaas 20mg tablets (for resistant hypertension)
+
+INDICATIONS:
+- Essential hypertension (first-line or add-on therapy)
+- Chronic stable angina pectoris
+- Vasospastic (Prinzmetal's) angina
+- Resistant hypertension (as part of combination therapy)
+- Early-stage hypertension in elderly patients
+
+MECHANISM OF ACTION:
+Amlodipine inhibits the transmembrane influx of calcium ions into vascular smooth muscle and cardiac muscle. It selectively inhibits L-type calcium channels, causing relaxation of coronary and peripheral arterial smooth muscle. This reduces peripheral vascular resistance (afterload), lowers blood pressure, and increases coronary blood flow. It has a gradual onset and long duration of action (24+ hours).
+
+DOSAGE AND ADMINISTRATION:
+- Bevaas 5mg: One tablet once daily. Starting dose for most patients, including elderly. Suitable for early-stage hypertension. Good tolerance observed in elderly patients.
+- Bevaas 10mg: One tablet once daily. Titrate up from 5mg after 1-2 weeks if BP not adequately controlled. Effective for BP reduction.
+- Bevaas 20mg: One tablet once daily. For resistant hypertension not controlled by 10mg or combination therapy. Use under specialist supervision. Effective in combination therapy for resistant hypertension. BP stabilization observed.
+
+CONTRAINDICATIONS:
+- Known hypersensitivity to amlodipine, other dihydropyridines, or any excipient
+- Severe aortic stenosis
+- Cardiogenic shock
+- Unstable angina (except Prinzmetal's)
+- Severe hypotension (systolic < 90 mmHg)
+- Pregnancy and lactation
+
+ADVERSE EFFECTS:
+Common (>1%): Peripheral edema (dose-dependent, up to 10% at higher doses), headache, flushing, dizziness, fatigue
+Uncommon (0.1-1%): Palpitations, nausea, abdominal pain, somnolence, muscle cramps
+Rare (<0.1%): Gingival hyperplasia, gynecomastia, hepatitis, jaundice, erythema multiforme
+Very rare: Myocardial infarction, arrhythmia
+
+DRUG INTERACTIONS:
+- CYP3A4 inhibitors (ketoconazole, diltiazem, erythromycin): May increase amlodipine levels — monitor BP
+- CYP3A4 inducers (rifampicin, carbamazepine): May reduce amlodipine levels — may need dose increase
+- Simvastatin: Limit simvastatin to 20mg/day when co-administered with amlodipine
+- Cyclosporine: Amlodipine may increase cyclosporine levels — monitor
+- Beta-blockers: Safe combination — complementary mechanism for BP and heart rate control
+- ACE inhibitors/ARBs: Effective combination for hypertension — commonly used together
+- Diuretics: Additive hypotensive effect — monitor for excessive BP lowering
+- Sildenafil: Additive hypotensive effect — use with caution
+
+SPECIAL POPULATIONS:
+- Elderly: Start with 5mg. Good tolerance in elderly patients. No dose adjustment needed for age alone.
+- Renal impairment: No dose adjustment required (not significantly dialyzed)
+- Hepatic impairment: Start with 2.5-5mg. Reduce dose in severe impairment. Amlodipine is extensively hepatically metabolized.
+- Pregnancy Category C: Contraindicated. Switch to methyldopa or labetalol.
+- Lactation: Excreted in breast milk — not recommended.
+- Paediatric (6-17 years): 2.5-5mg once daily for hypertension
+
+CLINICAL TRIAL DATA:
+- ALLHAT Trial: Amlodipine demonstrated comparable cardiovascular outcomes to ACE inhibitors and diuretics in high-risk hypertensive patients.
+- ASCOT-BPLA: Amlodipine-based regimen showed superior cardiovascular protection versus atenolol-based regimen.
+- CAMELOT Trial: Amlodipine reduced cardiovascular events in patients with coronary artery disease and normal blood pressure.
+- VALUE Trial: Amlodipine provided rapid and sustained BP reduction compared to valsartan.
+
+CLINICAL ADVANTAGES:
+- Once-daily dosing with true 24-hour coverage
+- Smooth, gradual onset — avoids reflex tachycardia
+- Long half-life (30-50 hours) — forgiving of missed doses
+- Effective as monotherapy and in combination
+- Well-established safety profile with decades of clinical use
+- Particularly effective for isolated systolic hypertension in elderly
+- BP stabilization observed in resistant hypertension with Bevaas 20mg
+- Effective in combination therapy with ACE inhibitors and diuretics
+
+STORAGE: Store below 30°C. Protect from light and moisture.

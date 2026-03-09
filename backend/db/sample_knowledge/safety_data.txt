@@ -1,0 +1,113 @@
+ZENRAC PHARMACEUTICALS — SAFETY DATA SUMMARY
+===============================================
+
+DERISE (Desloratadine) — Safety Profile
+-----------------------------------------
+
+Adverse Event Rates (from pooled clinical trials, N=4,200):
+- Headache: 6.2% (placebo 5.8%)
+- Dry mouth: 3.1% (placebo 1.8%)
+- Fatigue: 2.4% (placebo 2.1%)
+- Somnolence: 1.2% (placebo 0.9%)
+- Nausea: 1.1% (placebo 0.8%)
+- Dizziness: 0.8% (placebo 0.6%)
+- Myalgia: 0.5% (placebo 0.4%)
+- Tachycardia: 0.1% (placebo 0.1%)
+
+Serious Adverse Events: <0.1% — no drug-related serious adverse events in pivotal trials
+Discontinuation rate due to AEs: 2.3% (vs 2.0% placebo)
+
+Special Safety Notes:
+- No QTc prolongation at doses up to 45mg (9x Derise 5mg dose)
+- Safe in combination with azithromycin and ketoconazole (pharmacokinetic studies)
+- No dose-dependent increase in sedation from 10mg to 50mg
+- Weight-neutral: No significant weight change vs placebo over 12 weeks
+- No withdrawal or rebound effects on discontinuation
+
+Pregnancy & Lactation:
+- Category B: Animal studies showed no teratogenicity. No adequate human studies.
+- Excreted in breast milk in small amounts. Risk-benefit assessment required.
+
+Overdose:
+- Doses up to 45mg in clinical studies were well-tolerated
+- Symptoms of overdose: Somnolence, increased heart rate
+- Treatment: Supportive care, gastric lavage if recent ingestion
+- Not removed by hemodialysis
+
+
+RILAST (Montelukast) — Safety Profile
+---------------------------------------
+
+Adverse Event Rates (from pooled clinical trials, N=3,800):
+- Headache: 18.4% (placebo 18.1%)
+- Upper respiratory infection: 8.2% (not drug-related, similar to placebo)
+- Abdominal pain: 2.9% (placebo 2.5%)
+- Cough: 2.7% (placebo 2.4%)
+- Influenza: 1.6% (placebo 1.5%)
+- Diarrhea: 1.1% (placebo 0.8%)
+- Rash: 0.8% (placebo 0.6%)
+- Elevated ALT: 0.4% (placebo 0.3%)
+
+Neuropsychiatric Events (post-marketing, estimated frequency):
+- Sleep disturbances/vivid dreams: ~1 in 1,000
+- Agitation/aggression: ~1 in 10,000
+- Depression: ~1 in 10,000
+- Suicidal ideation: ~1 in 100,000
+- FDA Boxed Warning (March 2020): Healthcare providers should counsel patients about potential neuropsychiatric events
+
+Serious Adverse Events:
+- Churg-Strauss syndrome: Very rare, reported primarily during corticosteroid dose reduction
+- Hepatic eosinophilic infiltration: Very rare
+- Angioedema: Very rare
+
+Discontinuation rate due to AEs: 3.1% (vs 2.4% placebo)
+
+Pregnancy & Lactation:
+- Category B: Animal studies showed no harm. Limited human data.
+- Unknown if excreted in breast milk. Use with caution.
+
+
+BEVAAS (Amlodipine) — Safety Profile
+--------------------------------------
+
+Adverse Event Rates (from pooled clinical trials, N=11,000+):
+- Peripheral edema: 8.3% (placebo 0.6%) — dose-dependent
+- Headache: 7.3% (placebo 7.8%)
+- Fatigue/Somnolence: 4.5% (placebo 2.8%)
+- Dizziness: 3.4% (placebo 1.5%)
+- Flushing: 2.6% (placebo 0.3%)
+- Palpitations: 1.4% (placebo 0.6%)
+- Nausea: 2.9% (placebo 1.9%)
+- Abdominal pain: 1.6% (placebo 0.3%)
+- Muscle cramps: 1.0% (placebo 0.3%)
+
+Edema by dose:
+- 2.5mg: 1.8%
+- 5mg: 4.1%
+- 10mg: 8.9%
+- 20mg: 14.2%
+
+Serious Adverse Events:
+- Severe hypotension: Rare, primarily in patients with severe aortic stenosis
+- Acute pulmonary edema: Very rare
+- Hepatitis/jaundice: Very rare
+- Gingival hyperplasia: Rare (~0.1%), reversible on discontinuation
+- Gynecomastia: Very rare
+
+Discontinuation rate due to AEs: 3.8% (vs 1.9% placebo)
+
+Pregnancy & Lactation:
+- Category C: Animal studies showed delayed parturition and prolonged labor. No adequate human studies. Contraindicated.
+- Excreted in breast milk. Not recommended during breastfeeding.
+
+Overdose:
+- Symptoms: Excessive peripheral vasodilation, marked hypotension, reflex tachycardia
+- Treatment: IV calcium gluconate, vasopressors, fluids, activated charcoal (if within 1 hour)
+- Hemodialysis not effective (amlodipine is highly protein-bound)
+- Reported survival after ingestion of 70mg with supportive care
+
+Drug Safety in Special Populations:
+- Diabetics: Metabolically neutral. No effect on HbA1c, fasting glucose, or lipids.
+- CKD patients: Safe to use. No dose adjustment for mild-moderate renal impairment.
+- Heart failure: Safe in HFrEF (PRAISE trial). Avoid in acute decompensated HF.
+- Post-MI: Safe to initiate amlodipine post-myocardial infarction (CAMELOT data).

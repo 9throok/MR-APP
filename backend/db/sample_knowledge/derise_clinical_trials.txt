@@ -1,0 +1,68 @@
+DERISE (Desloratadine) — Clinical Trial Summary
+=================================================
+
+TRIAL 1: ARIA Study — Efficacy in Seasonal Allergic Rhinitis
+-------------------------------------------------------------
+Study Design: Randomized, double-blind, placebo-controlled, multicenter
+Patients: 924 adults with seasonal allergic rhinitis
+Duration: 4 weeks
+Arms: Desloratadine 5mg/10mg/20mg vs placebo
+
+Key Results:
+- Desloratadine 10mg significantly reduced Total Symptom Score (TSS) by 38% vs placebo (p<0.001)
+- Desloratadine 20mg reduced TSS by 42% vs placebo (p<0.001)
+- Onset of action within 1.25 hours for nasal symptoms
+- No significant difference in sedation rates between active arms and placebo
+- Patient satisfaction: 78% reported "good" or "excellent" relief with 10mg
+
+TRIAL 2: COMPASS Study — Chronic Urticaria
+--------------------------------------------
+Study Design: Randomized, double-blind, placebo-controlled
+Patients: 416 adults with chronic idiopathic urticaria
+Duration: 6 weeks
+Arms: Desloratadine 10mg vs 20mg vs placebo
+
+Key Results:
+- Both doses significantly reduced pruritus severity score vs placebo (p<0.001)
+- 20mg showed faster onset of wheal reduction (Day 1 vs Day 2 for 10mg)
+- Mean number of hives reduced by 62% (10mg) and 71% (20mg) at Week 6
+- Quality of life (DLQI) improved significantly in both treatment groups
+- No significant increase in somnolence vs placebo
+
+TRIAL 3: DREAM Study — Drowsiness and Real-world Performance
+--------------------------------------------------------------
+Study Design: Crossover, double-blind, placebo-controlled
+Patients: 200 adults (healthy volunteers)
+Duration: 7 days per arm
+Arms: Desloratadine 10mg vs cetirizine 10mg vs diphenhydramine 25mg vs placebo
+
+Key Results:
+- Desloratadine showed NO significant impairment on driving simulation tests vs placebo
+- Cetirizine showed mild impairment in 12% of subjects
+- Diphenhydramine (first-gen) showed significant impairment in 45% of subjects
+- Desloratadine: Cognitive function tests (digit symbol substitution) — no difference from placebo
+- Confirms non-sedating profile suitable for patients who drive or operate machinery
+
+TRIAL 4: Zenrac-DER-001 — Post-Marketing Surveillance (India)
+---------------------------------------------------------------
+Study Design: Prospective, open-label, observational
+Patients: 2,150 Indian adults with allergic rhinitis or urticaria
+Duration: 12 weeks
+Sites: 85 centers across India
+
+Key Results:
+- Overall efficacy rate: 82% of patients rated treatment as "effective" or "very effective"
+- Derise 10mg: 76% efficacy in mild allergic rhinitis
+- Derise 20mg: 84% efficacy in moderate allergic rhinitis (patients prefer once-daily dosing)
+- Derise 50mg: 79% efficacy in severe allergic dermatitis
+- Adverse events: 4.2% overall (headache 1.8%, dry mouth 1.1%, fatigue 0.9%, other 0.4%)
+- Drowsiness rate: Only 0.7% — significantly less than cetirizine comparator arm (3.1%)
+- Patient compliance: 91% adherence to once-daily regimen over 12 weeks
+- Patients reporting less drowsiness was a key differentiator vs competitor products
+
+SAFETY SUMMARY ACROSS TRIALS:
+- No QTc prolongation observed at doses up to 45mg (4.5x recommended dose)
+- No clinically significant changes in liver enzymes
+- Weight-neutral — no significant weight gain vs placebo
+- No withdrawal effects on discontinuation
+- Safe in combination with inhaled corticosteroids and bronchodilators

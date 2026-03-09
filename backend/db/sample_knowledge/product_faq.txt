@@ -1,0 +1,70 @@
+ZENRAC PHARMACEUTICALS — PRODUCT FAQ
+======================================
+
+DERISE (Desloratadine) — Frequently Asked Questions
+-----------------------------------------------------
+
+Q: What is the difference between Derise and older antihistamines?
+A: Derise is a second-generation antihistamine that does not cross the blood-brain barrier significantly. This means it causes minimal drowsiness compared to first-generation antihistamines like diphenhydramine or chlorpheniramine. In clinical trials, drowsiness rates with Derise were only 0.7% compared to 3.1% with cetirizine.
+
+Q: Can patients take Derise while driving?
+A: Yes. Clinical studies (DREAM trial) showed no significant impairment on driving simulation tests with Derise compared to placebo. It is suitable for patients who drive or operate heavy machinery.
+
+Q: Which strength should I start with?
+A: Start with Derise 10mg for mild-to-moderate allergic rhinitis. Increase to 20mg if response is insufficient after 1-2 weeks. Reserve Derise 50mg for severe allergic conditions under specialist guidance.
+
+Q: Can Derise be taken with food?
+A: Yes. Derise can be taken with or without food. There is no clinically significant food interaction.
+
+Q: Is Derise safe in elderly patients?
+A: Yes. No dose adjustment is required in elderly patients. Good tolerance has been reported in patients over 65 years of age.
+
+Q: How quickly does Derise work?
+A: Onset of action is typically within 1 hour of oral administration. Peak plasma concentration is reached in approximately 3 hours.
+
+Q: What are the contraindications of Derise?
+A: Derise is contraindicated in patients with known hypersensitivity to desloratadine or loratadine, severe hepatic impairment, children under 6 years (tablet form), and should be used with caution during pregnancy and lactation. Concurrent use with strong CYP3A4 inhibitors like ketoconazole requires monitoring.
+
+
+RILAST (Montelukast) — Frequently Asked Questions
+---------------------------------------------------
+
+Q: How is Rilast different from inhalers?
+A: Rilast is an oral medication (tablet, capsule, or syrup) that works by blocking leukotrienes — chemicals that cause airway inflammation. Unlike inhalers, it does not require correct inhaler technique, making it easier for patients to use consistently. It is used for long-term control, not as a rescue medication.
+
+Q: Should Rilast be taken in the morning or evening?
+A: Rilast should be taken once daily in the evening. This timing aligns with the natural circadian pattern of leukotriene production, which peaks at night, providing optimal nighttime and early morning symptom control.
+
+Q: What is the difference between Rilast Tablet and Rilast Capsule?
+A: Rilast Tablet is an immediate-release formulation with onset in 2-3 hours. Rilast Capsule is a sustained-release formulation with onset in 3-4 hours but provides steadier plasma levels throughout the day. The capsule is preferred by patients who want consistent overnight bronchodilation. Both contain 10mg montelukast and are taken once daily.
+
+Q: Can Rilast replace inhaled corticosteroids?
+A: Rilast is typically used as add-on therapy to inhaled corticosteroids, not as a replacement. However, in mild persistent asthma, it may be considered as monotherapy in patients who cannot use or refuse inhaled corticosteroids. Always follow step-wise asthma management guidelines.
+
+Q: Is Rilast Syrup safe for children?
+A: Yes. Rilast Syrup (4mg/5mL) is approved for children aged 2-14 years. Clinical trials show it is safe and effective for paediatric asthma. Parents report improved breathing within 1-2 weeks of regular use.
+
+Q: What are the neuropsychiatric warnings?
+A: The FDA has issued a boxed warning for montelukast regarding potential neuropsychiatric events including agitation, depression, and suicidal ideation. These are rare but healthcare providers should counsel patients and caregivers to report any mood or behavior changes immediately.
+
+
+BEVAAS (Amlodipine) — Frequently Asked Questions
+--------------------------------------------------
+
+Q: Why choose Bevaas over other antihypertensives?
+A: Bevaas (amlodipine) offers true 24-hour blood pressure control with once-daily dosing. Its long half-life (30-50 hours) means that even if a patient misses a dose, blood pressure remains controlled. It is metabolically neutral (does not affect glucose or lipids) and has an extensive evidence base from trials like ALLHAT and ASCOT.
+
+Q: What clinical trials support Bevaas?
+A: Multiple landmark trials support amlodipine: ALLHAT (33,357 patients — comparable to diuretics for preventing CV events), ASCOT-BPLA (19,257 patients — superior to atenolol for CV outcomes, trial stopped early for benefit), CAMELOT (1,991 patients — 31% reduction in CV events vs placebo in CAD patients), and the Zenrac real-world study (1,800 Indian patients — 72% achieved BP goal).
+
+Q: What about ankle swelling with Bevaas?
+A: Peripheral edema is the most common side effect and is dose-dependent (4.1% at 5mg, 8.9% at 10mg, 14.2% at 20mg). It is caused by arteriolar dilation, not fluid retention. Combining Bevaas with an ACE inhibitor or ARB can reduce edema by approximately 50% because these agents cause venodilation, counterbalancing the effect.
+
+Q: Can Bevaas be combined with other BP medications?
+A: Yes. Bevaas is commonly and effectively combined with ACE inhibitors (e.g., ramipril, enalapril), ARBs (e.g., telmisartan, losartan), diuretics, and beta-blockers. The ASCOT trial demonstrated superior outcomes with an amlodipine + perindopril combination.
+
+Q: Is Bevaas safe for diabetic patients?
+A: Yes. Amlodipine is metabolically neutral — it does not affect blood glucose, insulin sensitivity, or lipid levels. In the ASCOT trial, the amlodipine-based regimen was associated with 30% lower risk of new-onset diabetes compared to the atenolol-based regimen.
+
+Q: What is the maximum dose?
+A: The standard maximum is 10mg/day. Bevaas 20mg is available for resistant hypertension under specialist supervision. In clinical practice, if 10mg is insufficient, combination therapy is usually preferred over dose escalation to 20mg.

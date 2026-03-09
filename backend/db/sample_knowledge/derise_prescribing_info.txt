@@ -1,0 +1,64 @@
+DERISE (Desloratadine) — Prescribing Information
+=================================================
+
+BRAND NAME: Derise
+GENERIC NAME: Desloratadine
+MANUFACTURER: Zenrac Pharmaceuticals Pvt. Ltd.
+THERAPEUTIC CLASS: Second-generation antihistamine (H1 receptor antagonist)
+
+AVAILABLE STRENGTHS:
+- Derise 10mg tablets
+- Derise 20mg tablets
+- Derise 50mg tablets (for severe allergic conditions)
+
+INDICATIONS:
+- Allergic rhinitis (seasonal and perennial)
+- Chronic idiopathic urticaria
+- Allergic dermatitis
+- Allergic conjunctivitis
+- Pruritus associated with allergic skin conditions
+
+MECHANISM OF ACTION:
+Desloratadine is a long-acting, non-sedating, selective H1-receptor antagonist. It inhibits histamine release from mast cells and basophils, reducing allergic symptoms. Unlike first-generation antihistamines, it has minimal CNS penetration, resulting in significantly less drowsiness.
+
+DOSAGE AND ADMINISTRATION:
+- Derise 10mg: One tablet once daily for mild-to-moderate allergic rhinitis and urticaria. Suitable for initial therapy.
+- Derise 20mg: One tablet once daily for moderate allergic conditions or when 10mg provides insufficient relief. Preferred by patients who want once-daily dosing convenience.
+- Derise 50mg: One tablet once daily for severe allergic reactions, severe allergic dermatitis, or refractory cases. Use under specialist supervision.
+
+CONTRAINDICATIONS:
+- Known hypersensitivity to desloratadine, loratadine, or any excipient
+- Severe hepatic impairment (CrCl < 30 mL/min) — use with caution, dose reduction may be needed
+- Children under 6 years (tablet formulation)
+- Concurrent use with strong CYP3A4 inhibitors (ketoconazole, erythromycin) — monitor closely
+- Pregnancy Category B — use only if clearly needed
+- Lactation — excreted in breast milk, use with caution
+
+ADVERSE EFFECTS:
+Common (>1%): Headache, dry mouth, fatigue, dizziness
+Uncommon (0.1-1%): Nausea, myalgia, somnolence (significantly less than first-gen antihistamines)
+Rare (<0.1%): Tachycardia, elevated liver enzymes, hypersensitivity reactions
+
+DRUG INTERACTIONS:
+- Ketoconazole: Increases desloratadine plasma levels — monitor for adverse effects
+- Erythromycin: May increase plasma levels — no dose adjustment usually needed
+- Fluoxetine: Minor interaction — monitor
+- Alcohol: No significant potentiation of CNS depression (advantage over first-gen)
+- Grapefruit juice: May alter absorption — take with water
+
+SPECIAL POPULATIONS:
+- Elderly: No dose adjustment required; well-tolerated in patients >65 years. Good tolerance in elderly patients reported.
+- Renal impairment: Mild-moderate — no adjustment. Severe — use 10mg every other day.
+- Hepatic impairment: Mild — no adjustment. Moderate-severe — contraindicated or use lowest dose.
+- Pediatric: 6-11 years — use 5mg formulation (syrup). 12+ years — adult dosing.
+
+STORAGE: Store below 30°C. Protect from moisture. Keep out of reach of children.
+
+CLINICAL ADVANTAGES:
+- Once-daily dosing improves compliance
+- Non-sedating profile — suitable for daytime use
+- Rapid onset of action (within 1 hour)
+- 24-hour duration of effect
+- Minimal drug-food interactions
+- Patients report less drowsiness compared to first-generation antihistamines
+- Fast symptom relief observed in clinical practice
