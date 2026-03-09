@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import './SpeechRecorder.css'
+import { CARD, CARD_PADDING, BTN_GHOST, LABEL, TEXTAREA } from '../styles/designSystem'
 
 interface SpeechRecorderProps {
   onTranscriptionComplete: (transcription: string) => void
@@ -103,7 +103,7 @@ function SpeechRecorder({ onTranscriptionComplete, onError }: SpeechRecorderProp
 
     recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
       let errorMessage = 'Speech recognition error occurred'
-      
+
       switch (event.error) {
         case 'no-speech':
           errorMessage = 'No speech detected. Please try again.'
@@ -189,8 +189,8 @@ function SpeechRecorder({ onTranscriptionComplete, onError }: SpeechRecorderProp
 
   if (!isSupported) {
     return (
-      <div className="speech-recorder speech-recorder-unsupported">
-        <p className="error-message">
+      <div className={`${CARD} ${CARD_PADDING} space-y-4`}>
+        <p className="flex items-center gap-2 text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">
           Speech recognition is not supported in your browser. Please use Chrome or Edge.
         </p>
       </div>
@@ -198,12 +198,12 @@ function SpeechRecorder({ onTranscriptionComplete, onError }: SpeechRecorderProp
   }
 
   return (
-    <div className="speech-recorder">
-      <div className="speech-recorder-controls">
+    <div className={`${CARD} ${CARD_PADDING} space-y-4`}>
+      <div className="flex items-center gap-3">
         {!isRecording ? (
           <button
             type="button"
-            className="record-btn record-btn-start"
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-red-500 text-white text-sm font-medium rounded-lg hover:bg-red-600 transition-colors cursor-pointer border-none"
             onClick={handleStartRecording}
             aria-label="Start recording"
           >
@@ -215,12 +215,12 @@ function SpeechRecorder({ onTranscriptionComplete, onError }: SpeechRecorderProp
         ) : (
           <button
             type="button"
-            className="record-btn record-btn-stop"
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-800 text-white text-sm font-medium rounded-lg hover:bg-slate-900 transition-colors cursor-pointer border-none"
             onClick={handleStopRecording}
             aria-label="Stop recording"
           >
-            <div className="recording-indicator">
-              <div className="pulse-ring"></div>
+            <div className="relative flex items-center justify-center">
+              <div className="absolute w-10 h-10 rounded-full bg-red-500/30 animate-ping"></div>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor"/>
               </svg>
@@ -228,11 +228,11 @@ function SpeechRecorder({ onTranscriptionComplete, onError }: SpeechRecorderProp
             <span>Stop Recording</span>
           </button>
         )}
-        
+
         {transcription && (
           <button
             type="button"
-            className="clear-btn"
+            className={BTN_GHOST}
             onClick={handleClear}
             aria-label="Clear transcription"
           >
@@ -245,17 +245,17 @@ function SpeechRecorder({ onTranscriptionComplete, onError }: SpeechRecorderProp
       </div>
 
       {isRecording && (
-        <div className="recording-status" role="status" aria-live="polite">
-          <span className="recording-dot"></span>
+        <div className="flex items-center gap-2 text-sm text-red-500 font-medium" role="status" aria-live="polite">
+          <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
           Recording...
         </div>
       )}
 
       {transcription && (
-        <div className="transcription-preview">
-          <label className="transcription-label">Transcription:</label>
+        <div className="space-y-2">
+          <label className={LABEL}>Transcription:</label>
           <textarea
-            className="transcription-textarea"
+            className={TEXTAREA}
             value={transcription}
             onChange={(e) => setTranscription(e.target.value)}
             placeholder="Transcribed text will appear here..."
@@ -263,7 +263,7 @@ function SpeechRecorder({ onTranscriptionComplete, onError }: SpeechRecorderProp
             readOnly={isRecording}
           />
           {!isRecording && (
-            <p className="transcription-hint">
+            <p className="text-xs text-slate-400">
               You can edit the transcription before extracting data.
             </p>
           )}
@@ -271,7 +271,7 @@ function SpeechRecorder({ onTranscriptionComplete, onError }: SpeechRecorderProp
       )}
 
       {error && (
-        <div className="error-message" role="alert">
+        <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2" role="alert">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
             <path d="M12 8V12M12 16H12.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>

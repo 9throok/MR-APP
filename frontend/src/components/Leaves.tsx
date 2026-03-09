@@ -1,8 +1,15 @@
 import { useState } from 'react'
-import Header from './Header'
-import Sidebar from './Sidebar'
 import ApplyLeaveModal from './ApplyLeaveModal'
-import './Leaves.css'
+import {
+  PAGE_CONTENT,
+  BACK_BUTTON,
+  PAGE_TITLE,
+  BTN_PRIMARY,
+  CARD,
+  CARD_PADDING,
+  CARD_SM_PADDING,
+  SELECT,
+} from '../styles/designSystem'
 
 interface Leave {
   id: number
@@ -18,22 +25,13 @@ interface LeavesProps {
   onNavigate?: (page: string) => void
 }
 
-function Leaves({ onLogout, onBack, userName, onNavigate }: LeavesProps) {
-  const [sidebarOpen, setSidebarOpen] = useState(false)
+function Leaves({ onLogout: _onLogout, onBack, userName: _userName, onNavigate: _onNavigate }: LeavesProps) {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedDate, setSelectedDate] = useState<string>('')
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth())
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear())
   const [viewMode, setViewMode] = useState<'month' | 'year'>('month')
   const [leaves, setLeaves] = useState<Leave[]>([])
-
-  const handleMenuClick = () => {
-    setSidebarOpen(true)
-  }
-
-  const handleSidebarClose = () => {
-    setSidebarOpen(false)
-  }
 
   const handleApplyLeave = () => {
     setIsModalOpen(true)
@@ -80,17 +78,17 @@ function Leaves({ onLogout, onBack, userName, onNavigate }: LeavesProps) {
     const startingDayOfWeek = firstDay.getDay()
 
     const days = []
-    
+
     // Add empty cells for days before the first day of the month
     for (let i = 0; i < startingDayOfWeek; i++) {
       days.push(null)
     }
-    
+
     // Add all days of the month
     for (let day = 1; day <= daysInMonth; day++) {
       days.push(new Date(year, month, day))
     }
-    
+
     return days
   }
 
@@ -110,140 +108,149 @@ function Leaves({ onLogout, onBack, userName, onNavigate }: LeavesProps) {
   const years = Array.from({ length: 10 }, (_, i) => currentYear - 5 + i)
 
   return (
-    <div className="leaves-container">
-      <Header onLogout={onLogout} onMenuClick={handleMenuClick} onNavigateHome={() => onNavigate?.('home')} onNavigateOfflineRequests={() => onNavigate?.('offline-requests')} />
-      <Sidebar isOpen={sidebarOpen} onClose={handleSidebarClose} userName={userName} onNavigate={onNavigate} onLogout={onLogout} />
-      <main className="leaves-content">
-        <div className="leaves-header">
-          <button className="back-button" onClick={onBack} aria-label="Go back">
+    <div className={PAGE_CONTENT}>
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <button className={BACK_BUTTON} onClick={onBack} aria-label="Go back">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M19 12H5M5 12L12 19M5 12L12 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </button>
-          <h1 className="leaves-title">Apply for Leave</h1>
-          <button className="apply-leave-btn" onClick={handleApplyLeave}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M22 2L11 13M22 2L15 22L11 13M22 2L2 9L11 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-            <span>Apply Leave</span>
-          </button>
+          <h1 className={PAGE_TITLE}>Apply for Leave</h1>
         </div>
+        <button className={BTN_PRIMARY} onClick={handleApplyLeave}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M22 2L11 13M22 2L15 22L11 13M22 2L2 9L11 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+          <span>Apply Leave</span>
+        </button>
+      </div>
 
-        <div className="legends-section">
-          <div className="legends-header">Legends</div>
-          <div className="legends-content">
-            <div className="legend-item">
-              <span className="legend-badge present">P</span>
-              <span className="legend-label">Present</span>
-            </div>
-            <div className="legend-item">
-              <span className="legend-badge absent">A</span>
-              <span className="legend-label">Absent</span>
-            </div>
-            <div className="legend-item">
-              <span className="legend-badge leave">L</span>
-              <span className="legend-label">Leave</span>
-            </div>
-            <div className="legend-item">
-              <span className="legend-badge holiday">Off</span>
-              <span className="legend-label">Off</span>
-            </div>
+      <div className={`${CARD} ${CARD_SM_PADDING} mb-4`}>
+        <div className="text-sm font-medium text-slate-700 mb-2">Legends</div>
+        <div className="flex flex-wrap gap-4">
+          <div className="flex items-center gap-2 text-sm">
+            <span className="w-3 h-3 rounded-full bg-emerald-500 inline-block"></span>
+            <span className="text-xs text-slate-600">Present</span>
+          </div>
+          <div className="flex items-center gap-2 text-sm">
+            <span className="w-3 h-3 rounded-full bg-red-500 inline-block"></span>
+            <span className="text-xs text-slate-600">Absent</span>
+          </div>
+          <div className="flex items-center gap-2 text-sm">
+            <span className="w-3 h-3 rounded-full bg-amber-500 inline-block"></span>
+            <span className="text-xs text-slate-600">Leave</span>
+          </div>
+          <div className="flex items-center gap-2 text-sm">
+            <span className="w-3 h-3 rounded-full bg-slate-400 inline-block"></span>
+            <span className="text-xs text-slate-600">Off</span>
+          </div>
+        </div>
+      </div>
+
+      {selectedDate && (
+        <div className="text-sm text-slate-600 mb-4">
+          You selected date: {selectedDate}
+        </div>
+      )}
+
+      <div className={`${CARD} ${CARD_PADDING}`}>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <select
+              className={`${SELECT} w-auto`}
+              value={currentYear}
+              onChange={(e) => setCurrentYear(Number(e.target.value))}
+            >
+              {years.map(year => (
+                <option key={year} value={year}>{year}</option>
+              ))}
+            </select>
+            <select
+              className={`${SELECT} w-auto`}
+              value={currentMonth}
+              onChange={(e) => setCurrentMonth(Number(e.target.value))}
+            >
+              {monthNames.map((month, index) => (
+                <option key={index} value={index}>{month}</option>
+              ))}
+            </select>
+          </div>
+          <div className="flex gap-1 bg-slate-100 rounded-lg p-1">
+            <button
+              className={`px-3 py-1.5 text-sm font-medium rounded-md ${
+                viewMode === 'month'
+                  ? 'bg-white text-slate-900 shadow-sm'
+                  : 'text-slate-500 hover:text-slate-700'
+              }`}
+              onClick={() => setViewMode('month')}
+            >
+              Month
+            </button>
+            <button
+              className={`px-3 py-1.5 text-sm font-medium rounded-md ${
+                viewMode === 'year'
+                  ? 'bg-white text-slate-900 shadow-sm'
+                  : 'text-slate-500 hover:text-slate-700'
+              }`}
+              onClick={() => setViewMode('year')}
+            >
+              Year
+            </button>
           </div>
         </div>
 
-        {selectedDate && (
-          <div className="selected-date-display">
-            You selected date: {selectedDate}
-          </div>
-        )}
-
-        <div className="calendar-section">
-          <div className="calendar-controls">
-            <div className="date-selectors">
-              <select
-                className="year-selector"
-                value={currentYear}
-                onChange={(e) => setCurrentYear(Number(e.target.value))}
-              >
-                {years.map(year => (
-                  <option key={year} value={year}>{year}</option>
-                ))}
-              </select>
-              <select
-                className="month-selector"
-                value={currentMonth}
-                onChange={(e) => setCurrentMonth(Number(e.target.value))}
-              >
-                {monthNames.map((month, index) => (
-                  <option key={index} value={index}>{month}</option>
-                ))}
-              </select>
+        <div className="grid grid-cols-7 gap-px bg-slate-200 rounded-xl overflow-hidden">
+          {dayNames.map((day) => (
+            <div key={day} className="bg-slate-50 text-center py-2 text-xs font-medium text-slate-500 uppercase">
+              {day}
             </div>
-            <div className="view-toggle-buttons">
+          ))}
+          {days.map((date, index) => {
+            if (date === null) {
+              return <div key={`empty-${index}`} className="bg-white p-2 min-h-[60px]"></div>
+            }
+
+            const isToday = date.toDateString() === new Date().toDateString()
+            const dateString = formatDate(date)
+            const leaveStatus = getLeaveStatus(date)
+            const isHoliday = date.getDay() === 0 // Sunday as holiday example
+
+            return (
               <button
-                className={`view-toggle-btn ${viewMode === 'month' ? 'active' : ''}`}
-                onClick={() => setViewMode('month')}
+                key={dateString}
+                className={`bg-white p-2 min-h-[60px] text-center ${isToday ? 'bg-indigo-50' : ''} ${
+                  leaveStatus?.type === 'leave' ? 'bg-amber-50' :
+                  leaveStatus?.type === 'absent' ? 'bg-red-50' :
+                  leaveStatus?.type === 'present' ? 'bg-emerald-50' :
+                  isHoliday ? 'bg-slate-50' : ''
+                }`}
+                onClick={() => setSelectedDate(dateString)}
               >
-                Month
+                <span className="text-sm text-slate-700">{date.getDate()}</span>
+                {leaveStatus && (
+                  <div className={`w-2 h-2 rounded-full mx-auto mt-1 ${
+                    leaveStatus.type === 'leave' ? 'bg-amber-500' :
+                    leaveStatus.type === 'absent' ? 'bg-red-500' : 'bg-emerald-500'
+                  }`}></div>
+                )}
+                {isHoliday && !leaveStatus && (
+                  <div className="w-2 h-2 rounded-full mx-auto mt-1 bg-slate-400"></div>
+                )}
               </button>
-              <button
-                className={`view-toggle-btn ${viewMode === 'year' ? 'active' : ''}`}
-                onClick={() => setViewMode('year')}
-              >
-                Year
-              </button>
-            </div>
-          </div>
-
-          <div className="calendar-grid">
-            {dayNames.map((day) => (
-              <div key={day} className="calendar-day-header">
-                {day}
-              </div>
-            ))}
-            {days.map((date, index) => {
-              if (date === null) {
-                return <div key={`empty-${index}`} className="calendar-day empty"></div>
-              }
-              
-              const isToday = date.toDateString() === new Date().toDateString()
-              const dateString = formatDate(date)
-              const leaveStatus = getLeaveStatus(date)
-              const isHoliday = date.getDay() === 0 // Sunday as holiday example
-              
-              return (
-                <button
-                  key={dateString}
-                  className={`calendar-day ${isToday ? 'today' : ''} ${
-                    leaveStatus ? leaveStatus.type : isHoliday ? 'holiday' : ''
-                  }`}
-                  onClick={() => setSelectedDate(dateString)}
-                >
-                  <span className="day-number">{date.getDate()}</span>
-                  {leaveStatus && (
-                    <span className="status-badge">
-                      {leaveStatus.type === 'leave' ? 'L' : leaveStatus.type === 'absent' ? 'A' : 'P'}
-                    </span>
-                  )}
-                  {isHoliday && !leaveStatus && (
-                    <span className="status-badge">Off</span>
-                  )}
-                </button>
-              )
-            })}
-          </div>
+            )
+          })}
         </div>
+      </div>
 
-        {isModalOpen && (
-          <ApplyLeaveModal
-            onClose={handleModalClose}
-            onSubmit={handleLeaveSubmit}
-          />
-        )}
-      </main>
+      {isModalOpen && (
+        <ApplyLeaveModal
+          onClose={handleModalClose}
+          onSubmit={handleLeaveSubmit}
+        />
+      )}
     </div>
   )
 }
 
 export default Leaves
-

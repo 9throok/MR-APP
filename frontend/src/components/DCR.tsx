@@ -1,11 +1,24 @@
 import { useState, useRef, useEffect } from 'react'
-import Header from './Header'
-import Sidebar from './Sidebar'
 import SpeechRecorder from './SpeechRecorder'
 import { extractDCRData } from '../services/openaiService'
 import { findBestProductMatch, findBestSampleMatch } from '../utils/textMatching'
 import { apiPost } from '../services/apiService'
-import './DCR.css'
+import {
+  PAGE_CONTENT,
+  PAGE_TITLE,
+  BACK_BUTTON,
+  CARD,
+  CARD_PADDING,
+  LABEL,
+  INPUT,
+  SELECT,
+  TEXTAREA,
+  BTN_PRIMARY,
+  BTN_SECONDARY,
+  BTN_GHOST,
+  BADGE_PRIMARY,
+  BADGE_SUCCESS,
+} from '../styles/designSystem'
 
 interface DCRProps {
   onLogout: () => void
@@ -50,8 +63,7 @@ const availableSamples = [
   { id: 6, name: 'Sample F - Respiratory' },
 ]
 
-function DCR({ onLogout, onBack, userName, onNavigate, selectedItem: propSelectedItem }: DCRProps) {
-  const [sidebarOpen, setSidebarOpen] = useState(false)
+function DCR({ onLogout: _onLogout, onBack, userName: _userName, onNavigate, selectedItem: propSelectedItem }: DCRProps) {
   const [selectedProduct, setSelectedProduct] = useState('')
   const [selectedSamples, setSelectedSamples] = useState<Sample[]>([])
   const [callSummary, setCallSummary] = useState('')
@@ -67,7 +79,7 @@ function DCR({ onLogout, onBack, userName, onNavigate, selectedItem: propSelecte
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showConfirmModal, setShowConfirmModal] = useState(false)
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
-  
+
   // Speech-to-text states
   const [transcription, setTranscription] = useState('')
   const [isExtracting, setIsExtracting] = useState(false)
@@ -77,7 +89,7 @@ function DCR({ onLogout, onBack, userName, onNavigate, selectedItem: propSelecte
     samples?: boolean
     callSummary?: boolean
   }>({})
-  
+
   const fileInputRef = useRef<HTMLInputElement>(null)
   const samplesDropdownRef = useRef<HTMLDivElement>(null)
 
@@ -91,14 +103,6 @@ function DCR({ onLogout, onBack, userName, onNavigate, selectedItem: propSelecte
       return null
     }
   })
-
-  const handleMenuClick = () => {
-    setSidebarOpen(true)
-  }
-
-  const handleSidebarClose = () => {
-    setSidebarOpen(false)
-  }
 
   const handleBackClick = () => {
     // Clear sessionStorage when going back
@@ -226,7 +230,7 @@ function DCR({ onLogout, onBack, userName, onNavigate, selectedItem: propSelecte
   const handleTranscriptionComplete = async (text: string) => {
     setTranscription(text)
     setExtractionError(null)
-    
+
     // Automatically extract and fill form when transcription is complete
     if (text.trim()) {
       // Use the text parameter directly instead of waiting for state update
@@ -248,7 +252,7 @@ function DCR({ onLogout, onBack, userName, onNavigate, selectedItem: propSelecte
     }
     await handleExtractAndFillWithText(transcription)
   }
-  
+
   // Reference to avoid TypeScript unused variable warning
   if (false) {
     void handleExtractAndFill
@@ -351,7 +355,7 @@ function DCR({ onLogout, onBack, userName, onNavigate, selectedItem: propSelecte
             firstFilledField.scrollIntoView({ behavior: 'smooth', block: 'center' })
           }
         }, 100)
-        
+
         // Clear any previous errors
         setExtractionError(null)
       } else {
@@ -359,10 +363,10 @@ function DCR({ onLogout, onBack, userName, onNavigate, selectedItem: propSelecte
       }
     } catch (error) {
       let errorMessage = 'Failed to extract data. Please try again.'
-      
+
       if (error instanceof Error) {
         errorMessage = error.message
-        
+
         // Provide more user-friendly error messages
         if (errorMessage.includes('API key')) {
           errorMessage = 'Gemini API key is not configured. Please set VITE_GEMINI_API_KEY in your environment variables.'
@@ -374,7 +378,7 @@ function DCR({ onLogout, onBack, userName, onNavigate, selectedItem: propSelecte
           errorMessage = 'Service is temporarily unavailable. Please try again later.'
         }
       }
-      
+
       setExtractionError(errorMessage)
       console.error('Error extracting DCR data:', error)
     } finally {
@@ -469,10 +473,7 @@ function DCR({ onLogout, onBack, userName, onNavigate, selectedItem: propSelecte
   }
 
   return (
-    <div className="dcr-container">
-      <Header onLogout={onLogout} onMenuClick={handleMenuClick} onNavigateHome={() => onNavigate?.('home')} onNavigateOfflineRequests={() => onNavigate?.('offline-requests')} />
-      <Sidebar isOpen={sidebarOpen} onClose={handleSidebarClose} userName={userName} onNavigate={onNavigate} onLogout={onLogout} />
-
+    <div>
       {/* Toast notification */}
       {toast && (
         <div
@@ -541,7 +542,7 @@ function DCR({ onLogout, onBack, userName, onNavigate, selectedItem: propSelecte
           }}>
             <svg width="52" height="52" viewBox="0 0 48 48" fill="none">
               <circle cx="24" cy="24" r="20" stroke="#e2e8f0" strokeWidth="4"/>
-              <circle cx="24" cy="24" r="20" stroke="#22c55e" strokeWidth="4"
+              <circle cx="24" cy="24" r="20" stroke="#4F46E5" strokeWidth="4"
                 strokeLinecap="round" strokeDasharray="31.4 94.2">
                 <animateTransform attributeName="transform" type="rotate"
                   from="0 24 24" to="360 24 24" dur="0.8s" repeatCount="indefinite"/>
@@ -653,18 +654,18 @@ function DCR({ onLogout, onBack, userName, onNavigate, selectedItem: propSelecte
           </div>
         </div>
       )}
-      <main className="dcr-content">
-        <div className="dcr-header">
-          <button className="back-button" onClick={handleBackClick} aria-label="Go back">
+      <main className={PAGE_CONTENT}>
+        <div className="flex items-center gap-3 mb-6">
+          <button className={BACK_BUTTON} onClick={handleBackClick} aria-label="Go back">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M19 12H5M5 12L12 19M5 12L12 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </button>
-          <h1 className="dcr-title">Daily Call Report (DCR)</h1>
+          <h1 className={PAGE_TITLE}>Daily Call Report (DCR)</h1>
         </div>
 
         {/* Speech-to-Text Section - Outside Form */}
-        <div className="speech-recorder-wrapper">
+        <div className="mb-4">
           <SpeechRecorder
             onTranscriptionComplete={handleTranscriptionComplete}
             onError={handleSpeechError}
@@ -672,7 +673,7 @@ function DCR({ onLogout, onBack, userName, onNavigate, selectedItem: propSelecte
         </div>
 
         {isExtracting && (
-          <div className="auto-extracting-indicator">
+          <div className="flex items-center gap-2 text-sm text-indigo-600 bg-indigo-50 rounded-lg px-4 py-3 mb-4">
             <svg className="spinner" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeDasharray="32" strokeDashoffset="32">
                 <animate attributeName="stroke-dasharray" dur="2s" values="0 32;16 16;0 32;0 32" repeatCount="indefinite"/>
@@ -683,7 +684,7 @@ function DCR({ onLogout, onBack, userName, onNavigate, selectedItem: propSelecte
           </div>
         )}
         {extractionError && (
-          <div className="extraction-error" role="alert">
+          <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 rounded-lg px-4 py-3 mb-4" role="alert">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
               <path d="M12 8V12M12 16H12.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
@@ -692,7 +693,7 @@ function DCR({ onLogout, onBack, userName, onNavigate, selectedItem: propSelecte
           </div>
         )}
         {!extractionError && Object.keys(autoFilledFields).length > 0 && (
-          <div className="extraction-success" role="status">
+          <div className="flex items-center gap-2 text-sm text-emerald-600 bg-emerald-50 rounded-lg px-4 py-3 mb-4" role="status">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M20 6L9 17L4 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
@@ -702,7 +703,7 @@ function DCR({ onLogout, onBack, userName, onNavigate, selectedItem: propSelecte
 
         {/* ── AI Pre-call Briefing Card ───────────────────────────────── */}
         {(briefingLoading || briefing) && (
-          <div style={{ margin: '0 0 18px', borderRadius: '16px', border: '1.5px solid #bbf7d0', background: 'linear-gradient(135deg,#f0fdf4,#ecfdf5)', overflow: 'hidden', boxShadow: '0 2px 12px rgba(34,197,94,.1)' }}>
+          <div style={{ margin: '0 0 18px', borderRadius: '16px', border: '1.5px solid #c7d2fe', background: 'linear-gradient(135deg,#eef2ff,#e0e7ff)', overflow: 'hidden', boxShadow: '0 2px 12px rgba(79,70,229,.1)' }}>
 
             {/* Header row — always visible, click to collapse */}
             <button
@@ -710,27 +711,27 @@ function DCR({ onLogout, onBack, userName, onNavigate, selectedItem: propSelecte
               onClick={() => setBriefingExpanded(p => !p)}
               style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '10px', padding: '14px 16px', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}
             >
-              <div style={{ width: 34, height: 34, borderRadius: 10, background: 'linear-gradient(135deg,#22c55e,#16a34a)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 2px 8px rgba(34,197,94,.3)' }}>
+              <div style={{ width: 34, height: 34, borderRadius: 10, background: 'linear-gradient(135deg,#4F46E5,#4338CA)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 2px 8px rgba(79,70,229,.3)' }}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
                   <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="white" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               </div>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: '.88rem', fontWeight: 700, color: '#14532d', lineHeight: 1.2 }}>AI Pre-call Briefing</div>
-                <div style={{ fontSize: '.74rem', color: '#4ade80', marginTop: 1 }}>
+                <div style={{ fontSize: '.88rem', fontWeight: 700, color: '#312e81', lineHeight: 1.2 }}>AI Pre-call Briefing</div>
+                <div style={{ fontSize: '.74rem', color: '#818cf8', marginTop: 1 }}>
                   {briefingLoading ? 'Analysing past visits…' : `Based on visits with ${selectedItem?.name}`}
                 </div>
               </div>
               {briefingLoading ? (
                 <svg width="22" height="22" viewBox="0 0 48 48" fill="none" style={{ flexShrink: 0 }}>
-                  <circle cx="24" cy="24" r="18" stroke="#bbf7d0" strokeWidth="4"/>
-                  <circle cx="24" cy="24" r="18" stroke="#22c55e" strokeWidth="4" strokeLinecap="round" strokeDasharray="28 56">
+                  <circle cx="24" cy="24" r="18" stroke="#c7d2fe" strokeWidth="4"/>
+                  <circle cx="24" cy="24" r="18" stroke="#4F46E5" strokeWidth="4" strokeLinecap="round" strokeDasharray="28 56">
                     <animateTransform attributeName="transform" type="rotate" from="0 24 24" to="360 24 24" dur=".8s" repeatCount="indefinite"/>
                   </circle>
                 </svg>
               ) : (
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, transition: 'transform .2s', transform: briefingExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}>
-                  <path d="M19 9L12 15L5 9" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M19 9L12 15L5 9" stroke="#4F46E5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               )}
             </button>
@@ -787,29 +788,29 @@ function DCR({ onLogout, onBack, userName, onNavigate, selectedItem: propSelecte
         )}
         {/* ─────────────────────────────────────────────────────────────── */}
 
-        <form className="dcr-form" onSubmit={handleSubmit}>
+        <form className={`${CARD} ${CARD_PADDING} space-y-5`} onSubmit={handleSubmit}>
 
           {/* Name Field */}
-          <div className="form-group">
-            <label className="form-label">Name</label>
+          <div className="space-y-1.5">
+            <label className={LABEL}>Name</label>
             <input
               type="text"
-              className="form-input"
+              className={`${INPUT} disabled:bg-slate-50 disabled:text-slate-500`}
               value={selectedItem?.name || ''}
               readOnly
               disabled
             />
             {selectedItem?.specialization && (
-              <p className="form-hint">{selectedItem.specialization}</p>
+              <p className="text-xs text-slate-400 mt-1">{selectedItem.specialization}</p>
             )}
           </div>
 
           {/* Date Field */}
-          <div className="form-group">
-            <label className="form-label">Date</label>
+          <div className="space-y-1.5">
+            <label className={LABEL}>Date</label>
             <input
               type="text"
-              className="form-input"
+              className={`${INPUT} disabled:bg-slate-50 disabled:text-slate-500`}
               value={currentDate}
               readOnly
               disabled
@@ -817,13 +818,13 @@ function DCR({ onLogout, onBack, userName, onNavigate, selectedItem: propSelecte
           </div>
 
           {/* Product Dropdown */}
-          <div className="form-group">
-            <label className="form-label">
-              Select Product <span className="required">*</span>
-              {autoFilledFields.product && <span className="auto-filled-badge" title="Auto-filled from voice input">Auto-filled</span>}
+          <div className="space-y-1.5">
+            <label className={LABEL}>
+              Select Product <span className="text-red-500">*</span>
+              {autoFilledFields.product && <span className={`${BADGE_SUCCESS} ml-2`} title="Auto-filled from voice input">Auto-filled</span>}
             </label>
             <select
-              className={`form-select ${errors.product ? 'field-error' : ''} ${autoFilledFields.product ? 'auto-filled' : ''}`}
+              className={`${SELECT} ${errors.product ? 'border-red-300 focus:ring-red-500' : ''} ${autoFilledFields.product ? 'auto-filled border-indigo-300 bg-indigo-50/30' : ''}`}
               value={selectedProduct}
               onChange={(e) => {
                 setSelectedProduct(e.target.value)
@@ -839,19 +840,19 @@ function DCR({ onLogout, onBack, userName, onNavigate, selectedItem: propSelecte
                 <option key={product} value={product}>{product}</option>
               ))}
             </select>
-            {errors.product && <span className="error-message field-error">{errors.product}</span>}
+            {errors.product && <span className="text-xs text-red-500 mt-1 field-error">{errors.product}</span>}
           </div>
 
           {/* Samples Dropdown */}
-          <div className="form-group">
-            <label className="form-label">
+          <div className="space-y-1.5">
+            <label className={LABEL}>
               Samples
-              {autoFilledFields.samples && <span className="auto-filled-badge" title="Auto-filled from voice input">Auto-filled</span>}
+              {autoFilledFields.samples && <span className={`${BADGE_SUCCESS} ml-2`} title="Auto-filled from voice input">Auto-filled</span>}
             </label>
-            <div className={`samples-dropdown-wrapper ${autoFilledFields.samples ? 'auto-filled' : ''}`} ref={samplesDropdownRef}>
+            <div className={`relative ${autoFilledFields.samples ? 'auto-filled' : ''}`} ref={samplesDropdownRef}>
               <button
                 type="button"
-                className={`samples-dropdown-trigger ${autoFilledFields.samples ? 'auto-filled' : ''}`}
+                className={`${SELECT} flex items-center justify-between ${autoFilledFields.samples ? 'auto-filled border-indigo-300 bg-indigo-50/30' : ''}`}
                 onClick={() => {
                   setShowSampleDropdown(!showSampleDropdown)
                   if (autoFilledFields.samples) {
@@ -865,12 +866,12 @@ function DCR({ onLogout, onBack, userName, onNavigate, selectedItem: propSelecte
                 </svg>
               </button>
               {showSampleDropdown && (
-                <div className="samples-dropdown">
+                <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
                   {availableSamples.map((sample) => {
                     const isSelected = selectedSamples.find(s => s.id === sample.id)
                     return (
-                      <div key={sample.id} className="sample-item">
-                        <label className="sample-checkbox">
+                      <div key={sample.id} className="px-3 py-2 border-b border-slate-50">
+                        <label className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
                           <input
                             type="checkbox"
                             checked={!!isSelected}
@@ -879,14 +880,14 @@ function DCR({ onLogout, onBack, userName, onNavigate, selectedItem: propSelecte
                           <span>{sample.name}</span>
                         </label>
                         {isSelected && (
-                          <div className="sample-quantity">
+                          <div className="flex items-center gap-2 mt-2 pl-6">
                             <label>Quantity:</label>
                             <input
                               type="number"
                               min="1"
                               value={isSelected.quantity}
                               onChange={(e) => handleQuantityChange(sample.id, parseInt(e.target.value) || 0)}
-                              className="quantity-input"
+                              className={`w-20 ${INPUT}`}
                             />
                           </div>
                         )}
@@ -897,26 +898,26 @@ function DCR({ onLogout, onBack, userName, onNavigate, selectedItem: propSelecte
               )}
             </div>
             {selectedSamples.length > 0 && (
-              <div className="selected-samples-list">
+              <div className="mt-3 space-y-1.5">
                 {selectedSamples.map((sample) => (
-                  <div key={sample.id} className="selected-sample-item">
+                  <div key={sample.id} className="flex items-center justify-between text-sm bg-slate-50 rounded-lg px-3 py-2">
                     <span>{sample.name}</span>
-                    <span className="sample-quantity-badge">Qty: {sample.quantity}</span>
+                    <span className={BADGE_PRIMARY}>Qty: {sample.quantity}</span>
                   </div>
                 ))}
               </div>
             )}
-            {errors.samples && <span className="error-message field-error">{errors.samples}</span>}
+            {errors.samples && <span className="text-xs text-red-500 mt-1 field-error">{errors.samples}</span>}
           </div>
 
           {/* Summary of the call */}
-          <div className="form-group">
-            <label className="form-label">
-              Summary of the call <span className="required">*</span>
-              {autoFilledFields.callSummary && <span className="auto-filled-badge" title="Auto-filled from voice input">Auto-filled</span>}
+          <div className="space-y-1.5">
+            <label className={LABEL}>
+              Summary of the call <span className="text-red-500">*</span>
+              {autoFilledFields.callSummary && <span className={`${BADGE_SUCCESS} ml-2`} title="Auto-filled from voice input">Auto-filled</span>}
             </label>
             <textarea
-              className={`form-textarea ${errors.callSummary ? 'field-error' : ''} ${autoFilledFields.callSummary ? 'auto-filled' : ''}`}
+              className={`${TEXTAREA} ${errors.callSummary ? 'border-red-300 focus:ring-red-500 field-error' : ''} ${autoFilledFields.callSummary ? 'auto-filled border-indigo-300 bg-indigo-50/30' : ''}`}
               rows={5}
               value={callSummary}
               onChange={(e) => {
@@ -929,14 +930,14 @@ function DCR({ onLogout, onBack, userName, onNavigate, selectedItem: propSelecte
               placeholder="Enter summary of the call..."
               required
             />
-            {errors.callSummary && <span className="error-message field-error">{errors.callSummary}</span>}
+            {errors.callSummary && <span className="text-xs text-red-500 mt-1 field-error">{errors.callSummary}</span>}
           </div>
 
           {/* Doctor's Feedback */}
-          <div className="form-group">
-            <label className="form-label">Doctor's Feedback</label>
+          <div className="space-y-1.5">
+            <label className={LABEL}>Doctor's Feedback</label>
             <textarea
-              className="form-textarea"
+              className={TEXTAREA}
               rows={4}
               value={doctorFeedback}
               onChange={(e) => setDoctorFeedback(e.target.value)}
@@ -945,23 +946,23 @@ function DCR({ onLogout, onBack, userName, onNavigate, selectedItem: propSelecte
           </div>
 
           {/* Selfie Upload */}
-          <div className="form-group">
-            <label className="form-label">Upload Selfie</label>
+          <div className="space-y-1.5">
+            <label className={LABEL}>Upload Selfie</label>
             <input
               ref={fileInputRef}
               type="file"
               accept="image/*"
               capture="user"
               onChange={handleSelfieUpload}
-              className="file-input-hidden"
+              className="hidden"
             />
-            <div className="selfie-upload-container">
+            <div>
               {selfie ? (
-                <div className="selfie-preview">
-                  <img src={selfie} alt="Selfie" />
+                <div className="relative">
+                  <img src={selfie} alt="Selfie" className="w-full max-w-xs rounded-xl" />
                   <button
                     type="button"
-                    className="change-selfie-btn"
+                    className={BTN_GHOST}
                     onClick={handleTakeSelfie}
                   >
                     Change Selfie
@@ -970,7 +971,7 @@ function DCR({ onLogout, onBack, userName, onNavigate, selectedItem: propSelecte
               ) : (
                 <button
                   type="button"
-                  className="upload-selfie-btn"
+                  className={`${BTN_SECONDARY} w-full justify-center py-8 border-dashed`}
                   onClick={handleTakeSelfie}
                 >
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -981,12 +982,12 @@ function DCR({ onLogout, onBack, userName, onNavigate, selectedItem: propSelecte
                 </button>
               )}
             </div>
-            {errors.selfie && <span className="error-message field-error">{errors.selfie}</span>}
+            {errors.selfie && <span className="text-xs text-red-500 mt-1 field-error">{errors.selfie}</span>}
           </div>
 
           {/* Submit Button */}
-          <div className="form-actions">
-            <button type="submit" className="submit-dcr-btn">
+          <div className="pt-4">
+            <button type="submit" className={`${BTN_PRIMARY} w-full justify-center`}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M20 6L9 17L4 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
@@ -1000,4 +1001,3 @@ function DCR({ onLogout, onBack, userName, onNavigate, selectedItem: propSelecte
 }
 
 export default DCR
-

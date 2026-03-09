@@ -1,7 +1,19 @@
 import { useState } from 'react'
-import Header from './Header'
-import Sidebar from './Sidebar'
-import './Samples.css'
+import {
+  PAGE_CONTENT,
+  BACK_BUTTON,
+  PAGE_TITLE,
+  CARD,
+  SEARCH_INPUT,
+  TABLE_WRAPPER,
+  TABLE,
+  TABLE_HEAD,
+  TABLE_TH,
+  TABLE_TD,
+  TABLE_ROW,
+  EMPTY_STATE,
+  EMPTY_TITLE,
+} from '../styles/designSystem'
 
 interface InventoryItem {
   id: number
@@ -113,20 +125,11 @@ interface SamplesProps {
   onNavigate?: (page: string) => void
 }
 
-function Samples({ onLogout, onBack, userName, onNavigate }: SamplesProps) {
-  const [sidebarOpen, setSidebarOpen] = useState(false)
+function Samples({ onLogout: _onLogout, onBack, userName: _userName, onNavigate: _onNavigate }: SamplesProps) {
   const [searchQuery, setSearchQuery] = useState('')
 
-  const handleMenuClick = () => {
-    setSidebarOpen(true)
-  }
-
-  const handleSidebarClose = () => {
-    setSidebarOpen(false)
-  }
-
   const filteredInventory = inventoryData.filter(item => {
-    const matchesSearch = 
+    const matchesSearch =
       item.brand.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.product.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.batchNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -135,72 +138,72 @@ function Samples({ onLogout, onBack, userName, onNavigate }: SamplesProps) {
   })
 
   return (
-    <div className="samples-container">
-      <Header onLogout={onLogout} onMenuClick={handleMenuClick} onNavigateHome={() => onNavigate?.('home')} onNavigateOfflineRequests={() => onNavigate?.('offline-requests')} />
-      <Sidebar isOpen={sidebarOpen} onClose={handleSidebarClose} userName={userName} onNavigate={onNavigate} onLogout={onLogout} />
-      <main className="samples-content">
-        <div className="samples-header">
-          <button className="back-button" onClick={onBack} aria-label="Go back">
+    <div className={PAGE_CONTENT}>
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <button className={BACK_BUTTON} onClick={onBack} aria-label="Go back">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M19 12H5M5 12L12 19M5 12L12 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </button>
-          <h1 className="samples-title">Sample Management</h1>
+          <h1 className={PAGE_TITLE}>Sample Management</h1>
         </div>
+      </div>
 
-        <div className="samples-controls">
-          <div className="search-bar">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="2"/>
-              <path d="M21 21L16.65 16.65" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-            </svg>
-            <input
-              type="text"
-              placeholder="Search by brand, product, batch number, or distributor..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="search-input"
-            />
-          </div>
+      <div className="mb-4">
+        <div className="relative">
+          <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="2"/>
+            <path d="M21 21L16.65 16.65" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+          </svg>
+          <input
+            type="text"
+            placeholder="Search by brand, product, batch number, or distributor..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className={SEARCH_INPUT}
+          />
         </div>
+      </div>
 
-        <div className="inventory-table-container">
-          <div className="inventory-table-card">
-            <table className="inventory-table">
-              <thead>
+      <div className={`${CARD} overflow-hidden`}>
+        <div className={TABLE_WRAPPER}>
+          <table className={TABLE}>
+            <thead className={TABLE_HEAD}>
+              <tr>
+                <th className={TABLE_TH}>Brand</th>
+                <th className={TABLE_TH}>Product</th>
+                <th className={TABLE_TH}>Quantity</th>
+                <th className={TABLE_TH}>Batch Number</th>
+                <th className={TABLE_TH}>Expiry Date</th>
+                <th className={TABLE_TH}>Distributor</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredInventory.length === 0 ? (
                 <tr>
-                  <th>Brand</th>
-                  <th>Product</th>
-                  <th>Quantity</th>
-                  <th>Batch Number</th>
-                  <th>Expiry Date</th>
-                  <th>Distributor</th>
+                  <td colSpan={6}>
+                    <div className={EMPTY_STATE}>
+                      <p className={EMPTY_TITLE}>No inventory found matching your search criteria.</p>
+                    </div>
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {filteredInventory.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="no-data">
-                      No inventory found matching your search criteria.
-                    </td>
+              ) : (
+                filteredInventory.map((item) => (
+                  <tr key={item.id} className={TABLE_ROW}>
+                    <td className={TABLE_TD}>{item.brand}</td>
+                    <td className={TABLE_TD}>{item.product}</td>
+                    <td className={TABLE_TD}>{item.quantity}</td>
+                    <td className={TABLE_TD}>{item.batchNumber}</td>
+                    <td className={TABLE_TD}>{item.expiryDate}</td>
+                    <td className={TABLE_TD}>{item.distributor}</td>
                   </tr>
-                ) : (
-                  filteredInventory.map((item) => (
-                    <tr key={item.id}>
-                      <td>{item.brand}</td>
-                      <td>{item.product}</td>
-                      <td>{item.quantity}</td>
-                      <td>{item.batchNumber}</td>
-                      <td>{item.expiryDate}</td>
-                      <td>{item.distributor}</td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
-      </main>
+      </div>
     </div>
   )
 }

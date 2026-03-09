@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import './Carousel.css'
 
 interface CarouselProps {
   slides: Array<{
@@ -46,10 +45,10 @@ function Carousel({ slides }: CarouselProps) {
   }
 
   return (
-    <div className="carousel-container">
-      <div className="carousel-wrapper">
+    <div className="relative overflow-hidden rounded-xl">
+      <div className="relative">
         <button
-          className="carousel-button carousel-button-prev"
+          className="absolute top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white/80 backdrop-blur-sm border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-white hover:text-slate-900 transition-all cursor-pointer shadow-sm left-3"
           onClick={goToPrevious}
           aria-label="Previous slide"
         >
@@ -58,27 +57,31 @@ function Carousel({ slides }: CarouselProps) {
           </svg>
         </button>
 
-        <div className="carousel-slides">
+        <div
+          className="flex transition-transform duration-500 ease-in-out"
+          style={{ transform: `translateX(-${currentSlide * 100}%)` }}
+        >
           {slides.map((slide, index) => (
             <div
               key={slide.id}
-              className={`carousel-slide ${index === currentSlide ? 'active' : ''} ${slide.onClick && index === 0 ? 'clickable' : ''}`}
+              className={`w-full flex-shrink-0 relative ${slide.onClick && index === 0 ? 'cursor-pointer' : ''}`}
               style={{
                 background: slide.backgroundColor || 'linear-gradient(135deg, #00C853 0%, #00B248 100%)',
               }}
               onClick={slide.onClick && index === 0 && index === currentSlide ? slide.onClick : undefined}
             >
               {slide.image && (
-                <div className="carousel-slide-bg-image">
+                <div className="absolute inset-0 bg-cover bg-center">
                   <img src={slide.image} alt={slide.title} />
                 </div>
               )}
-              <div className="carousel-slide-content">
-                <h2 className="carousel-slide-title">{slide.title}</h2>
-                <p className="carousel-slide-description">{slide.description}</p>
+              <div className="relative z-10 flex flex-col items-start justify-end p-8 min-h-[300px]">
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 to-transparent" />
+                <h2 className="relative text-2xl font-bold text-white mb-2">{slide.title}</h2>
+                <p className="relative text-sm text-slate-200 mb-4 max-w-md">{slide.description}</p>
                 {slide.showButton && index === currentSlide && (
                   <button
-                    className="carousel-action-button"
+                    className="relative inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
                     onClick={(e) => {
                       e.stopPropagation()
                       if (slide.onClick) {
@@ -98,7 +101,7 @@ function Carousel({ slides }: CarouselProps) {
         </div>
 
         <button
-          className="carousel-button carousel-button-next"
+          className="absolute top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white/80 backdrop-blur-sm border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-white hover:text-slate-900 transition-all cursor-pointer shadow-sm right-3"
           onClick={goToNext}
           aria-label="Next slide"
         >
@@ -108,11 +111,11 @@ function Carousel({ slides }: CarouselProps) {
         </button>
       </div>
 
-      <div className="carousel-dots">
+      <div className="flex items-center justify-center gap-2 py-4">
         {slides.map((slide, index) => (
           <button
             key={slide.id}
-            className={`carousel-dot ${index === currentSlide ? 'active' : ''}`}
+            className={`h-2 rounded-full transition-all cursor-pointer ${index === currentSlide ? 'w-6 bg-indigo-600' : 'w-2 bg-slate-300'}`}
             onClick={() => goToSlide(index)}
             aria-label={`Go to slide ${index + 1}`}
           />
@@ -123,4 +126,3 @@ function Carousel({ slides }: CarouselProps) {
 }
 
 export default Carousel
-

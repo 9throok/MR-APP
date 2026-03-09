@@ -1,8 +1,13 @@
 import { useState } from 'react'
-import Header from './Header'
-import Sidebar from './Sidebar'
 import { apiPost, apiGet } from '../services/apiService'
-import './ManagerInsights.css'
+import {
+  PAGE_CONTENT, PAGE_TITLE, PAGE_SUBTITLE, BACK_BUTTON,
+  CARD, CARD_PADDING, CARD_SM_PADDING, CARD_TITLE,
+  BTN_PRIMARY, INPUT, TEXTAREA, LABEL,
+  TAB_CONTAINER, TAB_ITEM, TAB_ACTIVE,
+  EMPTY_STATE, EMPTY_TITLE, EMPTY_DESC,
+  TABLE_WRAPPER, TABLE, TABLE_HEAD, TABLE_TH, TABLE_TD, TABLE_ROW,
+} from '../styles/designSystem'
 
 interface ManagerInsightsProps {
   onLogout: () => void
@@ -76,8 +81,7 @@ function Spinner() {
 }
 
 // ── Main component ───────────────────────────────────────────────
-function ManagerInsights({ onLogout, onBack, userName, onNavigate }: ManagerInsightsProps) {
-  const [sidebarOpen, setSidebarOpen] = useState(false)
+function ManagerInsights({ onLogout: _onLogout, onBack, userName: _userName, onNavigate: _onNavigate }: ManagerInsightsProps) {
   const [activeTab, setActiveTab] = useState<'query' | 'signals'>('query')
 
   // Manager Query state
@@ -151,41 +155,26 @@ function ManagerInsights({ onLogout, onBack, userName, onNavigate }: ManagerInsi
   }
 
   return (
-    <div className="mi-container">
-      <Header
-        onLogout={onLogout}
-        onMenuClick={() => setSidebarOpen(true)}
-        onNavigateHome={() => onNavigate?.('home')}
-        onNavigateOfflineRequests={() => onNavigate?.('offline-requests')}
-      />
-      <Sidebar
-        isOpen={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-        userName={userName}
-        onNavigate={onNavigate}
-        onLogout={onLogout}
-        currentPage="manager-insights"
-      />
-
-      <main className="mi-content">
+    <div className={PAGE_CONTENT}>
+      <main>
 
         {/* Page header */}
-        <div className="mi-page-header">
-          <button className="mi-back-btn" onClick={onBack} aria-label="Go back">
+        <div className="flex items-center gap-3 mb-1">
+          <button className={BACK_BUTTON} onClick={onBack} aria-label="Go back">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
               <path d="M19 12H5M5 12L12 19M5 12L12 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </button>
           <div>
-            <h1 className="mi-page-title">Manager Insights</h1>
-            <p className="mi-page-subtitle">AI-powered team intelligence &amp; product performance</p>
+            <h1 className={PAGE_TITLE}>Manager Insights</h1>
+            <p className={`${PAGE_SUBTITLE} mb-6`}>AI-powered team intelligence &amp; product performance</p>
           </div>
         </div>
 
         {/* Tabs */}
-        <div className="mi-tabs">
+        <div className={TAB_CONTAINER}>
           <button
-            className={`mi-tab ${activeTab === 'query' ? 'mi-tab-active' : ''}`}
+            className={activeTab === 'query' ? TAB_ACTIVE : TAB_ITEM}
             onClick={() => setActiveTab('query')}
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
@@ -194,7 +183,7 @@ function ManagerInsights({ onLogout, onBack, userName, onNavigate }: ManagerInsi
             Manager Query
           </button>
           <button
-            className={`mi-tab ${activeTab === 'signals' ? 'mi-tab-active signals-tab' : ''}`}
+            className={activeTab === 'signals' ? TAB_ACTIVE : TAB_ITEM}
             onClick={() => setActiveTab('signals')}
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
@@ -208,15 +197,15 @@ function ManagerInsights({ onLogout, onBack, userName, onNavigate }: ManagerInsi
         {activeTab === 'query' && (
           <>
             {/* Question input */}
-            <div className="mi-query-card">
-              <label className="mi-query-label">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <div className={`${CARD} ${CARD_PADDING} mb-4`}>
+              <label className={LABEL}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="inline-block mr-1 -mt-0.5">
                   <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="#0ea5e9" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
                 Ask a question about your team
               </label>
               <textarea
-                className="mi-query-textarea"
+                className={TEXTAREA}
                 rows={4}
                 placeholder='e.g. "How is Lipidex performing across the team?" or "Which MR had the most calls last week?"'
                 value={queryText}
@@ -226,22 +215,22 @@ function ManagerInsights({ onLogout, onBack, userName, onNavigate }: ManagerInsi
             </div>
 
             {/* Optional filters */}
-            <div className="mi-filter-card">
-              <p className="mi-filter-title">Optional Filters</p>
-              <div className="mi-filter-grid">
-                <div className="mi-filter-group">
-                  <span className="mi-filter-label">From Date</span>
-                  <input type="date" className="mi-filter-input" value={queryFromDate} onChange={e => setQueryFromDate(e.target.value)} />
+            <div className={`${CARD} ${CARD_SM_PADDING} mb-4`}>
+              <p className="text-sm font-semibold text-slate-900 mb-3">Optional Filters</p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div>
+                  <span className={LABEL}>From Date</span>
+                  <input type="date" className={INPUT} value={queryFromDate} onChange={e => setQueryFromDate(e.target.value)} />
                 </div>
-                <div className="mi-filter-group">
-                  <span className="mi-filter-label">To Date</span>
-                  <input type="date" className="mi-filter-input" value={queryToDate} onChange={e => setQueryToDate(e.target.value)} />
+                <div>
+                  <span className={LABEL}>To Date</span>
+                  <input type="date" className={INPUT} value={queryToDate} onChange={e => setQueryToDate(e.target.value)} />
                 </div>
-                <div className="mi-filter-group full-width">
-                  <span className="mi-filter-label">MR User IDs (comma-separated)</span>
+                <div className="md:col-span-3">
+                  <span className={LABEL}>MR User IDs (comma-separated)</span>
                   <input
                     type="text"
-                    className="mi-filter-input"
+                    className={INPUT}
                     placeholder="e.g. mr_rahul_001, mr_priya_002"
                     value={queryUserIds}
                     onChange={e => setQueryUserIds(e.target.value)}
@@ -249,7 +238,7 @@ function ManagerInsights({ onLogout, onBack, userName, onNavigate }: ManagerInsi
                 </div>
               </div>
               <button
-                className="mi-submit-btn"
+                className={`${BTN_PRIMARY} mt-4`}
                 onClick={handleQuerySubmit}
                 disabled={queryLoading || !queryText.trim()}
               >
@@ -264,8 +253,8 @@ function ManagerInsights({ onLogout, onBack, userName, onNavigate }: ManagerInsi
 
             {/* Error */}
             {queryError && (
-              <div className="mi-error">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <div className="text-red-600 bg-red-50 rounded-lg px-4 py-3 mb-4 flex items-center gap-2">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="shrink-0">
                   <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
                   <path d="M12 8V12M12 16H12.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
                 </svg>
@@ -275,13 +264,13 @@ function ManagerInsights({ onLogout, onBack, userName, onNavigate }: ManagerInsi
 
             {/* Loading */}
             {queryLoading && (
-              <div className="mi-loading">
-                <div className="mi-loading-icon query">
+              <div className="flex flex-col items-center justify-center py-12 gap-3 text-slate-400">
+                <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center">
                   <Spinner />
                 </div>
-                <div>
-                  <p className="mi-loading-title">Thinking…</p>
-                  <p className="mi-loading-sub">Fetching DCRs and running AI analysis</p>
+                <div className="text-center">
+                  <p className="text-sm font-medium text-slate-700">Thinking…</p>
+                  <p className="text-xs text-slate-400">Fetching DCRs and running AI analysis</p>
                 </div>
               </div>
             )}
@@ -290,27 +279,27 @@ function ManagerInsights({ onLogout, onBack, userName, onNavigate }: ManagerInsi
             {!queryLoading && queryResult && (
               <>
                 {/* Answer */}
-                <div className="mi-answer-card">
-                  <div className="mi-answer-header">
-                    <div className="mi-answer-icon">
+                <div className={`${CARD} ${CARD_PADDING} mb-4`}>
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
                       <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
-                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" fill="white"/>
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" fill="currentColor"/>
                       </svg>
                     </div>
-                    <span className="mi-answer-label">AI Answer</span>
-                    <span className="mi-answer-meta">{queryResult.recordsAnalysed} records analysed</span>
+                    <span className="text-base font-semibold text-slate-900">AI Answer</span>
+                    <span className="text-xs text-slate-400">{queryResult.recordsAnalysed} records analysed</span>
                   </div>
-                  <p className="mi-answer-text">{queryResult.result.answer}</p>
+                  <p className="text-sm text-slate-700 leading-relaxed">{queryResult.result.answer}</p>
                 </div>
 
                 {/* Supporting data */}
                 {queryResult.result.supportingData.length > 0 && (
-                  <div className="mi-support-card">
-                    <p className="mi-card-title">Supporting Data</p>
-                    <ul className="mi-data-list">
+                  <div className={`${CARD} ${CARD_SM_PADDING} mb-4`}>
+                    <p className={CARD_TITLE}>Supporting Data</p>
+                    <ul className="space-y-2 mt-3">
                       {queryResult.result.supportingData.map((point, i) => (
-                        <li key={i} className="mi-data-item">
-                          <span className="mi-data-dot" />
+                        <li key={i} className="flex items-start gap-2 text-sm text-slate-600">
+                          <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 mt-1.5 shrink-0" />
                           {point}
                         </li>
                       ))}
@@ -320,16 +309,16 @@ function ManagerInsights({ onLogout, onBack, userName, onNavigate }: ManagerInsi
 
                 {/* Follow-up suggestions */}
                 {queryResult.result.followUpSuggestions.length > 0 && (
-                  <div className="mi-followup-card">
-                    <p className="mi-card-title" style={{ color: '#059669' }}>Suggested Follow-ups</p>
-                    <ul className="mi-followup-list">
+                  <div className={`${CARD} ${CARD_SM_PADDING}`}>
+                    <p className={`${CARD_TITLE} text-emerald-600`}>Suggested Follow-ups</p>
+                    <ul className="space-y-1 mt-3">
                       {queryResult.result.followUpSuggestions.map((s, i) => (
-                        <li key={i} className="mi-followup-item" onClick={() => handleFollowUp(s)}>
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
+                        <li key={i} className="flex items-center gap-2 px-3 py-2 text-sm text-indigo-600 hover:bg-indigo-50 rounded-lg cursor-pointer transition-colors" onClick={() => handleFollowUp(s)}>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="shrink-0">
                             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="#16a34a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                           </svg>
                           {s}
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="mi-followup-arrow">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="text-indigo-400 ml-auto shrink-0">
                             <path d="M9 18L15 12L9 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                           </svg>
                         </li>
@@ -342,14 +331,14 @@ function ManagerInsights({ onLogout, onBack, userName, onNavigate }: ManagerInsi
 
             {/* Idle state */}
             {!queryLoading && !queryResult && !queryError && (
-              <div className="mi-idle">
-                <div className="mi-idle-icon query">
+              <div className={EMPTY_STATE}>
+                <div className="w-16 h-16 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center mb-4">
                   <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="#0ea5e9" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
                 </div>
-                <p className="mi-idle-title">Ask anything about your team</p>
-                <p className="mi-idle-sub">Type a question above and the AI will analyse your team's DCR data to answer it.</p>
+                <p className={EMPTY_TITLE}>Ask anything about your team</p>
+                <p className={EMPTY_DESC}>Type a question above and the AI will analyse your team's DCR data to answer it.</p>
               </div>
             )}
           </>
@@ -359,22 +348,22 @@ function ManagerInsights({ onLogout, onBack, userName, onNavigate }: ManagerInsi
         {activeTab === 'signals' && (
           <>
             {/* Filters */}
-            <div className="mi-filter-card">
-              <p className="mi-filter-title">Filters (all optional)</p>
-              <div className="mi-filter-grid">
-                <div className="mi-filter-group">
-                  <span className="mi-filter-label">From Date</span>
-                  <input type="date" className="mi-filter-input" value={sigFromDate} onChange={e => setSigFromDate(e.target.value)} />
+            <div className={`${CARD} ${CARD_SM_PADDING} mb-4`}>
+              <p className="text-sm font-semibold text-slate-900 mb-3">Filters (all optional)</p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div>
+                  <span className={LABEL}>From Date</span>
+                  <input type="date" className={INPUT} value={sigFromDate} onChange={e => setSigFromDate(e.target.value)} />
                 </div>
-                <div className="mi-filter-group">
-                  <span className="mi-filter-label">To Date</span>
-                  <input type="date" className="mi-filter-input" value={sigToDate} onChange={e => setSigToDate(e.target.value)} />
+                <div>
+                  <span className={LABEL}>To Date</span>
+                  <input type="date" className={INPUT} value={sigToDate} onChange={e => setSigToDate(e.target.value)} />
                 </div>
-                <div className="mi-filter-group full-width">
-                  <span className="mi-filter-label">MR User IDs (comma-separated)</span>
+                <div className="md:col-span-3">
+                  <span className={LABEL}>MR User IDs (comma-separated)</span>
                   <input
                     type="text"
-                    className="mi-filter-input"
+                    className={INPUT}
                     placeholder="e.g. mr_rahul_001, mr_priya_002  (leave blank for all)"
                     value={sigUserIds}
                     onChange={e => setSigUserIds(e.target.value)}
@@ -382,7 +371,7 @@ function ManagerInsights({ onLogout, onBack, userName, onNavigate }: ManagerInsi
                 </div>
               </div>
               <button
-                className="mi-submit-btn signals"
+                className={`${BTN_PRIMARY} mt-4`}
                 onClick={handleSignalsFetch}
                 disabled={sigLoading}
               >
@@ -397,8 +386,8 @@ function ManagerInsights({ onLogout, onBack, userName, onNavigate }: ManagerInsi
 
             {/* Error */}
             {sigError && (
-              <div className="mi-error">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <div className="text-red-600 bg-red-50 rounded-lg px-4 py-3 mb-4 flex items-center gap-2">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="shrink-0">
                   <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
                   <path d="M12 8V12M12 16H12.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
                 </svg>
@@ -408,13 +397,13 @@ function ManagerInsights({ onLogout, onBack, userName, onNavigate }: ManagerInsi
 
             {/* Loading */}
             {sigLoading && (
-              <div className="mi-loading">
-                <div className="mi-loading-icon signals">
+              <div className="flex flex-col items-center justify-center py-12 gap-3 text-slate-400">
+                <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center">
                   <Spinner />
                 </div>
-                <div>
-                  <p className="mi-loading-title">Analysing products…</p>
-                  <p className="mi-loading-sub">Aggregating team DCR data and running AI</p>
+                <div className="text-center">
+                  <p className="text-sm font-medium text-slate-700">Analysing products…</p>
+                  <p className="text-xs text-slate-400">Aggregating team DCR data and running AI</p>
                 </div>
               </div>
             )}
@@ -423,45 +412,45 @@ function ManagerInsights({ onLogout, onBack, userName, onNavigate }: ManagerInsi
             {!sigLoading && sigResult && (
               <>
                 {/* AI Summary */}
-                <div className="mi-summary-card">
-                  <div className="mi-answer-header">
-                    <div className="mi-summary-icon">
+                <div className={`${CARD} ${CARD_PADDING} mb-4`}>
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                        <path d="M22 12h-4l-3 9L9 3l-3 9H2" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M22 12h-4l-3 9L9 3l-3 9H2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                       </svg>
                     </div>
-                    <span className="mi-summary-label">AI Summary</span>
-                    <span className="mi-answer-meta">{sigResult.productsAnalysed} products · {sigResult.period}</span>
+                    <span className="text-base font-semibold text-slate-900">AI Summary</span>
+                    <span className="text-xs text-slate-400">{sigResult.productsAnalysed} products · {sigResult.period}</span>
                   </div>
-                  <p className="mi-summary-text">{sigResult.analysis.summary}</p>
+                  <p className="text-sm text-slate-700 leading-relaxed">{sigResult.analysis.summary}</p>
                 </div>
 
                 {/* Top & Under performers */}
                 {(sigResult.analysis.topPerformers.length > 0 || sigResult.analysis.underperformers.length > 0) && (
-                  <div className="mi-performers-grid">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     {sigResult.analysis.topPerformers.map((p, i) => (
-                      <div key={i} className="mi-performer-card top">
-                        <div className="mi-performer-header">
+                      <div key={i} className={`${CARD} ${CARD_PADDING}`}>
+                        <div className="flex items-center gap-3 mb-3">
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                             <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="#22c55e"/>
                           </svg>
-                          <span className="mi-performer-label">Top Performer</span>
+                          <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">Top Performer</span>
                         </div>
-                        <div className="mi-performer-name">{p.product}</div>
-                        <p className="mi-performer-reason">{p.reason}</p>
+                        <div className="text-lg font-semibold text-slate-900">{p.product}</div>
+                        <p className="text-sm text-slate-600 mb-2">{p.reason}</p>
                       </div>
                     ))}
                     {sigResult.analysis.underperformers.map((p, i) => (
-                      <div key={i} className="mi-performer-card under">
-                        <div className="mi-performer-header">
+                      <div key={i} className={`${CARD} ${CARD_PADDING}`}>
+                        <div className="flex items-center gap-3 mb-3">
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                             <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="#ef4444"/>
                           </svg>
-                          <span className="mi-performer-label">Underperformer</span>
+                          <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">Underperformer</span>
                         </div>
-                        <div className="mi-performer-name">{p.product}</div>
-                        <p className="mi-performer-reason">{p.concern}</p>
-                        {p.suggestion && <p className="mi-performer-suggestion">💡 {p.suggestion}</p>}
+                        <div className="text-lg font-semibold text-slate-900">{p.product}</div>
+                        <p className="text-sm text-slate-600 mb-2">{p.concern}</p>
+                        {p.suggestion && <p className="text-sm text-indigo-600 bg-indigo-50 rounded-lg px-3 py-2">💡 {p.suggestion}</p>}
                       </div>
                     ))}
                   </div>
@@ -469,13 +458,13 @@ function ManagerInsights({ onLogout, onBack, userName, onNavigate }: ManagerInsi
 
                 {/* Signals */}
                 {sigResult.analysis.signals.length > 0 && (
-                  <div className="mi-signals-card">
-                    <p className="mi-card-title" style={{ color: '#b45309' }}>⚡ Notable Signals</p>
-                    <ul className="mi-signals-list">
+                  <div className={`${CARD} ${CARD_PADDING} mb-4`}>
+                    <p className={`${CARD_TITLE} text-amber-700`}>⚡ Notable Signals</p>
+                    <ul className="space-y-2 mt-3">
                       {sigResult.analysis.signals.map((s, i) => (
-                        <li key={i} className="mi-signal-item">
-                          <span className="mi-signal-dot" />
-                          {s}
+                        <li key={i} className="flex items-start gap-3 text-sm">
+                          <span className="w-2 h-2 rounded-full bg-amber-400 mt-1.5 shrink-0" />
+                          <span className="text-slate-600">{s}</span>
                         </li>
                       ))}
                     </ul>
@@ -484,29 +473,29 @@ function ManagerInsights({ onLogout, onBack, userName, onNavigate }: ManagerInsi
 
                 {/* Raw stats table */}
                 {sigResult.rawStats.length > 0 && (
-                  <div className="mi-stats-card">
-                    <div style={{ padding: '14px 16px 10px', borderBottom: '1px solid #e2e8f0' }}>
-                      <p className="mi-card-title" style={{ margin: 0 }}>Raw Stats per Product</p>
+                  <div className={`${CARD} overflow-hidden mb-4`}>
+                    <div className="px-4 py-3.5 border-b border-slate-200">
+                      <p className={CARD_TITLE}>Raw Stats per Product</p>
                     </div>
-                    <div className="mi-stats-table-wrap">
-                      <table className="mi-stats-table">
-                        <thead>
+                    <div className={TABLE_WRAPPER}>
+                      <table className={TABLE}>
+                        <thead className={TABLE_HEAD}>
                           <tr>
-                            <th>Product</th>
-                            <th>Calls</th>
-                            <th>Samples</th>
-                            <th>Doctors</th>
-                            <th>MRs</th>
+                            <th className={TABLE_TH}>Product</th>
+                            <th className={TABLE_TH}>Calls</th>
+                            <th className={TABLE_TH}>Samples</th>
+                            <th className={TABLE_TH}>Doctors</th>
+                            <th className={TABLE_TH}>MRs</th>
                           </tr>
                         </thead>
                         <tbody>
                           {sigResult.rawStats.map((row, i) => (
-                            <tr key={i}>
-                              <td>{row.product}</td>
-                              <td>{row.totalCalls}</td>
-                              <td>{row.callsWithSamples}</td>
-                              <td>{row.uniqueDoctors}</td>
-                              <td>{row.uniqueMRs}</td>
+                            <tr key={i} className={TABLE_ROW}>
+                              <td className={TABLE_TD}>{row.product}</td>
+                              <td className={TABLE_TD}>{row.totalCalls}</td>
+                              <td className={TABLE_TD}>{row.callsWithSamples}</td>
+                              <td className={TABLE_TD}>{row.uniqueDoctors}</td>
+                              <td className={TABLE_TD}>{row.uniqueMRs}</td>
                             </tr>
                           ))}
                         </tbody>
@@ -519,14 +508,14 @@ function ManagerInsights({ onLogout, onBack, userName, onNavigate }: ManagerInsi
 
             {/* Idle state */}
             {!sigLoading && !sigResult && !sigError && (
-              <div className="mi-idle">
-                <div className="mi-idle-icon signals">
+              <div className={EMPTY_STATE}>
+                <div className="w-16 h-16 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center mb-4">
                   <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-                    <path d="M22 12h-4l-3 9L9 3l-3 9H2" stroke="#8b5cf6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M22 12h-4l-3 9L9 3l-3 9H2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
                 </div>
-                <p className="mi-idle-title">Run a product performance scan</p>
-                <p className="mi-idle-sub">Apply optional filters and click "Run Product Signals" to see which products are thriving or struggling.</p>
+                <p className={EMPTY_TITLE}>Run a product performance scan</p>
+                <p className={EMPTY_DESC}>Apply optional filters and click "Run Product Signals" to see which products are thriving or struggling.</p>
               </div>
             )}
           </>

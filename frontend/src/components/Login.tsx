@@ -2,7 +2,7 @@ import { useState } from 'react'
 import zenracLogo from '../assets//images/ZenApp.png'
 import { useLanguage } from '../contexts/LanguageContext'
 import { useAuth } from '../contexts/AuthContext'
-import './Login.css'
+import { BTN_PRIMARY, INPUT, LABEL } from '../styles/designSystem'
 
 interface LoginProps {
   onLogin: () => void
@@ -34,22 +34,23 @@ function Login({ onLogin }: LoginProps) {
   }
 
   return (
-    <div className="login-container">
-      <div className="login-card">
-        <div className="logo-container">
-          <img src={zenracLogo} alt="ZenApp Logo" className="logo"/>
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4">
+      <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
+        <div className="flex justify-center mb-6">
+          <img src={zenracLogo} alt="ZenApp Logo" className="h-10"/>
         </div>
-        
-        
-        
-        {error && <div className="login-error" style={{ color: '#e74c3c', textAlign: 'center', marginBottom: '12px', fontSize: '14px' }}>{error}</div>}
 
-        <form onSubmit={handleSubmit} className="login-form">
-          <div className="input-group">
-            <label htmlFor="username">Username</label>
+
+
+        {error && <div className="text-sm text-red-600 bg-red-50 rounded-lg px-4 py-3 mb-4">{error}</div>}
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-1.5">
+            <label htmlFor="username" className={LABEL}>Username</label>
             <input
               type="text"
               id="username"
+              className={INPUT}
               placeholder="Enter username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
@@ -57,12 +58,13 @@ function Login({ onLogin }: LoginProps) {
             />
           </div>
 
-          <div className="input-group">
-            <label htmlFor="password">{t('password')}</label>
-            <div className="password-input-wrapper">
+          <div className="space-y-1.5">
+            <label htmlFor="password" className={LABEL}>{t('password')}</label>
+            <div className="relative">
               <input
                 type={showPassword ? 'text' : 'password'}
                 id="password"
+                className={INPUT}
                 placeholder={t('password')}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -70,7 +72,7 @@ function Login({ onLogin }: LoginProps) {
               />
               <button
                 type="button"
-                className="password-toggle"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer bg-transparent border-none"
                 onClick={() => setShowPassword(!showPassword)}
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
               >
@@ -79,15 +81,15 @@ function Login({ onLogin }: LoginProps) {
             </div>
           </div>
 
-          <div className="form-options">
-            <label className="remember-me">
+          <div className="flex items-center justify-between text-sm">
+            <label className="flex items-center gap-2 text-slate-600">
               <input type="checkbox" />
               <span>{t('rememberMe')}</span>
             </label>
-            <a href="#" className="forgot-password">{t('forgotPassword')}</a>
+            <a href="#" className="text-indigo-600 hover:text-indigo-700 font-medium">{t('forgotPassword')}</a>
           </div>
 
-          <button type="submit" className="login-button" disabled={isLoading}>
+          <button type="submit" className={`${BTN_PRIMARY} w-full justify-center py-3 text-base`} disabled={isLoading}>
             {isLoading ? (
               <span>Logging in...</span>
             ) : (
@@ -110,4 +112,3 @@ function Login({ onLogin }: LoginProps) {
 }
 
 export default Login
-

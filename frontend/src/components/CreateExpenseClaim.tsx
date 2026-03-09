@@ -1,6 +1,4 @@
 import { useState } from 'react'
-import Header from './Header'
-import Sidebar from './Sidebar'
 import {
   claimTypes,
   conveyanceModes,
@@ -8,7 +6,21 @@ import {
   dailyAllowanceType,
   transportClasses,
 } from '../constants/expenseConstants'
-import './CreateExpenseClaim.css'
+import {
+  PAGE_CONTENT,
+  PAGE_TITLE,
+  BACK_BUTTON,
+  CARD,
+  CARD_PADDING,
+  CARD_TITLE,
+  BTN_PRIMARY,
+  BTN_SECONDARY,
+  BTN_ICON,
+  INPUT,
+  TEXTAREA,
+  LABEL,
+  SELECT,
+} from '../styles/designSystem'
 
 interface CreateExpenseClaimProps {
   onLogout: () => void
@@ -65,17 +77,8 @@ const initialClaim: Claim = {
   attachment: null,
 }
 
-function CreateExpenseClaim({ onLogout, onBack, userName, onNavigate }: CreateExpenseClaimProps) {
-  const [sidebarOpen, setSidebarOpen] = useState(false)
+function CreateExpenseClaim({ onLogout: _onLogout, onBack, userName: _userName, onNavigate }: CreateExpenseClaimProps) {
   const [claims, setClaims] = useState<Claim[]>([{ ...initialClaim }])
-
-  const handleMenuClick = () => {
-    setSidebarOpen(true)
-  }
-
-  const handleSidebarClose = () => {
-    setSidebarOpen(false)
-  }
 
   const calculateDaysDifference = (fromDate: string, toDate: string): number => {
     if (!fromDate || !toDate) return 0
@@ -204,26 +207,24 @@ function CreateExpenseClaim({ onLogout, onBack, userName, onNavigate }: CreateEx
   }
 
   return (
-    <div className="create-expense-claim-container">
-      <Header onLogout={onLogout} onMenuClick={handleMenuClick} onNavigateHome={() => onNavigate?.('home')} onNavigateOfflineRequests={() => onNavigate?.('offline-requests')} />
-      <Sidebar isOpen={sidebarOpen} onClose={handleSidebarClose} userName={userName} onNavigate={onNavigate} onLogout={onLogout} />
-      <main className="create-expense-claim-content">
-        <div className="create-expense-claim-header">
-          <button className="back-button" onClick={handleBackClick} aria-label="Go back">
+    <div>
+      <main className={PAGE_CONTENT}>
+        <div className="flex items-center gap-3 mb-6">
+          <button className={BACK_BUTTON} onClick={handleBackClick} aria-label="Go back">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M19 12H5M5 12L12 19M5 12L12 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </button>
-          <h1 className="create-expense-claim-title">Create Expense Claim</h1>
+          <h1 className={PAGE_TITLE}>Create Expense Claim</h1>
         </div>
 
         {claims.map((claim, index) => (
-          <div key={claim.id} className="claim-card">
-            <div className="claim-card-header">
-              <h3>Claim {index + 1}</h3>
+          <div key={claim.id} className={`${CARD} ${CARD_PADDING} mb-4`}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className={CARD_TITLE}>Claim {index + 1}</h3>
               {claims.length > 1 && (
                 <button
-                  className="delete-claim-btn"
+                  className={`${BTN_ICON} text-red-400 hover:text-red-600 hover:bg-red-50`}
                   onClick={() => handleDeleteClaim(claim.id)}
                   aria-label="Delete claim"
                 >
@@ -234,12 +235,12 @@ function CreateExpenseClaim({ onLogout, onBack, userName, onNavigate }: CreateEx
               )}
             </div>
 
-            <div className="claim-form">
+            <div className="space-y-4">
               {/* Claim Type */}
-              <div className="form-group">
-                <label className="form-label">Claim Type <span className="required">*</span></label>
+              <div className="space-y-1.5">
+                <label className={LABEL}>Claim Type <span className="text-red-500">*</span></label>
                 <select
-                  className="form-select"
+                  className={SELECT}
                   value={claim.claimType}
                   onChange={(e) => handleChange(claim.id, 'claimType', e.target.value)}
                 >
@@ -252,53 +253,53 @@ function CreateExpenseClaim({ onLogout, onBack, userName, onNavigate }: CreateEx
               {/* Local Conveyance Fields */}
               {claim.claimType === 'Local Conveyance' && (
                 <>
-                  <div className="form-row">
-                    <div className="form-group">
-                      <label className="form-label">From Date <span className="required">*</span></label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="space-y-1.5">
+                      <label className={LABEL}>From Date <span className="text-red-500">*</span></label>
                       <input
                         type="date"
-                        className="form-input"
+                        className={INPUT}
                         value={formatDateForInput(claim.fromDate)}
                         onChange={(e) => handleChange(claim.id, 'fromDate', e.target.value)}
                       />
                     </div>
-                    <div className="form-group">
-                      <label className="form-label">To Date <span className="required">*</span></label>
+                    <div className="space-y-1.5">
+                      <label className={LABEL}>To Date <span className="text-red-500">*</span></label>
                       <input
                         type="date"
-                        className="form-input"
+                        className={INPUT}
                         value={formatDateForInput(claim.toDate)}
                         onChange={(e) => handleChange(claim.id, 'toDate', e.target.value)}
                       />
                     </div>
                   </div>
-                  <div className="form-row">
-                    <div className="form-group">
-                      <label className="form-label">From Place <span className="required">*</span></label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="space-y-1.5">
+                      <label className={LABEL}>From Place <span className="text-red-500">*</span></label>
                       <input
                         type="text"
-                        className="form-input"
+                        className={INPUT}
                         value={claim.fromPlace}
                         onChange={(e) => handleChange(claim.id, 'fromPlace', e.target.value)}
                         placeholder="Enter from place"
                       />
                     </div>
-                    <div className="form-group">
-                      <label className="form-label">To Place <span className="required">*</span></label>
+                    <div className="space-y-1.5">
+                      <label className={LABEL}>To Place <span className="text-red-500">*</span></label>
                       <input
                         type="text"
-                        className="form-input"
+                        className={INPUT}
                         value={claim.toPlace}
                         onChange={(e) => handleChange(claim.id, 'toPlace', e.target.value)}
                         placeholder="Enter to place"
                       />
                     </div>
                   </div>
-                  <div className="form-row">
-                    <div className="form-group">
-                      <label className="form-label">Conveyance Mode <span className="required">*</span></label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="space-y-1.5">
+                      <label className={LABEL}>Conveyance Mode <span className="text-red-500">*</span></label>
                       <select
-                        className="form-select"
+                        className={SELECT}
                         value={claim.conveyanceMode}
                         onChange={(e) => handleChange(claim.id, 'conveyanceMode', e.target.value)}
                       >
@@ -308,11 +309,11 @@ function CreateExpenseClaim({ onLogout, onBack, userName, onNavigate }: CreateEx
                         ))}
                       </select>
                     </div>
-                    <div className="form-group">
-                      <label className="form-label">Distance (KM) <span className="required">*</span></label>
+                    <div className="space-y-1.5">
+                      <label className={LABEL}>Distance (KM) <span className="text-red-500">*</span></label>
                       <input
                         type="number"
-                        className="form-input"
+                        className={INPUT}
                         value={claim.distance}
                         onChange={(e) => handleChange(claim.id, 'distance', e.target.value)}
                         placeholder="Enter distance"
@@ -321,11 +322,11 @@ function CreateExpenseClaim({ onLogout, onBack, userName, onNavigate }: CreateEx
                       />
                     </div>
                   </div>
-                  <div className="form-group">
-                    <label className="form-label">Total Amount <span className="required">*</span></label>
+                  <div className="space-y-1.5">
+                    <label className={LABEL}>Total Amount <span className="text-red-500">*</span></label>
                     <input
                       type="number"
-                      className="form-input"
+                      className={INPUT}
                       value={claim.totalAmount.toFixed(2)}
                       disabled
                       readOnly
@@ -337,10 +338,10 @@ function CreateExpenseClaim({ onLogout, onBack, userName, onNavigate }: CreateEx
               {/* Travel Allowance Fields */}
               {claim.claimType === 'Travel Allowance' && (
                 <>
-                  <div className="form-group">
-                    <label className="form-label">Transport Class <span className="required">*</span></label>
+                  <div className="space-y-1.5">
+                    <label className={LABEL}>Transport Class <span className="text-red-500">*</span></label>
                     <select
-                      className="form-select"
+                      className={SELECT}
                       value={claim.transportClass}
                       onChange={(e) => handleChange(claim.id, 'transportClass', e.target.value)}
                     >
@@ -350,80 +351,80 @@ function CreateExpenseClaim({ onLogout, onBack, userName, onNavigate }: CreateEx
                       ))}
                     </select>
                   </div>
-                  <div className="form-row">
-                    <div className="form-group">
-                      <label className="form-label">Departure Station <span className="required">*</span></label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="space-y-1.5">
+                      <label className={LABEL}>Departure Station <span className="text-red-500">*</span></label>
                       <input
                         type="text"
-                        className="form-input"
+                        className={INPUT}
                         value={claim.fromPlace}
                         onChange={(e) => handleChange(claim.id, 'fromPlace', e.target.value)}
                         placeholder="Enter departure station"
                       />
                     </div>
-                    <div className="form-group">
-                      <label className="form-label">Departure Date <span className="required">*</span></label>
+                    <div className="space-y-1.5">
+                      <label className={LABEL}>Departure Date <span className="text-red-500">*</span></label>
                       <input
                         type="date"
-                        className="form-input"
+                        className={INPUT}
                         value={formatDateForInput(claim.fromDate)}
                         onChange={(e) => handleChange(claim.id, 'fromDate', e.target.value)}
                       />
                     </div>
                   </div>
-                  <div className="form-row">
-                    <div className="form-group">
-                      <label className="form-label">Arrival Station <span className="required">*</span></label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="space-y-1.5">
+                      <label className={LABEL}>Arrival Station <span className="text-red-500">*</span></label>
                       <input
                         type="text"
-                        className="form-input"
+                        className={INPUT}
                         value={claim.toPlace}
                         onChange={(e) => handleChange(claim.id, 'toPlace', e.target.value)}
                         placeholder="Enter arrival station"
                       />
                     </div>
-                    <div className="form-group">
-                      <label className="form-label">Arrival Date <span className="required">*</span></label>
+                    <div className="space-y-1.5">
+                      <label className={LABEL}>Arrival Date <span className="text-red-500">*</span></label>
                       <input
                         type="date"
-                        className="form-input"
+                        className={INPUT}
                         value={formatDateForInput(claim.arrivalDate)}
                         onChange={(e) => handleChange(claim.id, 'arrivalDate', e.target.value)}
                       />
                     </div>
                   </div>
-                  <div className="form-group">
-                    <label className="form-label">Claim Amount <span className="required">*</span></label>
+                  <div className="space-y-1.5">
+                    <label className={LABEL}>Claim Amount <span className="text-red-500">*</span></label>
                     <input
                       type="number"
-                      className="form-input"
+                      className={INPUT}
                       value={claim.claimamount}
                       onChange={(e) => handleChange(claim.id, 'claimamount', e.target.value)}
                       placeholder="Enter claim amount"
                       min="0"
                     />
                   </div>
-                  <div className="form-group">
-                    <label className="form-label">Remark</label>
+                  <div className="space-y-1.5">
+                    <label className={LABEL}>Remark</label>
                     <textarea
-                      className="form-textarea"
+                      className={TEXTAREA}
                       value={claim.remark}
                       onChange={(e) => handleChange(claim.id, 'remark', e.target.value)}
                       placeholder="Enter remarks"
                       rows={3}
                     />
                   </div>
-                  <div className="form-group">
-                    <label className="form-label">Attachment</label>
-                    <div className="file-upload-wrapper">
+                  <div className="space-y-1.5">
+                    <label className={LABEL}>Attachment</label>
+                    <div className="space-y-1.5">
                       <input
                         type="file"
                         id={`attachment-${claim.id}`}
-                        className="file-input"
+                        className="hidden"
                         onChange={(e) => handleFileUpload(claim.id, e.target.files?.[0] || null)}
                         accept="image/*,.pdf"
                       />
-                      <label htmlFor={`attachment-${claim.id}`} className="file-upload-label">
+                      <label htmlFor={`attachment-${claim.id}`} className={`${BTN_SECONDARY} cursor-pointer`}>
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                           <path d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15M17 8L12 3M12 3L7 8M12 3V15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                         </svg>
@@ -437,10 +438,10 @@ function CreateExpenseClaim({ onLogout, onBack, userName, onNavigate }: CreateEx
               {/* General Expense Fields */}
               {claim.claimType === 'General Expense' && (
                 <>
-                  <div className="form-group">
-                    <label className="form-label">Allowance Type <span className="required">*</span></label>
+                  <div className="space-y-1.5">
+                    <label className={LABEL}>Allowance Type <span className="text-red-500">*</span></label>
                     <select
-                      className="form-select"
+                      className={SELECT}
                       value={claim.allowanceType}
                       onChange={(e) => handleChange(claim.id, 'allowanceType', e.target.value)}
                     >
@@ -450,37 +451,37 @@ function CreateExpenseClaim({ onLogout, onBack, userName, onNavigate }: CreateEx
                       ))}
                     </select>
                   </div>
-                  <div className="form-group">
-                    <label className="form-label">Date <span className="required">*</span></label>
+                  <div className="space-y-1.5">
+                    <label className={LABEL}>Date <span className="text-red-500">*</span></label>
                     <input
                       type="date"
-                      className="form-input"
+                      className={INPUT}
                       value={formatDateForInput(claim.date)}
                       onChange={(e) => handleChange(claim.id, 'date', e.target.value)}
                     />
                   </div>
-                  <div className="form-group">
-                    <label className="form-label">Amount <span className="required">*</span></label>
+                  <div className="space-y-1.5">
+                    <label className={LABEL}>Amount <span className="text-red-500">*</span></label>
                     <input
                       type="number"
-                      className="form-input"
+                      className={INPUT}
                       value={claim.totalAmount}
                       onChange={(e) => handleChange(claim.id, 'totalAmount', parseFloat(e.target.value) || 0)}
                       placeholder="Enter amount"
                       min="0"
                     />
                   </div>
-                  <div className="form-group">
-                    <label className="form-label">Attachment</label>
-                    <div className="file-upload-wrapper">
+                  <div className="space-y-1.5">
+                    <label className={LABEL}>Attachment</label>
+                    <div className="space-y-1.5">
                       <input
                         type="file"
                         id={`attachment-${claim.id}`}
-                        className="file-input"
+                        className="hidden"
                         onChange={(e) => handleFileUpload(claim.id, e.target.files?.[0] || null)}
                         accept="image/*,.pdf"
                       />
-                      <label htmlFor={`attachment-${claim.id}`} className="file-upload-label">
+                      <label htmlFor={`attachment-${claim.id}`} className={`${BTN_SECONDARY} cursor-pointer`}>
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                           <path d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15M17 8L12 3M12 3L7 8M12 3V15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                         </svg>
@@ -494,10 +495,10 @@ function CreateExpenseClaim({ onLogout, onBack, userName, onNavigate }: CreateEx
               {/* Daily Allowance Fields */}
               {claim.claimType === 'Daily Allowance' && (
                 <>
-                  <div className="form-group">
-                    <label className="form-label">Allowance Type <span className="required">*</span></label>
+                  <div className="space-y-1.5">
+                    <label className={LABEL}>Allowance Type <span className="text-red-500">*</span></label>
                     <select
-                      className="form-select"
+                      className={SELECT}
                       value={claim.dailyAllowanceType}
                       onChange={(e) => handleChange(claim.id, 'dailyAllowanceType', e.target.value)}
                     >
@@ -507,11 +508,11 @@ function CreateExpenseClaim({ onLogout, onBack, userName, onNavigate }: CreateEx
                       ))}
                     </select>
                   </div>
-                  <div className="form-group">
-                    <label className="form-label">City <span className="required">*</span></label>
+                  <div className="space-y-1.5">
+                    <label className={LABEL}>City <span className="text-red-500">*</span></label>
                     <input
                       type="text"
-                      className="form-input"
+                      className={INPUT}
                       value={claim.city}
                       onChange={(e) => handleChange(claim.id, 'city', e.target.value)}
                       placeholder="Enter city"
@@ -520,11 +521,11 @@ function CreateExpenseClaim({ onLogout, onBack, userName, onNavigate }: CreateEx
 
                   {/* HQ or EX HQ - Single Date */}
                   {(claim.dailyAllowanceType === 'HQ' || claim.dailyAllowanceType === 'EX HQ') && (
-                    <div className="form-group">
-                      <label className="form-label">Date <span className="required">*</span></label>
+                    <div className="space-y-1.5">
+                      <label className={LABEL}>Date <span className="text-red-500">*</span></label>
                       <input
                         type="date"
-                        className="form-input"
+                        className={INPUT}
                         value={formatDateForInput(claim.date)}
                         onChange={(e) => handleChange(claim.id, 'date', e.target.value)}
                       />
@@ -536,31 +537,31 @@ function CreateExpenseClaim({ onLogout, onBack, userName, onNavigate }: CreateEx
                     claim.dailyAllowanceType === 'Out Station Daily Allowance' ||
                     claim.dailyAllowanceType === 'Out Station Own Arrangement') && (
                     <>
-                      <div className="form-row">
-                        <div className="form-group">
-                          <label className="form-label">From Date <span className="required">*</span></label>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div className="space-y-1.5">
+                          <label className={LABEL}>From Date <span className="text-red-500">*</span></label>
                           <input
                             type="date"
-                            className="form-input"
+                            className={INPUT}
                             value={formatDateForInput(claim.fromDate)}
                             onChange={(e) => handleChange(claim.id, 'fromDate', e.target.value)}
                           />
                         </div>
-                        <div className="form-group">
-                          <label className="form-label">To Date <span className="required">*</span></label>
+                        <div className="space-y-1.5">
+                          <label className={LABEL}>To Date <span className="text-red-500">*</span></label>
                           <input
                             type="date"
-                            className="form-input"
+                            className={INPUT}
                             value={formatDateForInput(claim.toDate)}
                             onChange={(e) => handleChange(claim.id, 'toDate', e.target.value)}
                           />
                         </div>
                       </div>
-                      <div className="form-group">
-                        <label className="form-label">No Of Days <span className="required">*</span></label>
+                      <div className="space-y-1.5">
+                        <label className={LABEL}>No Of Days <span className="text-red-500">*</span></label>
                         <input
                           type="number"
-                          className="form-input"
+                          className={INPUT}
                           value={claim.days}
                           disabled
                           readOnly
@@ -571,11 +572,11 @@ function CreateExpenseClaim({ onLogout, onBack, userName, onNavigate }: CreateEx
 
                   {/* Out Station Own Arrangement - Auto-calculated */}
                   {claim.dailyAllowanceType === 'Out Station Own Arrangement' && (
-                    <div className="form-group">
-                      <label className="form-label">Total Amount <span className="required">*</span></label>
+                    <div className="space-y-1.5">
+                      <label className={LABEL}>Total Amount <span className="text-red-500">*</span></label>
                       <input
                         type="number"
-                        className="form-input"
+                        className={INPUT}
                         value={claim.totalAmount.toFixed(2)}
                         disabled
                         readOnly
@@ -587,11 +588,11 @@ function CreateExpenseClaim({ onLogout, onBack, userName, onNavigate }: CreateEx
                   {claim.dailyAllowanceType !== 'Out Station Own Arrangement' &&
                     claim.dailyAllowanceType !== 'HQ' &&
                     claim.dailyAllowanceType !== 'EX HQ' && (
-                      <div className="form-group">
-                        <label className="form-label">Total Amount <span className="required">*</span></label>
+                      <div className="space-y-1.5">
+                        <label className={LABEL}>Total Amount <span className="text-red-500">*</span></label>
                         <input
                           type="number"
-                          className="form-input"
+                          className={INPUT}
                           value={claim.totalAmount}
                           onChange={(e) => handleChange(claim.id, 'totalAmount', parseFloat(e.target.value) || 0)}
                           placeholder="Enter total amount"
@@ -602,17 +603,17 @@ function CreateExpenseClaim({ onLogout, onBack, userName, onNavigate }: CreateEx
 
                   {/* Out Station Hotel - Attachment */}
                   {claim.dailyAllowanceType === 'Out Station Hotel' && (
-                    <div className="form-group">
-                      <label className="form-label">Attachment</label>
-                      <div className="file-upload-wrapper">
+                    <div className="space-y-1.5">
+                      <label className={LABEL}>Attachment</label>
+                      <div className="space-y-1.5">
                         <input
                           type="file"
                           id={`attachment-${claim.id}`}
-                          className="file-input"
+                          className="hidden"
                           onChange={(e) => handleFileUpload(claim.id, e.target.files?.[0] || null)}
                           accept="image/*,.pdf"
                         />
-                        <label htmlFor={`attachment-${claim.id}`} className="file-upload-label">
+                        <label htmlFor={`attachment-${claim.id}`} className={`${BTN_SECONDARY} cursor-pointer`}>
                           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15M17 8L12 3M12 3L7 8M12 3V15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                           </svg>
@@ -627,14 +628,14 @@ function CreateExpenseClaim({ onLogout, onBack, userName, onNavigate }: CreateEx
           </div>
         ))}
 
-        <div className="form-actions">
-          <button className="add-claim-btn" onClick={addNewClaim}>
+        <div className="flex items-center gap-3 mt-6">
+          <button className={BTN_SECONDARY} onClick={addNewClaim}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M12 5V19M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
             <span>Add New Claim</span>
           </button>
-          <button className="save-claim-btn" onClick={handleSave}>
+          <button className={BTN_PRIMARY} onClick={handleSave}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H16L21 8V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               <path d="M17 21V13H7V21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -649,4 +650,3 @@ function CreateExpenseClaim({ onLogout, onBack, userName, onNavigate }: CreateEx
 }
 
 export default CreateExpenseClaim
-

@@ -1,11 +1,8 @@
-import { useState } from 'react'
-import Header from './Header'
-import Sidebar from './Sidebar'
+import { useLanguage } from '../contexts/LanguageContext'
 import TodaysPlanBanner from './TodaysPlanBanner'
 import Shortcuts from './Shortcuts'
 import DashboardReports from './DashboardReports'
-import { useLanguage } from '../contexts/LanguageContext'
-import './Home.css'
+import { useNavigation } from '../contexts/NavigationContext'
 
 interface HomeProps {
   onLogout: () => void
@@ -15,51 +12,28 @@ interface HomeProps {
   userMobile?: string
 }
 
-function Home({ onLogout, onNavigate, userName, userEmail, userMobile }: HomeProps) {
+function Home({ userName }: HomeProps) {
   const { t } = useLanguage()
-  const [sidebarOpen, setSidebarOpen] = useState(false)
-
-  const handleMenuClick = () => {
-    setSidebarOpen(true)
-  }
-
-  const handleSidebarClose = () => {
-    setSidebarOpen(false)
-  }
-
-  const handleTodaysPlanClick = () => {
-    if (onNavigate) {
-      onNavigate('todays-plan')
-    }
-  }
-
-  const handleNavigateHome = () => {
-    if (onNavigate) {
-      onNavigate('home')
-    }
-  }
+  const { navigateTo } = useNavigation()
 
   return (
-    <div className="home-container">
-      <Header onLogout={onLogout} onMenuClick={handleMenuClick} onNavigateHome={handleNavigateHome} onNavigateOfflineRequests={() => onNavigate?.('offline-requests')} />
-      <Sidebar isOpen={sidebarOpen} onClose={handleSidebarClose} userName={userName} userEmail={userEmail} userMobile={userMobile} onNavigate={onNavigate} onLogout={onLogout} currentPage="home" />
-      <main className="home-content">
-        <div className="welcome-greeting">
-          <h1>{t('hello')} {userName},</h1>
-        </div>
-        <TodaysPlanBanner onNavigate={handleTodaysPlanClick} />
-        <Shortcuts onNavigate={onNavigate} />
-        <h2 className="dashboards-heading">Dashboards</h2>
-        <DashboardReports />
-        {/* <div className="welcome-section">
-          <h1>Welcome to ZenApp</h1>
-          <p>Your medical application dashboard</p>
-        </div> */}
-        {/* Add more content here as needed */}
-      </main>
+    <div className="max-w-[1400px] mx-auto px-6 py-6">
+      {/* Greeting */}
+      <h1 className="text-2xl font-semibold text-slate-900 mb-6">
+        {t('hello')} {userName},
+      </h1>
+
+      {/* Today's Plan Banner */}
+      <TodaysPlanBanner onNavigate={() => navigateTo('todays-plan')} />
+
+      {/* Quick Actions */}
+      <Shortcuts onNavigate={navigateTo} />
+
+      {/* Dashboard Reports */}
+      <h2 className="text-lg font-semibold text-slate-800 mb-4 mt-8">Dashboards</h2>
+      <DashboardReports />
     </div>
   )
 }
 
 export default Home
-

@@ -1,5 +1,16 @@
 import { useState, useEffect, useRef } from 'react'
-import './TourPlanModal.css'
+import {
+  MODAL_OVERLAY,
+  MODAL_CARD,
+  MODAL_HEADER,
+  MODAL_BODY,
+  MODAL_FOOTER,
+  LABEL,
+  SELECT,
+  INPUT,
+  BTN_PRIMARY,
+  BTN_SECONDARY,
+} from '../styles/designSystem'
 
 interface TourPlanModalProps {
   date: Date
@@ -124,21 +135,21 @@ function TourPlanModal({ date, existingData, onClose, onSave }: TourPlanModalPro
   const dateString = formatDate(date)
 
   return (
-    <div className="tour-plan-modal-overlay" onClick={onClose}>
-      <div className="tour-plan-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
-          <h2 className="modal-title">My Plan for {dateString}</h2>
+    <div className={MODAL_OVERLAY} onClick={onClose}>
+      <div className={MODAL_CARD} onClick={(e) => e.stopPropagation()}>
+        <div className={MODAL_HEADER}>
+          <h2 className="text-lg font-semibold text-slate-900">My Plan for {dateString}</h2>
         </div>
 
-        <form className="tour-plan-form" onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label className="form-label">
-              Type of Plan <span className="required">*</span>
+        <form className={`${MODAL_BODY} space-y-4`} onSubmit={handleSubmit}>
+          <div className="space-y-1.5">
+            <label className={LABEL}>
+              Type of Plan <span className="text-red-500">*</span>
             </label>
-            <div className="dropdown-wrapper" ref={typeDropdownRef}>
+            <div className="relative" ref={typeDropdownRef}>
               <button
                 type="button"
-                className="form-dropdown"
+                className={`${SELECT} flex items-center justify-between cursor-pointer`}
                 onClick={() => {
                   setShowTypeDropdown(!showTypeDropdown)
                   setShowStationDropdown(false)
@@ -151,12 +162,12 @@ function TourPlanModal({ date, existingData, onClose, onSave }: TourPlanModalPro
                 </svg>
               </button>
               {showTypeDropdown && (
-                <div className="dropdown-menu">
+                <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
                   {tourTypes.map((type) => (
                     <button
                       key={type}
                       type="button"
-                      className="dropdown-item"
+                      className="w-full px-4 py-2.5 text-sm text-slate-700 text-left hover:bg-slate-50 cursor-pointer bg-transparent border-none"
                       onClick={() => {
                         handleInputChange('typeOfTour', type)
                         setShowTypeDropdown(false)
@@ -170,14 +181,14 @@ function TourPlanModal({ date, existingData, onClose, onSave }: TourPlanModalPro
             </div>
           </div>
 
-          <div className="form-group">
-            <label className="form-label">
-              Station <span className="required">*</span>
+          <div className="space-y-1.5">
+            <label className={LABEL}>
+              Station <span className="text-red-500">*</span>
             </label>
-            <div className="dropdown-wrapper" ref={stationDropdownRef}>
+            <div className="relative" ref={stationDropdownRef}>
               <button
                 type="button"
-                className="form-dropdown"
+                className={`${SELECT} flex items-center justify-between cursor-pointer`}
                 onClick={() => {
                   setShowStationDropdown(!showStationDropdown)
                   setShowTypeDropdown(false)
@@ -190,12 +201,12 @@ function TourPlanModal({ date, existingData, onClose, onSave }: TourPlanModalPro
                 </svg>
               </button>
               {showStationDropdown && (
-                <div className="dropdown-menu">
+                <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
                   {stations.map((station) => (
                     <button
                       key={station}
                       type="button"
-                      className="dropdown-item"
+                      className="w-full px-4 py-2.5 text-sm text-slate-700 text-left hover:bg-slate-50 cursor-pointer bg-transparent border-none"
                       onClick={() => {
                         handleInputChange('station', station)
                         setShowStationDropdown(false)
@@ -209,38 +220,38 @@ function TourPlanModal({ date, existingData, onClose, onSave }: TourPlanModalPro
             </div>
           </div>
 
-          <div className="form-group">
-            <label className="form-label">
-              Start Time <span className="required">*</span>
+          <div className="space-y-1.5">
+            <label className={LABEL}>
+              Start Time <span className="text-red-500">*</span>
             </label>
-            <div className="time-input-wrapper">
+            <div className="relative">
               <input
                 type="time"
-                className="form-time-input"
+                className={INPUT}
                 value={formData.startTime}
                 onChange={(e) => handleInputChange('startTime', e.target.value)}
                 required
               />
-              <svg className="time-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <svg className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
                 <path d="M12 6V12L16 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
               </svg>
             </div>
           </div>
 
-          <div className="form-group">
-            <label className="form-label">
-              End Time <span className="required">*</span>
+          <div className="space-y-1.5">
+            <label className={LABEL}>
+              End Time <span className="text-red-500">*</span>
             </label>
-            <div className="time-input-wrapper">
+            <div className="relative">
               <input
                 type="time"
-                className="form-time-input"
+                className={INPUT}
                 value={formData.endTime}
                 onChange={(e) => handleInputChange('endTime', e.target.value)}
                 required
               />
-              <svg className="time-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <svg className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
                 <path d="M12 6V12L16 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
               </svg>
@@ -248,14 +259,14 @@ function TourPlanModal({ date, existingData, onClose, onSave }: TourPlanModalPro
           </div>
 
           {formData.typeOfTour === 'Field Work' && (
-            <div className="form-group">
-              <label className="form-label">
-                Doctor <span className="required">*</span>
+            <div className="space-y-1.5">
+              <label className={LABEL}>
+                Doctor <span className="text-red-500">*</span>
               </label>
-              <div className="dropdown-wrapper" ref={doctorDropdownRef}>
+              <div className="relative" ref={doctorDropdownRef}>
                 <button
                   type="button"
-                  className="form-dropdown"
+                  className={`${SELECT} flex items-center justify-between cursor-pointer`}
                   onClick={() => {
                     setShowDoctorDropdown(!showDoctorDropdown)
                     setShowTypeDropdown(false)
@@ -274,15 +285,15 @@ function TourPlanModal({ date, existingData, onClose, onSave }: TourPlanModalPro
                   </svg>
                 </button>
                 {showDoctorDropdown && (
-                  <div className="dropdown-menu multi-select">
+                  <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
                     {doctors.map((doctor) => (
                       <button
                         key={doctor}
                         type="button"
-                        className={`dropdown-item ${formData.doctors.includes(doctor) ? 'selected' : ''}`}
+                        className={`w-full px-4 py-2.5 text-sm text-slate-700 text-left hover:bg-slate-50 cursor-pointer bg-transparent border-none ${formData.doctors.includes(doctor) ? 'bg-indigo-50 text-indigo-700' : ''}`}
                         onClick={() => toggleDoctor(doctor)}
                       >
-                        <span className="checkbox">
+                        <span className="inline-flex items-center justify-center w-4 h-4 mr-2">
                           {formData.doctors.includes(doctor) && (
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                               <path d="M20 6L9 17L4 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -298,14 +309,14 @@ function TourPlanModal({ date, existingData, onClose, onSave }: TourPlanModalPro
             </div>
           )}
 
-          <div className="modal-actions">
-            <button type="button" className="cancel-button" onClick={onClose}>
+          <div className={MODAL_FOOTER}>
+            <button type="button" className={BTN_SECONDARY} onClick={onClose}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
               <span>Cancel</span>
             </button>
-                  <button type="submit" className="save-button">
+                  <button type="submit" className={BTN_PRIMARY}>
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <path d="M22 2L11 13M22 2L15 22L11 13M22 2L2 9L11 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
@@ -319,4 +330,3 @@ function TourPlanModal({ date, existingData, onClose, onSave }: TourPlanModalPro
 }
 
 export default TourPlanModal
-

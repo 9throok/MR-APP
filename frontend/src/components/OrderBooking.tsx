@@ -1,7 +1,25 @@
 import { useState, useEffect } from 'react'
-import Header from './Header'
-import Sidebar from './Sidebar'
-import './OrderBooking.css'
+import {
+  PAGE_CONTENT,
+  PAGE_TITLE,
+  BACK_BUTTON,
+  CARD,
+  CARD_PADDING,
+  LABEL,
+  SELECT,
+  INPUT,
+  BTN_PRIMARY,
+  BTN_GHOST,
+  BTN_ICON,
+  TABLE_WRAPPER,
+  TABLE,
+  TABLE_HEAD,
+  TABLE_TH,
+  TABLE_TD,
+  TABLE_ROW,
+  SECTION_TITLE,
+  BADGE_PRIMARY,
+} from '../styles/designSystem'
 
 interface Customer {
   id: number
@@ -81,8 +99,7 @@ const skusByProduct: Record<string, string[]> = {
   'Bevaas 20mg': ['SKU-BEV-20-001', 'SKU-BEV-20-002'],
 }
 
-function OrderBooking({ onLogout, onBack, userName, onNavigate }: OrderBookingProps) {
-  const [sidebarOpen, setSidebarOpen] = useState(false)
+function OrderBooking({ onLogout: _onLogout, onBack, userName: _userName, onNavigate: _onNavigate }: OrderBookingProps) {
   const [customerType, setCustomerType] = useState<'doctor' | 'pharmacy' | 'distributor' | ''>('')
   const [selectedCustomer, setSelectedCustomer] = useState<string>('')
   const [orderRows, setOrderRows] = useState<OrderRow[]>([])
@@ -100,14 +117,6 @@ function OrderBooking({ onLogout, onBack, userName, onNavigate }: OrderBookingPr
       console.error('Error loading order history:', error)
     }
   }, [])
-
-  const handleMenuClick = () => {
-    setSidebarOpen(true)
-  }
-
-  const handleSidebarClose = () => {
-    setSidebarOpen(false)
-  }
 
   const filteredCustomers = customerType
     ? customers.filter(c => c.type === customerType)
@@ -186,7 +195,7 @@ function OrderBooking({ onLogout, onBack, userName, onNavigate }: OrderBookingPr
     if (orderRows.length === 0) {
       return
     }
-    
+
     // Validate all rows
     const invalidRows = orderRows.filter(row => !row.brand || !row.product || !row.sku || row.price <= 0 || row.qty <= 0)
     if (invalidRows.length > 0) {
@@ -229,25 +238,23 @@ function OrderBooking({ onLogout, onBack, userName, onNavigate }: OrderBookingPr
   }
 
   return (
-    <div className="order-booking-container">
-      <Header onLogout={onLogout} onMenuClick={handleMenuClick} onNavigateHome={() => onNavigate?.('home')} onNavigateOfflineRequests={() => onNavigate?.('offline-requests')} />
-      <Sidebar isOpen={sidebarOpen} onClose={handleSidebarClose} userName={userName} onNavigate={onNavigate} onLogout={onLogout} />
-      <main className="order-booking-content">
-        <div className="order-booking-header">
-          <button className="back-button" onClick={onBack} aria-label="Go back">
+    <div>
+      <main className={PAGE_CONTENT}>
+        <div className="flex items-center gap-3 mb-6">
+          <button className={BACK_BUTTON} onClick={onBack} aria-label="Go back">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M19 12H5M5 12L12 19M5 12L12 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </button>
-          <h1 className="order-booking-title">Order Booking</h1>
+          <h1 className={PAGE_TITLE}>Order Booking</h1>
         </div>
 
-        <div className="order-booking-form">
+        <div className={`${CARD} ${CARD_PADDING} mb-6`}>
           {/* Customer Type Selection */}
-          <div className="form-section">
-            <label className="form-label">Select Customer Type</label>
+          <div className="space-y-4">
+            <label className={LABEL}>Select Customer Type</label>
             <select
-              className="form-select"
+              className={SELECT}
               value={customerType}
               onChange={(e) => handleCustomerTypeChange(e.target.value as 'doctor' | 'pharmacy' | 'distributor' | '')}
             >
@@ -260,10 +267,10 @@ function OrderBooking({ onLogout, onBack, userName, onNavigate }: OrderBookingPr
 
           {/* Customer Selection */}
           {customerType && (
-            <div className="form-section">
-              <label className="form-label">Select {customerType.charAt(0).toUpperCase() + customerType.slice(1)}</label>
+            <div className="space-y-4 mt-4">
+              <label className={LABEL}>Select {customerType.charAt(0).toUpperCase() + customerType.slice(1)}</label>
               <select
-                className="form-select"
+                className={SELECT}
                 value={selectedCustomer}
                 onChange={(e) => handleCustomerChange(e.target.value)}
               >
@@ -279,10 +286,10 @@ function OrderBooking({ onLogout, onBack, userName, onNavigate }: OrderBookingPr
 
           {/* Take Order Button */}
           {selectedCustomer && !showOrderTable && (
-            <div className="form-section">
+            <div className="space-y-4 mt-4">
               <button
                 type="button"
-                className="take-order-btn"
+                className={BTN_PRIMARY}
                 onClick={handleTakeOrder}
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -295,124 +302,126 @@ function OrderBooking({ onLogout, onBack, userName, onNavigate }: OrderBookingPr
 
           {/* Order Table */}
           {showOrderTable && (
-            <div className="form-section">
-              <div className="order-table-wrapper">
-                <table className="order-table">
-                  <thead>
-                    <tr>
-                      <th>Brand</th>
-                      <th>Product</th>
-                      <th>SKU</th>
-                      <th>Price</th>
-                      <th>Qty</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {orderRows.map((row) => (
-                      <tr key={row.id}>
-                        <td>
-                          <select
-                            className="order-select"
-                            value={row.brand}
-                            onChange={(e) => handleRowChange(row.id, 'brand', e.target.value)}
-                          >
-                            <option value="">Select Brand</option>
-                            {brands.map((brand) => (
-                              <option key={brand} value={brand}>{brand}</option>
-                            ))}
-                          </select>
-                        </td>
-                        <td>
-                          <select
-                            className="order-select"
-                            value={row.product}
-                            onChange={(e) => handleRowChange(row.id, 'product', e.target.value)}
-                            disabled={!row.brand}
-                          >
-                            <option value="">Select Product</option>
-                            {row.brand && getProductsForBrand(row.brand).map((product) => (
-                              <option key={product} value={product}>{product}</option>
-                            ))}
-                          </select>
-                        </td>
-                        <td>
-                          <select
-                            className="order-select"
-                            value={row.sku}
-                            onChange={(e) => handleRowChange(row.id, 'sku', e.target.value)}
-                            disabled={!row.product}
-                          >
-                            <option value="">Select SKU</option>
-                            {row.product && getSkusForProduct(row.product).map((sku) => (
-                              <option key={sku} value={sku}>{sku}</option>
-                            ))}
-                          </select>
-                        </td>
-                        <td>
-                          <input
-                            type="number"
-                            className="order-input"
-                            min="0"
-                            step="0.01"
-                            value={row.price || ''}
-                            onChange={(e) => handleRowChange(row.id, 'price', parseFloat(e.target.value) || 0)}
-                            placeholder="0.00"
-                          />
-                        </td>
-                        <td>
-                          <input
-                            type="number"
-                            className="order-input"
-                            min="0"
-                            step="1"
-                            value={row.qty || ''}
-                            onChange={(e) => handleRowChange(row.id, 'qty', parseInt(e.target.value) || 0)}
-                            placeholder="0"
-                          />
-                        </td>
-                        <td>
-                          <div className="action-buttons">
-                            {orderRows.length > 1 && (
-                              <button
-                                type="button"
-                                className="delete-btn"
-                                onClick={() => handleDeleteRow(row.id)}
-                                title="Delete Row"
-                              >
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                  <path d="M3 6H5H21M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6M19 6V20C19 20.5304 18.7893 21.0391 18.4142 21.4142C18.0391 21.7893 17.5304 22 17 22H7C6.46957 22 5.96086 21.7893 5.58579 21.4142C5.21071 21.0391 5 20.5304 5 20V6H19Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                                </svg>
-                              </button>
-                            )}
-                            {row.id === orderRows[orderRows.length - 1].id && (
-                              <button
-                                type="button"
-                                className="add-row-btn"
-                                onClick={addOrderRow}
-                                title="Add Row"
-                              >
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                  <path d="M12 5V19M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                                </svg>
-                              </button>
-                            )}
-                          </div>
-                        </td>
+            <div className="space-y-4 mt-4">
+              <div className={`${CARD} overflow-hidden`}>
+                <div className={TABLE_WRAPPER}>
+                  <table className={TABLE}>
+                    <thead className={TABLE_HEAD}>
+                      <tr>
+                        <th className={TABLE_TH}>Brand</th>
+                        <th className={TABLE_TH}>Product</th>
+                        <th className={TABLE_TH}>SKU</th>
+                        <th className={TABLE_TH}>Price</th>
+                        <th className={TABLE_TH}>Qty</th>
+                        <th className={TABLE_TH}>Actions</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {orderRows.map((row) => (
+                        <tr key={row.id} className={TABLE_ROW}>
+                          <td className={TABLE_TD}>
+                            <select
+                              className={`${SELECT} text-xs px-2 py-1.5`}
+                              value={row.brand}
+                              onChange={(e) => handleRowChange(row.id, 'brand', e.target.value)}
+                            >
+                              <option value="">Select Brand</option>
+                              {brands.map((brand) => (
+                                <option key={brand} value={brand}>{brand}</option>
+                              ))}
+                            </select>
+                          </td>
+                          <td className={TABLE_TD}>
+                            <select
+                              className={`${SELECT} text-xs px-2 py-1.5`}
+                              value={row.product}
+                              onChange={(e) => handleRowChange(row.id, 'product', e.target.value)}
+                              disabled={!row.brand}
+                            >
+                              <option value="">Select Product</option>
+                              {row.brand && getProductsForBrand(row.brand).map((product) => (
+                                <option key={product} value={product}>{product}</option>
+                              ))}
+                            </select>
+                          </td>
+                          <td className={TABLE_TD}>
+                            <select
+                              className={`${SELECT} text-xs px-2 py-1.5`}
+                              value={row.sku}
+                              onChange={(e) => handleRowChange(row.id, 'sku', e.target.value)}
+                              disabled={!row.product}
+                            >
+                              <option value="">Select SKU</option>
+                              {row.product && getSkusForProduct(row.product).map((sku) => (
+                                <option key={sku} value={sku}>{sku}</option>
+                              ))}
+                            </select>
+                          </td>
+                          <td className={TABLE_TD}>
+                            <input
+                              type="number"
+                              className={`${INPUT} text-xs px-2 py-1.5`}
+                              min="0"
+                              step="0.01"
+                              value={row.price || ''}
+                              onChange={(e) => handleRowChange(row.id, 'price', parseFloat(e.target.value) || 0)}
+                              placeholder="0.00"
+                            />
+                          </td>
+                          <td className={TABLE_TD}>
+                            <input
+                              type="number"
+                              className={`${INPUT} text-xs px-2 py-1.5`}
+                              min="0"
+                              step="1"
+                              value={row.qty || ''}
+                              onChange={(e) => handleRowChange(row.id, 'qty', parseInt(e.target.value) || 0)}
+                              placeholder="0"
+                            />
+                          </td>
+                          <td className={TABLE_TD}>
+                            <div className="flex items-center gap-1">
+                              {orderRows.length > 1 && (
+                                <button
+                                  type="button"
+                                  className={`${BTN_ICON} text-red-400 hover:text-red-600`}
+                                  onClick={() => handleDeleteRow(row.id)}
+                                  title="Delete Row"
+                                >
+                                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M3 6H5H21M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6M19 6V20C19 20.5304 18.7893 21.0391 18.4142 21.4142C18.0391 21.7893 17.5304 22 17 22H7C6.46957 22 5.96086 21.7893 5.58579 21.4142C5.21071 21.0391 5 20.5304 5 20V6H19Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                  </svg>
+                                </button>
+                              )}
+                              {row.id === orderRows[orderRows.length - 1].id && (
+                                <button
+                                  type="button"
+                                  className={`${BTN_GHOST} w-full border-t border-slate-100`}
+                                  onClick={addOrderRow}
+                                  title="Add Row"
+                                >
+                                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M12 5V19M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                  </svg>
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           )}
 
           {/* Confirm Order Button */}
           {showOrderTable && orderRows.length > 0 && (
-            <div className="form-actions">
+            <div className="flex justify-end mt-4">
               <button
                 type="button"
-                className="confirm-order-btn"
+                className={BTN_PRIMARY}
                 onClick={handleConfirmOrder}
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -426,43 +435,43 @@ function OrderBooking({ onLogout, onBack, userName, onNavigate }: OrderBookingPr
 
         {/* Order History Section */}
         {orderHistory.length > 0 && (
-          <div className="order-history-section">
-            <h2 className="section-title">Order History</h2>
-            <div className="order-history-list">
+          <div className="mt-8">
+            <h2 className={SECTION_TITLE}>Order History</h2>
+            <div className="space-y-4">
               {orderHistory.map((order) => (
-                <div key={order.id} className="order-history-item">
-                  <div className="order-history-header">
+                <div key={order.id} className={`${CARD} ${CARD_PADDING}`}>
+                  <div className="flex items-center justify-between mb-3">
                     <div>
-                      <h3 className="order-history-customer">{order.customerName}</h3>
-                      <p className="order-history-type">{order.customerType.charAt(0).toUpperCase() + order.customerType.slice(1)}</p>
-                      <p className="order-history-date">{formatDate(order.date)}</p>
+                      <h3 className="text-base font-semibold text-slate-900">{order.customerName}</h3>
+                      <p className={BADGE_PRIMARY}>{order.customerType.charAt(0).toUpperCase() + order.customerType.slice(1)}</p>
+                      <p className="text-xs text-slate-400">{formatDate(order.date)}</p>
                     </div>
-                    <div className="order-total">
-                      <span className="total-label">Total:</span>
-                      <span className="total-value">₹{order.total.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                    <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-100">
+                      <span className="text-sm text-slate-500">Total:</span>
+                      <span className="text-lg font-bold text-slate-900">₹{order.total.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                     </div>
                   </div>
-                  <div className="order-history-table-wrapper">
-                    <table className="order-history-table">
-                      <thead>
+                  <div className={TABLE_WRAPPER}>
+                    <table className={TABLE}>
+                      <thead className={TABLE_HEAD}>
                         <tr>
-                          <th>Brand</th>
-                          <th>Product</th>
-                          <th>SKU</th>
-                          <th>Price</th>
-                          <th>Qty</th>
-                          <th>Subtotal</th>
+                          <th className={TABLE_TH}>Brand</th>
+                          <th className={TABLE_TH}>Product</th>
+                          <th className={TABLE_TH}>SKU</th>
+                          <th className={TABLE_TH}>Price</th>
+                          <th className={TABLE_TH}>Qty</th>
+                          <th className={TABLE_TH}>Subtotal</th>
                         </tr>
                       </thead>
                       <tbody>
                         {order.items.map((item, index) => (
-                          <tr key={index}>
-                            <td>{item.brand}</td>
-                            <td>{item.product}</td>
-                            <td>{item.sku}</td>
-                            <td>₹{item.price.toFixed(2)}</td>
-                            <td>{item.qty}</td>
-                            <td>₹{(item.price * item.qty).toFixed(2)}</td>
+                          <tr key={index} className={TABLE_ROW}>
+                            <td className={TABLE_TD}>{item.brand}</td>
+                            <td className={TABLE_TD}>{item.product}</td>
+                            <td className={TABLE_TD}>{item.sku}</td>
+                            <td className={TABLE_TD}>₹{item.price.toFixed(2)}</td>
+                            <td className={TABLE_TD}>{item.qty}</td>
+                            <td className={TABLE_TD}>₹{(item.price * item.qty).toFixed(2)}</td>
                           </tr>
                         ))}
                       </tbody>

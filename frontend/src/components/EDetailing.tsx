@@ -1,7 +1,19 @@
 import { useState, useEffect } from 'react'
-import Header from './Header'
-import Sidebar from './Sidebar'
-import './EDetailing.css'
+import {
+  PAGE_CONTENT,
+  PAGE_TITLE,
+  BACK_BUTTON,
+  SEARCH_INPUT,
+  FILTER_PILL_ACTIVE,
+  FILTER_PILL_INACTIVE,
+  CARD,
+  EMPTY_STATE,
+  EMPTY_TITLE,
+  MODAL_OVERLAY,
+  BTN_PRIMARY,
+  BTN_SECONDARY,
+  BTN_ICON,
+} from '../styles/designSystem'
 
 interface ContentItem {
   id: number
@@ -154,19 +166,10 @@ interface EDetailingProps {
   onNavigate?: (page: string) => void
 }
 
-function EDetailing({ onLogout, onBack, userName, onNavigate }: EDetailingProps) {
-  const [sidebarOpen, setSidebarOpen] = useState(false)
+function EDetailing({ onLogout: _onLogout, onBack, userName: _userName, onNavigate }: EDetailingProps) {
   const [filter, setFilter] = useState<'all' | 'video' | 'pdf'>('all')
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedVideo, setSelectedVideo] = useState<ContentItem | null>(null)
-
-  const handleMenuClick = () => {
-    setSidebarOpen(true)
-  }
-
-  const handleSidebarClose = () => {
-    setSidebarOpen(false)
-  }
 
   const handleBackClick = () => {
     // Get previous page from sessionStorage, default to home if not found
@@ -218,43 +221,43 @@ function EDetailing({ onLogout, onBack, userName, onNavigate }: EDetailingProps)
   }, [selectedVideo])
 
   return (
-    <div className="edetailing-container">
-      <Header onLogout={onLogout} onMenuClick={handleMenuClick} onNavigateHome={() => onNavigate?.('home')} onNavigateOfflineRequests={() => onNavigate?.('offline-requests')} />
-      <Sidebar isOpen={sidebarOpen} onClose={handleSidebarClose} userName={userName} onNavigate={onNavigate} onLogout={onLogout} />
-      <main className="edetailing-content">
-        <div className="edetailing-header">
-          <button className="back-button" onClick={handleBackClick} aria-label="Go back">
+    <div>
+      <main className={PAGE_CONTENT}>
+        <div className="flex items-center gap-3 mb-6">
+          <button className={BACK_BUTTON} onClick={handleBackClick} aria-label="Go back">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M19 12H5M5 12L12 19M5 12L12 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </button>
-          <h1 className="edetailing-title">eDetailing</h1>
+          <h1 className={PAGE_TITLE}>eDetailing</h1>
         </div>
 
-        <div className="edetailing-controls">
-          <div className="search-bar">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="2"/>
-              <path d="M21 21L16.65 16.65" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-            </svg>
+        <div className="flex items-center gap-3 mb-6 flex-wrap">
+          <div className="relative">
+            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="2"/>
+                <path d="M21 21L16.65 16.65" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              </svg>
+            </div>
             <input
               type="text"
               placeholder="Search videos and PDFs..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="search-input"
+              className={SEARCH_INPUT}
             />
           </div>
 
-          <div className="filter-tabs">
+          <div className="flex items-center gap-2">
             <button
-              className={`filter-tab ${filter === 'all' ? 'active' : ''}`}
+              className={filter === 'all' ? FILTER_PILL_ACTIVE : FILTER_PILL_INACTIVE}
               onClick={() => setFilter('all')}
             >
               All
             </button>
             <button
-              className={`filter-tab ${filter === 'video' ? 'active' : ''}`}
+              className={filter === 'video' ? FILTER_PILL_ACTIVE : FILTER_PILL_INACTIVE}
               onClick={() => setFilter('video')}
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -264,7 +267,7 @@ function EDetailing({ onLogout, onBack, userName, onNavigate }: EDetailingProps)
               Videos
             </button>
             <button
-              className={`filter-tab ${filter === 'pdf' ? 'active' : ''}`}
+              className={filter === 'pdf' ? FILTER_PILL_ACTIVE : FILTER_PILL_INACTIVE}
               onClick={() => setFilter('pdf')}
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -279,62 +282,64 @@ function EDetailing({ onLogout, onBack, userName, onNavigate }: EDetailingProps)
           </div>
         </div>
 
-        <div className="content-grid">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredContent.length === 0 ? (
-            <div className="no-content">
-              <p>No content found matching your search.</p>
+            <div className={EMPTY_STATE}>
+              <p className={EMPTY_TITLE}>No content found matching your search.</p>
             </div>
           ) : (
             filteredContent.map((item) => (
               <div
                 key={item.id}
-                className="content-card"
+                className={`${CARD} overflow-hidden cursor-pointer hover:shadow-md transition-shadow`}
                 onClick={() => handleContentClick(item)}
               >
                 {item.type === 'video' ? (
-                  <div className="content-thumbnail video-thumbnail">
-                    <img 
-                      src={item.thumbnail} 
-                      alt={item.title} 
-                      className="thumbnail-image"
+                  <div className="relative h-48 bg-slate-100">
+                    <img
+                      src={item.thumbnail}
+                      alt={item.title}
+                      className="w-full h-full object-cover"
                       onError={(e) => {
                         const target = e.target as HTMLImageElement
                         target.style.display = 'none'
                       }}
                     />
-                    <div className="thumbnail-header">
-                      <h4 className="thumbnail-title">{item.title}</h4>
-                      <div className="play-button-center">
-                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <circle cx="12" cy="12" r="10" fill="rgba(0, 0, 0, 0.5)"/>
-                          <path d="M10 8L16 12L10 16V8Z" fill="#ffffff"/>
-                        </svg>
+                    <div className="absolute top-3 left-3 right-3 flex items-center justify-between">
+                      <h4 className="text-xs font-medium text-white bg-slate-900/60 backdrop-blur-sm rounded-lg px-2 py-1">{item.title}</h4>
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center">
+                          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="12" cy="12" r="10" fill="rgba(0, 0, 0, 0.5)"/>
+                            <path d="M10 8L16 12L10 16V8Z" fill="#ffffff"/>
+                          </svg>
+                        </div>
                       </div>
-                      <div className="duration-badge">{item.duration}</div>
+                      <span className="absolute bottom-3 right-3 text-xs font-medium text-white bg-slate-900/60 backdrop-blur-sm rounded-lg px-2 py-1">{item.duration}</span>
                     </div>
                   </div>
                 ) : (
-                  <div className="content-thumbnail pdf-thumbnail">
-                    <img 
-                      src={item.thumbnail} 
-                      alt={item.title} 
-                      className="thumbnail-image"
+                  <div className="relative h-48 bg-slate-100">
+                    <img
+                      src={item.thumbnail}
+                      alt={item.title}
+                      className="w-full h-full object-cover"
                       onError={(e) => {
                         const target = e.target as HTMLImageElement
                         target.style.display = 'none'
                       }}
                     />
-                    <div className="thumbnail-header">
-                      <h4 className="thumbnail-title">{item.title}</h4>
-                      <div className="size-badge">{item.size}</div>
+                    <div className="absolute top-3 left-3 right-3 flex items-center justify-between">
+                      <h4 className="text-xs font-medium text-white bg-slate-900/60 backdrop-blur-sm rounded-lg px-2 py-1">{item.title}</h4>
+                      <span className="absolute bottom-3 right-3 text-xs font-medium text-white bg-slate-900/60 backdrop-blur-sm rounded-lg px-2 py-1">{item.size}</span>
                     </div>
                   </div>
                 )}
-                <div className="content-info">
-                  <div className="content-category">{item.category}</div>
-                  <h3 className="content-title">{item.title}</h3>
-                  <p className="content-description">{item.description}</p>
-                  <button className={`content-type-btn ${item.type === 'video' ? 'video-btn' : 'pdf-btn'}`}>
+                <div className="p-4">
+                  <div className="text-xs font-medium text-indigo-600 uppercase tracking-wider">{item.category}</div>
+                  <h3 className="text-sm font-semibold text-slate-900 mt-1">{item.title}</h3>
+                  <p className="text-xs text-slate-500 mt-1 line-clamp-2">{item.description}</p>
+                  <button className={`mt-3 ${item.type === 'video' ? BTN_PRIMARY : BTN_SECONDARY} text-xs px-3 py-1.5`}>
                     {item.type === 'video' ? (
                       <>
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -361,28 +366,28 @@ function EDetailing({ onLogout, onBack, userName, onNavigate }: EDetailingProps)
 
       {/* Video Player Modal */}
       {selectedVideo && (
-        <div className="video-modal-overlay" onClick={handleCloseVideo}>
-          <div className="video-modal-content" onClick={(e) => e.stopPropagation()}>
-            <button className="video-modal-close" onClick={handleCloseVideo} aria-label="Close video">
+        <div className={MODAL_OVERLAY} onClick={handleCloseVideo}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl mx-4 overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <button className={`${BTN_ICON} absolute top-4 right-4 z-10`} onClick={handleCloseVideo} aria-label="Close video">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </button>
-            <div className="video-modal-header">
-              <h2>{selectedVideo.title}</h2>
-              <p className="video-modal-category">{selectedVideo.category}</p>
+            <div className="p-5 border-b border-slate-100">
+              <h2 className="text-lg font-semibold text-slate-900">{selectedVideo.title}</h2>
+              <p className="text-xs font-medium text-indigo-600 uppercase tracking-wider mt-1">{selectedVideo.category}</p>
             </div>
-            <div className="video-player-container">
+            <div className="relative bg-black aspect-video">
               <iframe
                 src={`${selectedVideo.url}?autoplay=1`}
                 title={selectedVideo.title}
                 frameBorder="0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
-                className="video-player"
+                className="w-full h-full"
               ></iframe>
             </div>
-            <div className="video-modal-description">
+            <div className="p-5 text-sm text-slate-600">
               <p>{selectedVideo.description}</p>
             </div>
           </div>
@@ -393,5 +398,3 @@ function EDetailing({ onLogout, onBack, userName, onNavigate }: EDetailingProps)
 }
 
 export default EDetailing
-
-

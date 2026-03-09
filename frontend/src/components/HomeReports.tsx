@@ -1,5 +1,10 @@
-import './HomeReports.css'
 import { useLanguage } from '../contexts/LanguageContext'
+import {
+  SECTION_TITLE,
+  BTN_GHOST,
+  CARD,
+  CARD_PADDING,
+} from '../styles/designSystem'
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -35,13 +40,13 @@ function HomeReports({ onNavigate }: HomeReportsProps) {
       {
         label: 'Actual',
         data: [0, 0, 1, 0],
-        backgroundColor: '#64B5F6',
+        backgroundColor: '#818CF8',
         borderRadius: 4,
       },
       {
         label: 'Target',
         data: [0, 0, 0, 0],
-        backgroundColor: '#2196F3',
+        backgroundColor: '#4F46E5',
         borderRadius: 4,
       },
     ],
@@ -100,13 +105,13 @@ function HomeReports({ onNavigate }: HomeReportsProps) {
       {
         label: 'Actual',
         data: [1200],
-        backgroundColor: '#64B5F6',
+        backgroundColor: '#818CF8',
         borderRadius: 4,
       },
       {
         label: 'Target',
         data: [3300],
-        backgroundColor: '#2196F3',
+        backgroundColor: '#4F46E5',
         borderRadius: 4,
       },
     ],
@@ -173,13 +178,13 @@ function HomeReports({ onNavigate }: HomeReportsProps) {
       {
         label: '121.4',
         data: [121.4],
-        backgroundColor: '#64B5F6',
+        backgroundColor: '#818CF8',
         borderRadius: 4,
       },
       {
         label: '35.4',
         data: [35.4],
-        backgroundColor: '#2196F3',
+        backgroundColor: '#4F46E5',
         borderRadius: 4,
       },
     ],
@@ -242,37 +247,37 @@ function HomeReports({ onNavigate }: HomeReportsProps) {
   }
 
   return (
-    <div className="home-reports-container">
-      <div className="home-reports-header">
-        <h2 className="home-reports-title">{t('recentReports')}</h2>
-        <button className="view-all-reports-btn" onClick={handleReportClick}>
+    <div>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className={`${SECTION_TITLE} !mb-0`}>{t('recentReports')}</h2>
+        <button className={`${BTN_GHOST} text-indigo-600`} onClick={handleReportClick}>
           <span>{t('viewAll')}</span>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         </button>
       </div>
-      <div className="home-reports-grid">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {/* Call Average Chart */}
-        <div className="home-report-card" onClick={handleReportClick}>
-          <h3 className="report-chart-title">Call Average</h3>
-          <div className="report-chart-wrapper">
+        <div className={`${CARD} ${CARD_PADDING} cursor-pointer`} onClick={handleReportClick}>
+          <h3 className="text-sm font-semibold text-slate-900 mb-3">Call Average</h3>
+          <div className="h-[200px]">
             <Bar data={callAverageData} options={callAverageOptions} />
           </div>
         </div>
 
         {/* POB Chart */}
-        <div className="home-report-card" onClick={handleReportClick}>
-          <h3 className="report-chart-title">POB(Actual Vs Achieved)</h3>
-          <div className="report-chart-wrapper">
+        <div className={`${CARD} ${CARD_PADDING} cursor-pointer`} onClick={handleReportClick}>
+          <h3 className="text-sm font-semibold text-slate-900 mb-3">POB(Actual Vs Achieved)</h3>
+          <div className="h-[200px]">
             <Bar data={pobData} options={pobOptions} />
           </div>
         </div>
 
         {/* Budget Chart */}
-        <div className="home-report-card" onClick={handleReportClick}>
-          <h3 className="report-chart-title">Budget Vs Actual</h3>
-          <div className="report-chart-wrapper">
+        <div className={`${CARD} ${CARD_PADDING} cursor-pointer`} onClick={handleReportClick}>
+          <h3 className="text-sm font-semibold text-slate-900 mb-3">Budget Vs Actual</h3>
+          <div className="h-[200px]">
             <Bar data={budgetData} options={budgetOptions} />
           </div>
         </div>
@@ -282,4 +287,3 @@ function HomeReports({ onNavigate }: HomeReportsProps) {
 }
 
 export default HomeReports
-

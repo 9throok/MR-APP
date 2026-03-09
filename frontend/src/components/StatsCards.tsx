@@ -1,5 +1,9 @@
-import './StatsCards.css'
 import { useLanguage } from '../contexts/LanguageContext'
+import {
+  SECTION_TITLE,
+  CARD,
+  CARD_PADDING,
+} from '../styles/designSystem'
 import {
   Chart as ChartJS,
   ArcElement,
@@ -60,13 +64,13 @@ function StatsCards() {
     // Calculate the remaining value to complete the pie
     const outerRemaining = data.maxValue - data.outerValue
     const innerRemaining = data.maxValue - data.innerValue
-    
+
     const outerChartConfig = {
       labels: [data.outerValue.toFixed(1), ''],
       datasets: [
         {
           data: [data.outerValue, outerRemaining],
-          backgroundColor: ['#A5D6A7', '#E0E0E0'],
+          backgroundColor: ['#818CF8', '#E0E0E0'],
           borderWidth: 0,
         },
       ],
@@ -77,7 +81,7 @@ function StatsCards() {
       datasets: [
         {
           data: [data.innerValue, innerRemaining],
-          backgroundColor: ['#81C784', '#E0E0E0'],
+          backgroundColor: ['#6366F1', '#E0E0E0'],
           borderWidth: 0,
         },
       ],
@@ -128,25 +132,25 @@ function StatsCards() {
     }
 
     return (
-      <div key={data.id} className="chart-card">
-        <h3 className="chart-title">{data.title}</h3>
-        <div className="chart-container">
-          <div className="pie-charts-wrapper">
-            <div className="pie-chart-outer">
+      <div key={data.id} className={`${CARD} ${CARD_PADDING}`}>
+        <h3 className="text-sm font-semibold text-slate-900 mb-3">{data.title}</h3>
+        <div className="flex items-center justify-center">
+          <div className="flex items-center gap-6">
+            <div className="w-24 h-24">
               <Pie data={outerChartConfig} options={options} />
             </div>
-            <div className="pie-chart-inner">
+            <div className="w-20 h-20">
               <Pie data={innerChartConfig} options={innerOptions} />
             </div>
           </div>
-          <div className="chart-values">
-            <div className="chart-value-label">
-              <span className="chart-color-box" style={{ backgroundColor: '#A5D6A7' }}></span>
-              <span className="chart-value-text">{data.outerValue.toFixed(1)}</span>
+          <div className="space-y-2 mt-3">
+            <div className="flex items-center gap-2 text-sm text-slate-600">
+              <span className="w-3 h-3 rounded-sm" style={{ backgroundColor: '#818CF8' }}></span>
+              <span className="text-sm font-medium text-slate-700">{data.outerValue.toFixed(1)}</span>
             </div>
-            <div className="chart-value-label">
-              <span className="chart-color-box" style={{ backgroundColor: '#81C784' }}></span>
-              <span className="chart-value-text">{data.innerValue.toFixed(1)}</span>
+            <div className="flex items-center gap-2 text-sm text-slate-600">
+              <span className="w-3 h-3 rounded-sm" style={{ backgroundColor: '#6366F1' }}></span>
+              <span className="text-sm font-medium text-slate-700">{data.innerValue.toFixed(1)}</span>
             </div>
           </div>
         </div>
@@ -156,8 +160,8 @@ function StatsCards() {
 
   return (
     <div>
-      <h2 className="shortcuts-title">{t('dashboardStatistics')}</h2>
-      <div className="charts-container">
+      <h2 className={SECTION_TITLE}>{t('dashboardStatistics')}</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {chartData.map((data) => renderChart(data))}
       </div>
     </div>
@@ -165,4 +169,3 @@ function StatsCards() {
 }
 
 export default StatsCards
-

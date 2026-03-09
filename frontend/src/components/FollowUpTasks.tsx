@@ -1,8 +1,15 @@
 import { useState, useEffect } from 'react'
-import Header from './Header'
-import Sidebar from './Sidebar'
 import { apiGet, apiPatch } from '../services/apiService'
-import './FollowUpTasks.css'
+import {
+  PAGE_CONTENT,
+  PAGE_TITLE,
+  CARD,
+  CARD_SM_PADDING,
+  FILTER_PILL_ACTIVE,
+  FILTER_PILL_INACTIVE,
+  EMPTY_STATE,
+  EMPTY_TITLE,
+} from '../styles/designSystem'
 
 interface FollowUpTasksProps {
   onLogout: () => void
@@ -22,8 +29,7 @@ interface Task {
   created_at: string
 }
 
-function FollowUpTasks({ onLogout, onBack, userName, onNavigate }: FollowUpTasksProps) {
-  const [sidebarOpen, setSidebarOpen] = useState(false)
+function FollowUpTasks({ onLogout: _onLogout, onBack: _onBack, userName: _userName, onNavigate: _onNavigate }: FollowUpTasksProps) {
   const [tasks, setTasks] = useState<Task[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'pending' | 'completed' | 'overdue'>('pending')
@@ -68,64 +74,64 @@ function FollowUpTasks({ onLogout, onBack, userName, onNavigate }: FollowUpTasks
   }
 
   return (
-    <div className="followup-tasks-page">
-      <Header onLogout={onLogout} onMenuClick={() => setSidebarOpen(true)} onNavigateHome={onBack} />
-      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} userName={userName} onNavigate={onNavigate} onLogout={onLogout} currentPage="follow-up-tasks" />
+    <div className={PAGE_CONTENT}>
+      <h2 className={`${PAGE_TITLE} mb-6`}>Follow-Up Tasks</h2>
 
-      <main className="followup-tasks-content">
-        <div className="tasks-filter-bar">
-          {(['all', 'pending', 'completed', 'overdue'] as const).map(f => (
-            <button
-              key={f}
-              className={`filter-btn ${filter === f ? 'active' : ''}`}
-              onClick={() => setFilter(f)}
-            >
-              {f.charAt(0).toUpperCase() + f.slice(1)}
-            </button>
-          ))}
+      <div className="flex gap-2 mb-4">
+        {(['all', 'pending', 'completed', 'overdue'] as const).map(f => (
+          <button
+            key={f}
+            className={filter === f ? FILTER_PILL_ACTIVE : FILTER_PILL_INACTIVE}
+            onClick={() => setFilter(f)}
+          >
+            {f.charAt(0).toUpperCase() + f.slice(1)}
+          </button>
+        ))}
+      </div>
+
+      {loading ? (
+        <div className="flex items-center justify-center py-12 text-slate-400">Loading tasks...</div>
+      ) : tasks.length === 0 ? (
+        <div className={EMPTY_STATE}>
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="mb-4">
+            <path d="M9 11L12 14L22 4M21 12V19C21 20.1046 20.1046 21 19 21H5C3.89543 21 3 20.1046 3 19V5C3 3.89543 3.89543 3 5 3H16" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+          <p className={EMPTY_TITLE}>No {filter !== 'all' ? filter : ''} tasks found</p>
         </div>
-
-        {loading ? (
-          <div className="tasks-loading">Loading tasks...</div>
-        ) : tasks.length === 0 ? (
-          <div className="tasks-empty">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M9 11L12 14L22 4M21 12V19C21 20.1046 20.1046 21 19 21H5C3.89543 21 3 20.1046 3 19V5C3 3.89543 3.89543 3 5 3H16" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-            <p>No {filter !== 'all' ? filter : ''} tasks found</p>
-          </div>
-        ) : (
-          <div className="tasks-list">
-            {tasks.map(task => (
-              <div key={task.id} className={`task-card ${task.status} ${isOverdue(task) ? 'overdue' : ''}`}>
-                <div className="task-checkbox" onClick={() => handleToggleStatus(task)}>
-                  {task.status === 'completed' ? (
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                      <rect x="3" y="3" width="18" height="18" rx="4" fill="#10b981" />
-                      <path d="M8 12L11 15L17 9" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  ) : (
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                      <rect x="3" y="3" width="18" height="18" rx="4" stroke="#cbd5e1" strokeWidth="2" />
-                    </svg>
-                  )}
+      ) : (
+        <div className="space-y-2">
+          {tasks.map(task => (
+            <div key={task.id} className={`${CARD} ${CARD_SM_PADDING} flex items-start gap-3`}>
+              <div
+                className="w-5 h-5 mt-0.5 shrink-0 cursor-pointer"
+                onClick={() => handleToggleStatus(task)}
+              >
+                {task.status === 'completed' ? (
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                    <rect x="3" y="3" width="18" height="18" rx="4" fill="#10b981" />
+                    <path d="M8 12L11 15L17 9" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                ) : (
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                    <rect x="3" y="3" width="18" height="18" rx="4" stroke="#cbd5e1" strokeWidth="2" />
+                  </svg>
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className={`text-sm text-slate-700 ${task.status === 'completed' ? 'line-through text-slate-400' : ''}`}>
+                  {task.task}
                 </div>
-                <div className="task-details">
-                  <div className={`task-text ${task.status === 'completed' ? 'completed-text' : ''}`}>
-                    {task.task}
-                  </div>
-                  <div className="task-meta">
-                    <span className="task-doctor">{task.doctor_name}</span>
-                    <span className={`task-due ${isOverdue(task) ? 'due-overdue' : ''}`}>
-                      {formatDate(task.due_date)}
-                    </span>
-                  </div>
+                <div className="flex items-center gap-3 mt-1">
+                  <span className="text-xs text-slate-500">{task.doctor_name}</span>
+                  <span className={`text-xs ${isOverdue(task) ? 'text-amber-600 font-medium' : 'text-slate-400'}`}>
+                    {formatDate(task.due_date)}
+                  </span>
                 </div>
               </div>
-            ))}
-          </div>
-        )}
-      </main>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

@@ -1,5 +1,17 @@
 import { useState, useRef, useEffect } from 'react'
-import './ApplyLeaveModal.css'
+import {
+  MODAL_OVERLAY,
+  MODAL_CARD,
+  MODAL_HEADER,
+  MODAL_BODY,
+  MODAL_FOOTER,
+  LABEL,
+  SELECT,
+  INPUT,
+  TEXTAREA,
+  BTN_PRIMARY,
+  BTN_SECONDARY,
+} from '../styles/designSystem'
 
 interface ApplyLeaveModalProps {
   onClose: () => void
@@ -85,19 +97,19 @@ function ApplyLeaveModal({ onClose, onSubmit }: ApplyLeaveModalProps) {
   }
 
   return (
-    <div className="apply-leave-modal-overlay" onClick={onClose}>
-      <div className="apply-leave-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
-          <h2 className="modal-title">Applying for Leave</h2>
+    <div className={MODAL_OVERLAY} onClick={onClose}>
+      <div className={`${MODAL_CARD} max-w-xl`} onClick={(e) => e.stopPropagation()}>
+        <div className={MODAL_HEADER}>
+          <h2 className="text-lg font-semibold text-slate-900">Applying for Leave</h2>
         </div>
 
-        <form className="leave-form" onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label className="form-label">Select Leave Type</label>
-            <div className="dropdown-wrapper" ref={leaveTypeRef}>
+        <form className={`${MODAL_BODY} space-y-4`} onSubmit={handleSubmit}>
+          <div className="space-y-1.5">
+            <label className={LABEL}>Select Leave Type</label>
+            <div className="relative" ref={leaveTypeRef}>
               <button
                 type="button"
-                className="form-dropdown"
+                className={`${SELECT} cursor-pointer flex items-center justify-between`}
                 onClick={() => setShowLeaveTypeDropdown(!showLeaveTypeDropdown)}
               >
                 <span>{formData.leaveType || 'Select Leave Type'}</span>
@@ -106,12 +118,12 @@ function ApplyLeaveModal({ onClose, onSubmit }: ApplyLeaveModalProps) {
                 </svg>
               </button>
               {showLeaveTypeDropdown && (
-                <div className="dropdown-menu">
+                <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
                   {leaveTypes.map((type) => (
                     <button
                       key={type}
                       type="button"
-                      className="dropdown-item"
+                      className="w-full px-4 py-2.5 text-sm text-slate-700 text-left hover:bg-slate-50 cursor-pointer bg-transparent border-none"
                       onClick={() => {
                         handleInputChange('leaveType', type)
                         setShowLeaveTypeDropdown(false)
@@ -125,30 +137,30 @@ function ApplyLeaveModal({ onClose, onSubmit }: ApplyLeaveModalProps) {
             </div>
           </div>
 
-          <div className="form-row">
-            <div className="form-group">
-              <label className="form-label">From Date</label>
-              <div className="date-input-wrapper">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label className={LABEL}>From Date</label>
+              <div className="relative">
                 <input
                   type="date"
-                  className="form-date-input"
+                  className={INPUT}
                   value={formData.fromDate}
                   onChange={(e) => handleInputChange('fromDate', e.target.value)}
                   required
                 />
-                <svg className="date-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <svg className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="2"/>
                   <path d="M16 2V6M8 2V6M3 10H21" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
                 </svg>
               </div>
             </div>
 
-            <div className="form-group">
-              <label className="form-label">Select Leave Type</label>
-              <div className="dropdown-wrapper" ref={fromSessionRef}>
+            <div className="space-y-1.5">
+              <label className={LABEL}>Select Leave Type</label>
+              <div className="relative" ref={fromSessionRef}>
                 <button
                   type="button"
-                  className="form-dropdown"
+                  className={`${SELECT} cursor-pointer flex items-center justify-between`}
                   onClick={() => {
                     setShowFromSessionDropdown(!showFromSessionDropdown)
                     setShowLeaveTypeDropdown(false)
@@ -161,12 +173,12 @@ function ApplyLeaveModal({ onClose, onSubmit }: ApplyLeaveModalProps) {
                   </svg>
                 </button>
                 {showFromSessionDropdown && (
-                  <div className="dropdown-menu">
+                  <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
                     {sessionTypes.map((session) => (
                       <button
                         key={session}
                         type="button"
-                        className="dropdown-item"
+                        className="w-full px-4 py-2.5 text-sm text-slate-700 text-left hover:bg-slate-50 cursor-pointer bg-transparent border-none"
                         onClick={() => {
                           setFromSession(session)
                           setShowFromSessionDropdown(false)
@@ -181,30 +193,30 @@ function ApplyLeaveModal({ onClose, onSubmit }: ApplyLeaveModalProps) {
             </div>
           </div>
 
-          <div className="form-row">
-            <div className="form-group">
-              <label className="form-label">To Date</label>
-              <div className="date-input-wrapper">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label className={LABEL}>To Date</label>
+              <div className="relative">
                 <input
                   type="date"
-                  className="form-date-input"
+                  className={INPUT}
                   value={formData.toDate}
                   onChange={(e) => handleInputChange('toDate', e.target.value)}
                   required
                 />
-                <svg className="date-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <svg className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="2"/>
                   <path d="M16 2V6M8 2V6M3 10H21" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
                 </svg>
               </div>
             </div>
 
-            <div className="form-group">
-              <label className="form-label">Select Leave Type</label>
-              <div className="dropdown-wrapper" ref={toSessionRef}>
+            <div className="space-y-1.5">
+              <label className={LABEL}>Select Leave Type</label>
+              <div className="relative" ref={toSessionRef}>
                 <button
                   type="button"
-                  className="form-dropdown"
+                  className={`${SELECT} cursor-pointer flex items-center justify-between`}
                   onClick={() => {
                     setShowToSessionDropdown(!showToSessionDropdown)
                     setShowLeaveTypeDropdown(false)
@@ -217,12 +229,12 @@ function ApplyLeaveModal({ onClose, onSubmit }: ApplyLeaveModalProps) {
                   </svg>
                 </button>
                 {showToSessionDropdown && (
-                  <div className="dropdown-menu">
+                  <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
                     {sessionTypes.map((session) => (
                       <button
                         key={session}
                         type="button"
-                        className="dropdown-item"
+                        className="w-full px-4 py-2.5 text-sm text-slate-700 text-left hover:bg-slate-50 cursor-pointer bg-transparent border-none"
                         onClick={() => {
                           setToSession(session)
                           setShowToSessionDropdown(false)
@@ -237,36 +249,36 @@ function ApplyLeaveModal({ onClose, onSubmit }: ApplyLeaveModalProps) {
             </div>
           </div>
 
-          <div className="form-group">
-            <label className="form-label">Contact Details</label>
-            <div className="contact-details-row">
+          <div className="space-y-1.5">
+            <label className={LABEL}>Contact Details</label>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <input
                 type="text"
-                className="form-text-input"
+                className={INPUT}
                 value={formData.contactDetails}
                 onChange={(e) => handleInputChange('contactDetails', e.target.value)}
                 placeholder="Enter contact details"
               />
-              <div className="file-upload-wrapper">
+              <div className="space-y-1.5">
                 <input
                   type="file"
                   id="file-upload"
-                  className="file-input"
+                  className="hidden"
                   onChange={handleFileChange}
                   accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
                 />
-                <label htmlFor="file-upload" className="file-upload-btn">
+                <label htmlFor="file-upload" className={`${BTN_SECONDARY} cursor-pointer w-full justify-center`}>
                   Choose File
                 </label>
-                <span className="file-name">{fileName || 'No file chosen'}</span>
+                <span className="text-xs text-slate-500 mt-1">{fileName || 'No file chosen'}</span>
               </div>
             </div>
           </div>
 
-          <div className="form-group">
-            <label className="form-label">Reason</label>
+          <div className="space-y-1.5">
+            <label className={LABEL}>Reason</label>
             <textarea
-              className="form-textarea"
+              className={TEXTAREA}
               value={formData.reason}
               onChange={(e) => handleInputChange('reason', e.target.value)}
               placeholder="Enter reason for leave"
@@ -275,14 +287,14 @@ function ApplyLeaveModal({ onClose, onSubmit }: ApplyLeaveModalProps) {
             />
           </div>
 
-          <div className="modal-actions">
-            <button type="submit" className="submit-btn">
+          <div className={MODAL_FOOTER}>
+            <button type="submit" className={BTN_PRIMARY}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M22 2L11 13M22 2L15 22L11 13M22 2L2 9L11 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
               <span>Submit</span>
             </button>
-            <button type="button" className="cancel-btn" onClick={onClose}>
+            <button type="button" className={BTN_SECONDARY} onClick={onClose}>
               Cancel
             </button>
           </div>
@@ -293,4 +305,3 @@ function ApplyLeaveModal({ onClose, onSubmit }: ApplyLeaveModalProps) {
 }
 
 export default ApplyLeaveModal
-

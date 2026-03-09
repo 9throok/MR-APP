@@ -1,8 +1,11 @@
 import { useState, useEffect, useRef } from 'react'
-import Header from './Header'
-import Sidebar from './Sidebar'
 import DashboardReports from './DashboardReports'
-import './Reports.css'
+import {
+  PAGE_CONTENT, PAGE_TITLE, BACK_BUTTON,
+  CARD, CARD_PADDING,
+  SELECT, LABEL,
+  TABLE, TABLE_HEAD, TABLE_TH, TABLE_TD, TABLE_ROW, TABLE_WRAPPER,
+} from '../styles/designSystem'
 
 interface ReportsProps {
   onLogout: () => void
@@ -11,8 +14,7 @@ interface ReportsProps {
   onNavigate?: (page: string) => void
 }
 
-function Reports({ onLogout, onBack, userName, onNavigate }: ReportsProps) {
-  const [sidebarOpen, setSidebarOpen] = useState(false)
+function Reports({ onLogout: _onLogout, onBack, userName: _userName, onNavigate: _onNavigate }: ReportsProps) {
   const [expandedReports, setExpandedReports] = useState<Set<string>>(new Set())
   const [selectedReportType, setSelectedReportType] = useState('Dashboard')
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
@@ -74,14 +76,6 @@ function Reports({ onLogout, onBack, userName, onNavigate }: ReportsProps) {
       document.removeEventListener('mousedown', handleClickOutside)
     }
   }, [isDropdownOpen])
-
-  const handleMenuClick = () => {
-    setSidebarOpen(true)
-  }
-
-  const handleSidebarClose = () => {
-    setSidebarOpen(false)
-  }
 
   // Dummy data for reports
   const callAverageData = [
@@ -150,58 +144,58 @@ function Reports({ onLogout, onBack, userName, onNavigate }: ReportsProps) {
   ]
 
   const reports = [
-    { 
-      id: 'call-average', 
-      title: 'Call Average', 
+    {
+      id: 'call-average',
+      title: 'Call Average',
       type: 'bar',
       count: callAverageData.reduce((sum, item) => sum + item.calls, 0),
       subtitle: 'Total Calls'
     },
-    { 
-      id: 'pob', 
-      title: 'POB (Actual vs Achieved)', 
+    {
+      id: 'pob',
+      title: 'POB (Actual vs Achieved)',
       type: 'comparison',
       count: pobData.achieved,
       subtitle: 'Achieved Amount'
     },
-    { 
-      id: 'budget', 
-      title: 'Budget vs Actual', 
+    {
+      id: 'budget',
+      title: 'Budget vs Actual',
       type: 'bar',
       count: budgetData.length,
       subtitle: 'Categories'
     },
-    { 
-      id: 'tour-plan', 
-      title: 'Tour Plan Report', 
+    {
+      id: 'tour-plan',
+      title: 'Tour Plan Report',
       type: 'line',
       count: tourPlanData.reduce((sum, item) => sum + item.completed, 0),
       subtitle: 'Completed Tours'
     },
-    { 
-      id: 'daily-call', 
-      title: 'Daily Call Report', 
+    {
+      id: 'daily-call',
+      title: 'Daily Call Report',
       type: 'bar',
       count: dailyCallData.reduce((sum, item) => sum + item.calls, 0),
       subtitle: 'Weekly Total'
     },
-    { 
-      id: 'joint-working', 
-      title: 'Joint Working Coverage', 
+    {
+      id: 'joint-working',
+      title: 'Joint Working Coverage',
       type: 'pie',
       count: jointWorkingData.length,
       subtitle: 'Doctors'
     },
-    { 
-      id: 'attendance', 
-      title: 'Attendance Report', 
+    {
+      id: 'attendance',
+      title: 'Attendance Report',
       type: 'table',
       count: attendanceData.reduce((sum, item) => sum + item.present, 0),
       subtitle: 'Total Present Days'
     },
-    { 
-      id: 'campaign', 
-      title: 'Campaign Report', 
+    {
+      id: 'campaign',
+      title: 'Campaign Report',
       type: 'bar',
       count: campaignData.length,
       subtitle: 'Active Campaigns'
@@ -213,33 +207,33 @@ function Reports({ onLogout, onBack, userName, onNavigate }: ReportsProps) {
       case 'call-average':
         const maxCallAverage = Math.max(...callAverageData.map(d => d.calls))
         return (
-          <div className="report-chart">
-            <h3>Monthly Call Average</h3>
-            <div className="horizontal-bar-chart">
+          <div>
+            <h3 className="text-sm font-semibold text-slate-900 mb-4">Monthly Call Average</h3>
+            <div className="space-y-3">
               {callAverageData.map((item, index) => (
-                <div key={index} className="horizontal-bar-item">
-                  <span className="bar-label-left">{item.month}</span>
-                  <div className="horizontal-bar-wrapper">
+                <div key={index} className="flex items-center gap-3">
+                  <span className="text-xs text-slate-500 w-10 shrink-0">{item.month}</span>
+                  <div className="flex-1 bg-slate-100 rounded-full h-6 overflow-hidden">
                     <div
-                      className="horizontal-bar"
+                      className="bg-indigo-500 h-full rounded-full flex items-center justify-end pr-2 text-xs text-white font-medium transition-all"
                       style={{ width: `${(item.calls / maxCallAverage) * 100}%` }}
                     >
-                      <span className="bar-value-right">{item.calls}</span>
+                      <span>{item.calls}</span>
                     </div>
                   </div>
                 </div>
               ))}
             </div>
-            <div className="chart-summary">
-              <div className="summary-item">
-                <span className="summary-label">Average:</span>
-                <span className="summary-value">
+            <div className="grid grid-cols-2 gap-4 mt-4 pt-4 border-t border-slate-100">
+              <div>
+                <span className="text-xs text-slate-500">Average:</span>
+                <span className="text-sm font-semibold text-slate-900 ml-1">
                   {Math.round(callAverageData.reduce((sum, item) => sum + item.calls, 0) / callAverageData.length)} calls/month
                 </span>
               </div>
-              <div className="summary-item">
-                <span className="summary-label">Total:</span>
-                <span className="summary-value">
+              <div>
+                <span className="text-xs text-slate-500">Total:</span>
+                <span className="text-sm font-semibold text-slate-900 ml-1">
                   {callAverageData.reduce((sum, item) => sum + item.calls, 0)} calls
                 </span>
               </div>
@@ -250,38 +244,38 @@ function Reports({ onLogout, onBack, userName, onNavigate }: ReportsProps) {
       case 'pob':
         const pobPercentage = (pobData.achieved / pobData.target) * 100
         return (
-          <div className="report-chart">
-            <h3>POB Performance</h3>
-            <div className="comparison-chart">
-              <div className="comparison-item">
-                <div className="comparison-label">Target</div>
-                <div className="comparison-bar-wrapper">
-                  <div className="comparison-bar target" style={{ width: '100%' }}>
+          <div>
+            <h3 className="text-sm font-semibold text-slate-900 mb-4">POB Performance</h3>
+            <div className="space-y-3">
+              <div>
+                <div className="text-xs text-slate-500 mb-1">Target</div>
+                <div className="flex-1 bg-slate-100 rounded-full h-6 overflow-hidden">
+                  <div className="bg-slate-300 h-full rounded-full flex items-center justify-end pr-2 text-xs text-white font-medium transition-all" style={{ width: '100%' }}>
                     <span>₹{pobData.target.toLocaleString('en-IN')}</span>
                   </div>
                 </div>
               </div>
-              <div className="comparison-item">
-                <div className="comparison-label">Achieved</div>
-                <div className="comparison-bar-wrapper">
-                  <div className="comparison-bar achieved" style={{ width: `${pobPercentage}%` }}>
+              <div>
+                <div className="text-xs text-slate-500 mb-1">Achieved</div>
+                <div className="flex-1 bg-slate-100 rounded-full h-6 overflow-hidden">
+                  <div className="bg-indigo-500 h-full rounded-full flex items-center justify-end pr-2 text-xs text-white font-medium transition-all" style={{ width: `${pobPercentage}%` }}>
                     <span>₹{pobData.achieved.toLocaleString('en-IN')} ({pobPercentage.toFixed(1)}%)</span>
                   </div>
                 </div>
               </div>
-              <div className="comparison-item">
-                <div className="comparison-label">Actual</div>
-                <div className="comparison-bar-wrapper">
-                  <div className="comparison-bar actual" style={{ width: `${(pobData.actual / pobData.target) * 100}%` }}>
+              <div>
+                <div className="text-xs text-slate-500 mb-1">Actual</div>
+                <div className="flex-1 bg-slate-100 rounded-full h-6 overflow-hidden">
+                  <div className="bg-emerald-500 h-full rounded-full flex items-center justify-end pr-2 text-xs text-white font-medium transition-all" style={{ width: `${(pobData.actual / pobData.target) * 100}%` }}>
                     <span>₹{pobData.actual.toLocaleString('en-IN')}</span>
                   </div>
                 </div>
               </div>
             </div>
-            <div className="chart-summary">
-              <div className="summary-item">
-                <span className="summary-label">Achievement Rate:</span>
-                <span className="summary-value">{pobPercentage.toFixed(1)}%</span>
+            <div className="grid grid-cols-2 gap-4 mt-4 pt-4 border-t border-slate-100">
+              <div>
+                <span className="text-xs text-slate-500">Achievement Rate:</span>
+                <span className="text-sm font-semibold text-slate-900 ml-1">{pobPercentage.toFixed(1)}%</span>
               </div>
             </div>
           </div>
@@ -290,50 +284,50 @@ function Reports({ onLogout, onBack, userName, onNavigate }: ReportsProps) {
       case 'budget':
         const maxBudget = Math.max(...budgetData.map(d => Math.max(d.budget, d.actual)))
         return (
-          <div className="report-chart">
-            <h3>Budget vs Actual Spending</h3>
-            <div className="budget-chart">
+          <div>
+            <h3 className="text-sm font-semibold text-slate-900 mb-4">Budget vs Actual Spending</h3>
+            <div className="space-y-4">
               {budgetData.map((item, index) => {
                 const budgetPercent = (item.actual / item.budget) * 100
                 return (
-                  <div key={index} className="budget-item">
-                    <div className="budget-label">{item.category}</div>
-                    <div className="budget-bars">
-                      <div className="budget-bar-wrapper">
-                        <div className="budget-bar budget" style={{ width: `${(item.budget / maxBudget) * 100}%` }}>
+                  <div key={index} className="space-y-2">
+                    <div className="text-sm font-medium text-slate-700">{item.category}</div>
+                    <div>
+                      <div className="flex-1 bg-slate-100 rounded-full h-6 overflow-hidden mb-1">
+                        <div className="bg-slate-300 h-full rounded-full flex items-center justify-end pr-2 text-xs text-white font-medium transition-all" style={{ width: `${(item.budget / maxBudget) * 100}%` }}>
                           <span>Budget: ₹{item.budget.toLocaleString('en-IN')}</span>
                         </div>
                       </div>
-                      <div className="budget-bar-wrapper">
+                      <div className="flex-1 bg-slate-100 rounded-full h-6 overflow-hidden">
                         <div
-                          className="budget-bar actual"
+                          className="bg-indigo-500 h-full rounded-full flex items-center justify-end pr-2 text-xs text-white font-medium transition-all"
                           style={{ width: `${(item.actual / maxBudget) * 100}%` }}
                         >
                           <span>Actual: ₹{item.actual.toLocaleString('en-IN')}</span>
                         </div>
                       </div>
                     </div>
-                    <div className="budget-percentage">
+                    <div>
                       {budgetPercent > 100 ? (
-                        <span className="over-budget">+{(budgetPercent - 100).toFixed(1)}% over budget</span>
+                        <span className="text-xs text-red-500">+{(budgetPercent - 100).toFixed(1)}% over budget</span>
                       ) : (
-                        <span className="under-budget">{(100 - budgetPercent).toFixed(1)}% remaining</span>
+                        <span className="text-xs text-emerald-500">{(100 - budgetPercent).toFixed(1)}% remaining</span>
                       )}
                     </div>
                   </div>
                 )
               })}
             </div>
-            <div className="chart-summary">
-              <div className="summary-item">
-                <span className="summary-label">Total Budget:</span>
-                <span className="summary-value">
+            <div className="grid grid-cols-2 gap-4 mt-4 pt-4 border-t border-slate-100">
+              <div>
+                <span className="text-xs text-slate-500">Total Budget:</span>
+                <span className="text-sm font-semibold text-slate-900 ml-1">
                   ₹{budgetData.reduce((sum, item) => sum + item.budget, 0).toLocaleString('en-IN')}
                 </span>
               </div>
-              <div className="summary-item">
-                <span className="summary-label">Total Spent:</span>
-                <span className="summary-value">
+              <div>
+                <span className="text-xs text-slate-500">Total Spent:</span>
+                <span className="text-sm font-semibold text-slate-900 ml-1">
                   ₹{budgetData.reduce((sum, item) => sum + item.actual, 0).toLocaleString('en-IN')}
                 </span>
               </div>
@@ -344,10 +338,10 @@ function Reports({ onLogout, onBack, userName, onNavigate }: ReportsProps) {
       case 'tour-plan':
         const maxTourValue = Math.max(...tourPlanData.map(d => Math.max(d.planned, d.completed)))
         return (
-          <div className="report-chart">
-            <h3>Tour Plan Completion</h3>
-            <div className="line-chart">
-              <svg className="line-chart-svg" viewBox="0 0 600 300">
+          <div>
+            <h3 className="text-sm font-semibold text-slate-900 mb-4">Tour Plan Completion</h3>
+            <div className="my-4">
+              <svg className="w-full" viewBox="0 0 600 300">
                 {/* Grid lines */}
                 {[0, 1, 2, 3, 4, 5].map(i => (
                   <line
@@ -363,23 +357,21 @@ function Reports({ onLogout, onBack, userName, onNavigate }: ReportsProps) {
                 ))}
                 {/* Planned line */}
                 <polyline
-                  points={tourPlanData.map((item, index) => 
+                  points={tourPlanData.map((item, index) =>
                     `${50 + (index * 100)},${250 - (item.planned / maxTourValue) * 200}`
                   ).join(' ')}
                   fill="none"
-                  stroke="var(--primary-green)"
+                  stroke="#4F46E5"
                   strokeWidth="3"
-                  className="line-path"
                 />
                 {/* Completed line */}
                 <polyline
-                  points={tourPlanData.map((item, index) => 
+                  points={tourPlanData.map((item, index) =>
                     `${50 + (index * 100)},${250 - (item.completed / maxTourValue) * 200}`
                   ).join(' ')}
                   fill="none"
-                  stroke="#81C784"
+                  stroke="#6ee7b7"
                   strokeWidth="3"
-                  className="line-path"
                 />
                 {/* Planned points */}
                 {tourPlanData.map((item, index) => (
@@ -388,7 +380,7 @@ function Reports({ onLogout, onBack, userName, onNavigate }: ReportsProps) {
                       cx={50 + index * 100}
                       cy={250 - (item.planned / maxTourValue) * 200}
                       r="6"
-                      fill="var(--primary-green)"
+                      fill="#4F46E5"
                       stroke="#ffffff"
                       strokeWidth="2"
                     />
@@ -398,7 +390,7 @@ function Reports({ onLogout, onBack, userName, onNavigate }: ReportsProps) {
                       textAnchor="middle"
                       fontSize="12"
                       fontWeight="600"
-                      fill="var(--text-primary)"
+                      fill="#0f172a"
                     >
                       {item.planned}
                     </text>
@@ -411,7 +403,7 @@ function Reports({ onLogout, onBack, userName, onNavigate }: ReportsProps) {
                       cx={50 + index * 100}
                       cy={250 - (item.completed / maxTourValue) * 200}
                       r="6"
-                      fill="#81C784"
+                      fill="#6ee7b7"
                       stroke="#ffffff"
                       strokeWidth="2"
                     />
@@ -421,7 +413,7 @@ function Reports({ onLogout, onBack, userName, onNavigate }: ReportsProps) {
                       textAnchor="middle"
                       fontSize="12"
                       fontWeight="600"
-                      fill="var(--text-primary)"
+                      fill="#0f172a"
                     >
                       {item.completed}
                     </text>
@@ -436,20 +428,20 @@ function Reports({ onLogout, onBack, userName, onNavigate }: ReportsProps) {
                     textAnchor="middle"
                     fontSize="12"
                     fontWeight="600"
-                    fill="var(--text-secondary)"
+                    fill="#64748b"
                   >
                     {item.month}
                   </text>
                 ))}
               </svg>
             </div>
-            <div className="chart-legend">
-              <div className="legend-item">
-                <span className="legend-color planned"></span>
+            <div className="flex items-center gap-6 justify-center mt-4">
+              <div className="flex items-center gap-2 text-sm text-slate-600">
+                <span className="w-3 h-3 rounded-full bg-indigo-500"></span>
                 <span>Planned</span>
               </div>
-              <div className="legend-item">
-                <span className="legend-color completed"></span>
+              <div className="flex items-center gap-2 text-sm text-slate-600">
+                <span className="w-3 h-3 rounded-full bg-emerald-400"></span>
                 <span>Completed</span>
               </div>
             </div>
@@ -459,33 +451,33 @@ function Reports({ onLogout, onBack, userName, onNavigate }: ReportsProps) {
       case 'daily-call':
         const maxDailyCall = Math.max(...dailyCallData.map(d => d.calls))
         return (
-          <div className="report-chart">
-            <h3>Weekly Daily Call Report</h3>
-            <div className="horizontal-bar-chart">
+          <div>
+            <h3 className="text-sm font-semibold text-slate-900 mb-4">Weekly Daily Call Report</h3>
+            <div className="space-y-3">
               {dailyCallData.map((item, index) => (
-                <div key={index} className="horizontal-bar-item">
-                  <span className="bar-label-left">{item.day}</span>
-                  <div className="horizontal-bar-wrapper">
+                <div key={index} className="flex items-center gap-3">
+                  <span className="text-xs text-slate-500 w-10 shrink-0">{item.day}</span>
+                  <div className="flex-1 bg-slate-100 rounded-full h-6 overflow-hidden">
                     <div
-                      className="horizontal-bar"
+                      className="bg-indigo-500 h-full rounded-full flex items-center justify-end pr-2 text-xs text-white font-medium transition-all"
                       style={{ width: `${(item.calls / maxDailyCall) * 100}%` }}
                     >
-                      <span className="bar-value-right">{item.calls}</span>
+                      <span>{item.calls}</span>
                     </div>
                   </div>
                 </div>
               ))}
             </div>
-            <div className="chart-summary">
-              <div className="summary-item">
-                <span className="summary-label">Total Calls:</span>
-                <span className="summary-value">
+            <div className="grid grid-cols-2 gap-4 mt-4 pt-4 border-t border-slate-100">
+              <div>
+                <span className="text-xs text-slate-500">Total Calls:</span>
+                <span className="text-sm font-semibold text-slate-900 ml-1">
                   {dailyCallData.reduce((sum, item) => sum + item.calls, 0)} calls/week
                 </span>
               </div>
-              <div className="summary-item">
-                <span className="summary-label">Daily Average:</span>
-                <span className="summary-value">
+              <div>
+                <span className="text-xs text-slate-500">Daily Average:</span>
+                <span className="text-sm font-semibold text-slate-900 ml-1">
                   {Math.round(dailyCallData.reduce((sum, item) => sum + item.calls, 0) / dailyCallData.length)} calls/day
                 </span>
               </div>
@@ -494,7 +486,7 @@ function Reports({ onLogout, onBack, userName, onNavigate }: ReportsProps) {
         )
 
       case 'joint-working':
-        const colors = ['#66BB6A', '#81C784', '#A5D6A7', '#C8E6C9', '#9CCC65']
+        const colors: string[] = ['#818CF8', '#6366F1', '#4F46E5', '#4338CA', '#3730A3']
         // Calculate total coverage to normalize percentages
         const totalCoverage = jointWorkingData.reduce((sum, item) => sum + item.coverage, 0)
         // Normalize each doctor's coverage to be a percentage of the total
@@ -503,11 +495,11 @@ function Reports({ onLogout, onBack, userName, onNavigate }: ReportsProps) {
           normalizedPercentage: (item.coverage / totalCoverage) * 100
         }))
         return (
-          <div className="report-chart">
-            <h3>Joint Working Coverage by Doctor</h3>
-            <div className="pie-chart-container">
-              <div className="pie-chart-wrapper">
-                <svg className="pie-chart-svg" viewBox="0 0 200 200">
+          <div>
+            <h3 className="text-sm font-semibold text-slate-900 mb-4">Joint Working Coverage by Doctor</h3>
+            <div className="flex flex-col md:flex-row items-center gap-6">
+              <div className="flex-shrink-0">
+                <svg className="w-[200px] h-[200px]" viewBox="0 0 200 200">
                   {normalizedData.map((item, index) => {
                     const percentage = item.normalizedPercentage
                     const startAngle = normalizedData.slice(0, index).reduce((sum, d) => sum + (d.normalizedPercentage / 100) * 360, 0)
@@ -531,13 +523,13 @@ function Reports({ onLogout, onBack, userName, onNavigate }: ReportsProps) {
                   })}
                 </svg>
               </div>
-              <div className="pie-legend">
+              <div className="space-y-2">
                 {normalizedData.map((item, index) => (
-                  <div key={index} className="pie-legend-item">
-                    <span className="pie-legend-color" style={{ backgroundColor: colors[index % colors.length] }}></span>
-                    <div className="pie-legend-info">
-                      <span className="pie-legend-name">{item.doctor}</span>
-                      <span className="pie-legend-value">{item.coverage}% ({item.normalizedPercentage.toFixed(1)}% share)</span>
+                  <div key={index} className="flex items-center gap-2">
+                    <span className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: colors[index % colors.length] }}></span>
+                    <div>
+                      <span className="text-sm font-medium text-slate-700">{item.doctor}</span>
+                      <span className="text-xs text-slate-500 ml-1">{item.coverage}% ({item.normalizedPercentage.toFixed(1)}% share)</span>
                     </div>
                   </div>
                 ))}
@@ -548,18 +540,18 @@ function Reports({ onLogout, onBack, userName, onNavigate }: ReportsProps) {
 
       case 'attendance':
         return (
-          <div className="report-chart">
-            <h3>Monthly Attendance Report</h3>
-            <div className="table-chart">
-              <table className="report-table">
-                <thead>
+          <div>
+            <h3 className="text-sm font-semibold text-slate-900 mb-4">Monthly Attendance Report</h3>
+            <div className={TABLE_WRAPPER}>
+              <table className={TABLE}>
+                <thead className={TABLE_HEAD}>
                   <tr>
-                    <th>Month</th>
-                    <th>Present</th>
-                    <th>Absent</th>
-                    <th>Leave</th>
-                    <th>Total Days</th>
-                    <th>Attendance %</th>
+                    <th className={TABLE_TH}>Month</th>
+                    <th className={TABLE_TH}>Present</th>
+                    <th className={TABLE_TH}>Absent</th>
+                    <th className={TABLE_TH}>Leave</th>
+                    <th className={TABLE_TH}>Total Days</th>
+                    <th className={TABLE_TH}>Attendance %</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -567,16 +559,16 @@ function Reports({ onLogout, onBack, userName, onNavigate }: ReportsProps) {
                     const total = item.present + item.absent + item.leave
                     const attendancePercent = (item.present / total) * 100
                     return (
-                      <tr key={index}>
-                        <td>{item.month}</td>
-                        <td className="present-cell">{item.present}</td>
-                        <td className="absent-cell">{item.absent}</td>
-                        <td className="leave-cell">{item.leave}</td>
-                        <td>{total}</td>
-                        <td>
-                          <div className="attendance-bar">
+                      <tr key={index} className={TABLE_ROW}>
+                        <td className={TABLE_TD}>{item.month}</td>
+                        <td className={`${TABLE_TD} text-emerald-600 font-medium`}>{item.present}</td>
+                        <td className={`${TABLE_TD} text-red-500 font-medium`}>{item.absent}</td>
+                        <td className={`${TABLE_TD} text-amber-500 font-medium`}>{item.leave}</td>
+                        <td className={TABLE_TD}>{total}</td>
+                        <td className={TABLE_TD}>
+                          <div className="w-full bg-slate-100 rounded-full h-5 overflow-hidden">
                             <div
-                              className="attendance-fill"
+                              className="bg-indigo-500 h-full rounded-full flex items-center justify-center text-xs text-white font-medium"
                               style={{ width: `${attendancePercent}%` }}
                             >
                               {attendancePercent.toFixed(1)}%
@@ -595,39 +587,43 @@ function Reports({ onLogout, onBack, userName, onNavigate }: ReportsProps) {
       case 'campaign':
         const maxCampaignValue = Math.max(...campaignData.map(d => Math.max(d.reach, d.engagement)))
         return (
-          <div className="report-chart">
-            <h3>Campaign Performance</h3>
-            <div className="campaign-chart">
+          <div>
+            <h3 className="text-sm font-semibold text-slate-900 mb-4">Campaign Performance</h3>
+            <div className="space-y-4">
               {campaignData.map((item, index) => (
-                <div key={index} className="campaign-item">
-                  <div className="campaign-label">{item.campaign}</div>
-                  <div className="campaign-bars">
-                    <div className="campaign-bar-wrapper">
-                      <div className="campaign-bar-label">Reach</div>
-                      <div className="campaign-bar reach" style={{ width: `${(item.reach / maxCampaignValue) * 100}%` }}>
-                        <span>{item.reach}</span>
+                <div key={index} className="space-y-2">
+                  <div className="text-sm font-medium text-slate-700">{item.campaign}</div>
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-xs text-slate-500 w-20 shrink-0">Reach</span>
+                      <div className="flex-1 bg-slate-100 rounded-full h-6 overflow-hidden">
+                        <div className="bg-indigo-500 h-full rounded-full flex items-center justify-end pr-2 text-xs text-white font-medium transition-all" style={{ width: `${(item.reach / maxCampaignValue) * 100}%` }}>
+                          <span>{item.reach}</span>
+                        </div>
                       </div>
                     </div>
-                    <div className="campaign-bar-wrapper">
-                      <div className="campaign-bar-label">Engagement</div>
-                      <div className="campaign-bar engagement" style={{ width: `${(item.engagement / maxCampaignValue) * 100}%` }}>
-                        <span>{item.engagement}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-slate-500 w-20 shrink-0">Engagement</span>
+                      <div className="flex-1 bg-slate-100 rounded-full h-6 overflow-hidden">
+                        <div className="bg-emerald-400 h-full rounded-full flex items-center justify-end pr-2 text-xs text-white font-medium transition-all" style={{ width: `${(item.engagement / maxCampaignValue) * 100}%` }}>
+                          <span>{item.engagement}</span>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
               ))}
             </div>
-            <div className="chart-summary">
-              <div className="summary-item">
-                <span className="summary-label">Total Reach:</span>
-                <span className="summary-value">
+            <div className="grid grid-cols-2 gap-4 mt-4 pt-4 border-t border-slate-100">
+              <div>
+                <span className="text-xs text-slate-500">Total Reach:</span>
+                <span className="text-sm font-semibold text-slate-900 ml-1">
                   {campaignData.reduce((sum, item) => sum + item.reach, 0)} people
                 </span>
               </div>
-              <div className="summary-item">
-                <span className="summary-label">Total Engagement:</span>
-                <span className="summary-value">
+              <div>
+                <span className="text-xs text-slate-500">Total Engagement:</span>
+                <span className="text-sm font-semibold text-slate-900 ml-1">
                   {campaignData.reduce((sum, item) => sum + item.engagement, 0)} interactions
                 </span>
               </div>
@@ -641,256 +637,236 @@ function Reports({ onLogout, onBack, userName, onNavigate }: ReportsProps) {
   }
 
   return (
-    <div className="reports-container">
-      <Header onLogout={onLogout} onMenuClick={handleMenuClick} onNavigateHome={() => onNavigate?.('home')} onNavigateOfflineRequests={() => onNavigate?.('offline-requests')} />
-      <Sidebar isOpen={sidebarOpen} onClose={handleSidebarClose} userName={userName} onNavigate={onNavigate} onLogout={onLogout} />
-      <main className="reports-content">
-        <div className="reports-header">
-          <button className="back-button" onClick={onBack} aria-label="Go back">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M19 12H5M5 12L12 19M5 12L12 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    <div className={PAGE_CONTENT}>
+      <div className="flex items-center gap-3 mb-6">
+        <button className={BACK_BUTTON} onClick={onBack} aria-label="Go back">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M19 12H5M5 12L12 19M5 12L12 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </button>
+        <h1 className={PAGE_TITLE}>Reports</h1>
+      </div>
+
+      <div className="mb-6">
+        <label className={LABEL}>Types of Reports</label>
+        <div className="relative" ref={dropdownRef}>
+          <button
+            className={`${SELECT} flex items-center justify-between cursor-pointer`}
+            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+            aria-label="Select report type"
+          >
+            <span>{selectedReportType}</span>
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              className={`transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`}
+            >
+              <path d="M6 9L12 15L18 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </button>
-          <h1 className="reports-title">Reports</h1>
-        </div>
-
-        <div className="reports-type-selector">
-          <label className="reports-type-label">Types of Reports</label>
-          <div className="dropdown-container" ref={dropdownRef}>
-            <button
-              className="dropdown-button"
-              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              aria-label="Select report type"
-            >
-              <span className="dropdown-selected">{selectedReportType}</span>
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                className={`dropdown-arrow ${isDropdownOpen ? 'open' : ''}`}
-              >
-                <path d="M6 9L12 15L18 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </button>
-            {isDropdownOpen && (
-              <div className="dropdown-menu">
-                {reportTypes.map((type) => (
-                  <button
-                    key={type}
-                    className={`dropdown-item ${selectedReportType === type ? 'active' : ''}`}
-                    onClick={() => {
-                      setSelectedReportType(type)
-                      setIsDropdownOpen(false)
-                    }}
-                  >
-                    {type}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {selectedReportType === 'Dashboard' ? (
-          <DashboardReports />
-        ) : selectedReportType === 'Tour Plan Report' ? (
-          <div className="tour-plan-report-container">
-            <div className="report-card">
-              <div className="table-card">
-                <h3 className="table-title">Tour Plan Report</h3>
-                <div className="table-wrapper">
-                  <table className="cpc-table">
-                    <thead>
-                      <tr>
-                        <th>Month</th>
-                        <th>Planned</th>
-                        <th>Completed</th>
-                        <th>Pending</th>
-                        <th>Completion %</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {tourPlanReportData.map((row, index) => (
-                        <tr key={index}>
-                          <td>{row.month}</td>
-                          <td>{row.planned}</td>
-                          <td>{row.completed}</td>
-                          <td>{row.pending}</td>
-                          <td>{row.completionPercent.toFixed(1)}%</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          </div>
-        ) : selectedReportType === 'Daily Call Report' ? (
-          <div className="tour-plan-report-container">
-            <div className="report-card">
-              <div className="table-card">
-                <h3 className="table-title">Daily Call Report</h3>
-                <div className="table-wrapper">
-                  <table className="cpc-table">
-                    <thead>
-                      <tr>
-                        <th>Customer Name</th>
-                        <th>Visit Date</th>
-                        <th>MR Name</th>
-                        <th>Created Date</th>
-                        <th>Brand Discussed</th>
-                        <th>Accompanied By</th>
-                        <th>Samples</th>
-                        <th>Promotional Inputs</th>
-                        <th>POB</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {dailyCallReportData.map((row, index) => (
-                        <tr key={index}>
-                          <td>{row.customerName}</td>
-                          <td>{row.visitDate}</td>
-                          <td>{row.mrName}</td>
-                          <td>{row.createdDate}</td>
-                          <td>{row.brandDiscussed}</td>
-                          <td>{row.accompaniedBy}</td>
-                          <td>{row.samples}</td>
-                          <td>{row.promotionalInputs}</td>
-                          <td>{row.pob}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          </div>
-        ) : selectedReportType === 'Joint Working Coverage' ? (
-          <div className="tour-plan-report-container">
-            <div className="report-card">
-              <div className="table-card">
-                <h3 className="table-title">Joint Working Coverage</h3>
-                <div className="table-wrapper">
-                  <table className="cpc-table">
-                    <thead>
-                      <tr>
-                        <th>Doctor Name</th>
-                        <th>Coverage %</th>
-                        <th>Total Visits</th>
-                        <th>Completed Visits</th>
-                        <th>Pending Visits</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {jointWorkingCoverageData.map((row, index) => (
-                        <tr key={index}>
-                          <td>{row.doctorName}</td>
-                          <td>{row.coverage}%</td>
-                          <td>{row.totalVisits}</td>
-                          <td>{row.completedVisits}</td>
-                          <td>{row.pendingVisits}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          </div>
-        ) : selectedReportType === 'Call Average' ? (
-          <div className="tour-plan-report-container">
-            <div className="report-card">
-              <div className="table-card">
-                <h3 className="table-title">Call Average</h3>
-                <div className="table-wrapper">
-                  <table className="cpc-table">
-                    <thead>
-                      <tr>
-                        <th>Employee Name</th>
-                        <th>Start Date</th>
-                        <th>End Date</th>
-                        <th>No of Field Working Days</th>
-                        <th>Total Customers</th>
-                        <th>Total Retailers</th>
-                        <th>Total Calls</th>
-                        <th>Doctor Target Calls</th>
-                        <th>Pharmacy Target Calls</th>
-                        <th>Call Average</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {callAverageReportData.map((row, index) => (
-                        <tr key={index}>
-                          <td>{row.employeeName}</td>
-                          <td>{row.startDate}</td>
-                          <td>{row.endDate}</td>
-                          <td>{row.fieldWorkingDays}</td>
-                          <td>{row.totalCustomers}</td>
-                          <td>{row.totalRetailers}</td>
-                          <td>{row.totalCalls}</td>
-                          <td>{row.doctorTargetCalls}</td>
-                          <td>{row.pharmacyTargetCalls}</td>
-                          <td>{row.callAverage}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          </div>
-        ) : (
-        <div className="reports-grid">
-          {reports.map((report) => {
-            const isExpanded = expandedReports.has(report.id)
-            return (
-              <div
-                key={report.id}
-                className={`report-card ${isExpanded ? 'expanded' : ''}`}
-              >
-                <div 
-                  className="report-card-header"
+          {isDropdownOpen && (
+            <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg overflow-hidden">
+              {reportTypes.map((type) => (
+                <button
+                  key={type}
+                  className={`w-full px-4 py-2.5 text-sm text-slate-700 text-left hover:bg-slate-50 transition-colors cursor-pointer bg-transparent border-none ${selectedReportType === type ? 'bg-indigo-50 text-indigo-700 font-medium' : ''}`}
                   onClick={() => {
-                    const newExpanded = new Set(expandedReports)
-                    if (isExpanded) {
-                      newExpanded.delete(report.id)
-                    } else {
-                      newExpanded.add(report.id)
-                    }
-                    setExpandedReports(newExpanded)
+                    setSelectedReportType(type)
+                    setIsDropdownOpen(false)
                   }}
                 >
-                  <div className="report-card-title-section">
-                    <h3 className="report-card-title">{report.title}</h3>
-                    <div className="report-card-count">
-                      <span className="count-value">{report.count.toLocaleString('en-IN')}</span>
-                      <span className="count-label">{report.subtitle}</span>
-                    </div>
-                  </div>
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    className={`expand-icon ${isExpanded ? 'expanded' : ''}`}
-                  >
-                    <path d="M6 9L12 15L18 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                </div>
-                {isExpanded && (
-                  <div className="report-card-content">
-                    {renderReport(report.id)}
-                  </div>
-                )}
-              </div>
-            )
-          })}
+                  {type}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
-        )}
-      </main>
+      </div>
+
+      {selectedReportType === 'Dashboard' ? (
+        <DashboardReports />
+      ) : selectedReportType === 'Tour Plan Report' ? (
+        <div className={`${CARD} ${CARD_PADDING}`}>
+          <h3 className="text-base font-semibold text-slate-900 mb-4">Tour Plan Report</h3>
+          <div className={TABLE_WRAPPER}>
+            <table className={TABLE}>
+              <thead className={TABLE_HEAD}>
+                <tr>
+                  <th className={TABLE_TH}>Month</th>
+                  <th className={TABLE_TH}>Planned</th>
+                  <th className={TABLE_TH}>Completed</th>
+                  <th className={TABLE_TH}>Pending</th>
+                  <th className={TABLE_TH}>Completion %</th>
+                </tr>
+              </thead>
+              <tbody>
+                {tourPlanReportData.map((row, index) => (
+                  <tr key={index} className={TABLE_ROW}>
+                    <td className={TABLE_TD}>{row.month}</td>
+                    <td className={TABLE_TD}>{row.planned}</td>
+                    <td className={TABLE_TD}>{row.completed}</td>
+                    <td className={TABLE_TD}>{row.pending}</td>
+                    <td className={TABLE_TD}>{row.completionPercent.toFixed(1)}%</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ) : selectedReportType === 'Daily Call Report' ? (
+        <div className={`${CARD} ${CARD_PADDING}`}>
+          <h3 className="text-base font-semibold text-slate-900 mb-4">Daily Call Report</h3>
+          <div className={TABLE_WRAPPER}>
+            <table className={TABLE}>
+              <thead className={TABLE_HEAD}>
+                <tr>
+                  <th className={TABLE_TH}>Customer Name</th>
+                  <th className={TABLE_TH}>Visit Date</th>
+                  <th className={TABLE_TH}>MR Name</th>
+                  <th className={TABLE_TH}>Created Date</th>
+                  <th className={TABLE_TH}>Brand Discussed</th>
+                  <th className={TABLE_TH}>Accompanied By</th>
+                  <th className={TABLE_TH}>Samples</th>
+                  <th className={TABLE_TH}>Promotional Inputs</th>
+                  <th className={TABLE_TH}>POB</th>
+                </tr>
+              </thead>
+              <tbody>
+                {dailyCallReportData.map((row, index) => (
+                  <tr key={index} className={TABLE_ROW}>
+                    <td className={TABLE_TD}>{row.customerName}</td>
+                    <td className={TABLE_TD}>{row.visitDate}</td>
+                    <td className={TABLE_TD}>{row.mrName}</td>
+                    <td className={TABLE_TD}>{row.createdDate}</td>
+                    <td className={TABLE_TD}>{row.brandDiscussed}</td>
+                    <td className={TABLE_TD}>{row.accompaniedBy}</td>
+                    <td className={TABLE_TD}>{row.samples}</td>
+                    <td className={TABLE_TD}>{row.promotionalInputs}</td>
+                    <td className={TABLE_TD}>{row.pob}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ) : selectedReportType === 'Joint Working Coverage' ? (
+        <div className={`${CARD} ${CARD_PADDING}`}>
+          <h3 className="text-base font-semibold text-slate-900 mb-4">Joint Working Coverage</h3>
+          <div className={TABLE_WRAPPER}>
+            <table className={TABLE}>
+              <thead className={TABLE_HEAD}>
+                <tr>
+                  <th className={TABLE_TH}>Doctor Name</th>
+                  <th className={TABLE_TH}>Coverage %</th>
+                  <th className={TABLE_TH}>Total Visits</th>
+                  <th className={TABLE_TH}>Completed Visits</th>
+                  <th className={TABLE_TH}>Pending Visits</th>
+                </tr>
+              </thead>
+              <tbody>
+                {jointWorkingCoverageData.map((row, index) => (
+                  <tr key={index} className={TABLE_ROW}>
+                    <td className={TABLE_TD}>{row.doctorName}</td>
+                    <td className={TABLE_TD}>{row.coverage}%</td>
+                    <td className={TABLE_TD}>{row.totalVisits}</td>
+                    <td className={TABLE_TD}>{row.completedVisits}</td>
+                    <td className={TABLE_TD}>{row.pendingVisits}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ) : selectedReportType === 'Call Average' ? (
+        <div className={`${CARD} ${CARD_PADDING}`}>
+          <h3 className="text-base font-semibold text-slate-900 mb-4">Call Average</h3>
+          <div className={TABLE_WRAPPER}>
+            <table className={TABLE}>
+              <thead className={TABLE_HEAD}>
+                <tr>
+                  <th className={TABLE_TH}>Employee Name</th>
+                  <th className={TABLE_TH}>Start Date</th>
+                  <th className={TABLE_TH}>End Date</th>
+                  <th className={TABLE_TH}>No of Field Working Days</th>
+                  <th className={TABLE_TH}>Total Customers</th>
+                  <th className={TABLE_TH}>Total Retailers</th>
+                  <th className={TABLE_TH}>Total Calls</th>
+                  <th className={TABLE_TH}>Doctor Target Calls</th>
+                  <th className={TABLE_TH}>Pharmacy Target Calls</th>
+                  <th className={TABLE_TH}>Call Average</th>
+                </tr>
+              </thead>
+              <tbody>
+                {callAverageReportData.map((row, index) => (
+                  <tr key={index} className={TABLE_ROW}>
+                    <td className={TABLE_TD}>{row.employeeName}</td>
+                    <td className={TABLE_TD}>{row.startDate}</td>
+                    <td className={TABLE_TD}>{row.endDate}</td>
+                    <td className={TABLE_TD}>{row.fieldWorkingDays}</td>
+                    <td className={TABLE_TD}>{row.totalCustomers}</td>
+                    <td className={TABLE_TD}>{row.totalRetailers}</td>
+                    <td className={TABLE_TD}>{row.totalCalls}</td>
+                    <td className={TABLE_TD}>{row.doctorTargetCalls}</td>
+                    <td className={TABLE_TD}>{row.pharmacyTargetCalls}</td>
+                    <td className={TABLE_TD}>{row.callAverage}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ) : (
+      <div className="space-y-3">
+        {reports.map((report) => {
+          const isExpanded = expandedReports.has(report.id)
+          return (
+            <div
+              key={report.id}
+              className={`${CARD} overflow-hidden`}
+            >
+              <div
+                className="flex items-center justify-between px-5 py-4 cursor-pointer hover:bg-slate-50 transition-colors"
+                onClick={() => {
+                  const newExpanded = new Set(expandedReports)
+                  if (isExpanded) {
+                    newExpanded.delete(report.id)
+                  } else {
+                    newExpanded.add(report.id)
+                  }
+                  setExpandedReports(newExpanded)
+                }}
+              >
+                <div>
+                  <h3 className="text-sm font-semibold text-slate-900">{report.title}</h3>
+                  <div>
+                    <span className="text-lg font-bold text-indigo-600">{report.count.toLocaleString('en-IN')}</span>
+                    <span className="text-xs text-slate-500 ml-1">{report.subtitle}</span>
+                  </div>
+                </div>
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  className={`transition-transform text-slate-400 ${isExpanded ? 'rotate-180' : ''}`}
+                >
+                  <path d="M6 9L12 15L18 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+              {isExpanded && (
+                <div className="px-5 pb-5 border-t border-slate-100 pt-4">
+                  {renderReport(report.id)}
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
+      )}
     </div>
   )
 }

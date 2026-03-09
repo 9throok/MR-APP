@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { useLanguage } from '../contexts/LanguageContext'
 import type { Language } from '../contexts/LanguageContext'
-import './LanguageSelector.css'
 
 const languages: Array<{ code: Language; name: string; nativeName: string; flag: string }> = [
   // Indian Languages
@@ -56,9 +55,9 @@ function LanguageSelector() {
   }
 
   return (
-    <div className="language-selector" ref={dropdownRef}>
+    <div className="relative" ref={dropdownRef}>
       <button
-        className="language-selector-button"
+        className="flex items-center gap-2 px-3 py-2 text-sm text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer bg-transparent border-none"
         onClick={() => setIsOpen(!isOpen)}
         aria-label="Select language"
         aria-expanded={isOpen}
@@ -69,15 +68,15 @@ function LanguageSelector() {
         </svg>
       </button>
       {isOpen && (
-        <div className="language-dropdown">
+        <div className="absolute right-0 top-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg py-1 z-50 min-w-[160px]">
           {languages.map((lang) => (
             <button
               key={lang.code}
-              className={`language-option ${language === lang.code ? 'active' : ''}`}
+              className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer bg-transparent border-none text-left ${language === lang.code ? 'bg-indigo-50 text-indigo-700 font-medium' : ''}`}
               onClick={() => handleLanguageChange(lang.code)}
             >
-              <span className="language-flag">{lang.flag}</span>
-              <span className="language-option-native">{lang.nativeName} - {lang.name}</span>
+              <span className="text-lg">{lang.flag}</span>
+              <span className="text-xs text-slate-400">{lang.nativeName} - {lang.name}</span>
             </button>
           ))}
         </div>
@@ -87,4 +86,3 @@ function LanguageSelector() {
 }
 
 export default LanguageSelector
-

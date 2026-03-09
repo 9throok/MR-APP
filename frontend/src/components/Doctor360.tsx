@@ -1,7 +1,17 @@
 import { useState, useEffect } from 'react'
-import Header from './Header'
-import Sidebar from './Sidebar'
-import './Doctor360.css'
+import {
+  PAGE_CONTENT,
+  PAGE_TITLE,
+  BACK_BUTTON,
+  CARD,
+  CARD_PADDING,
+  CARD_SM_PADDING,
+  BTN_SECONDARY,
+  SECTION_TITLE,
+  BADGE_PRIMARY,
+  BADGE_INFO,
+  BADGE_SUCCESS,
+} from '../styles/designSystem'
 
 interface Doctor360Props {
   onLogout: () => void
@@ -21,8 +31,7 @@ interface HistoryItem {
   amount?: number
 }
 
-function Doctor360({ onLogout, onBack, userName, onNavigate }: Doctor360Props) {
-  const [sidebarOpen, setSidebarOpen] = useState(false)
+function Doctor360({ onLogout: _onLogout, onBack, userName: _userName, onNavigate }: Doctor360Props) {
   const [client, setClient] = useState<any>(null)
 
   useEffect(() => {
@@ -32,14 +41,6 @@ function Doctor360({ onLogout, onBack, userName, onNavigate }: Doctor360Props) {
       setClient(JSON.parse(stored))
     }
   }, [])
-
-  const handleMenuClick = () => {
-    setSidebarOpen(true)
-  }
-
-  const handleSidebarClose = () => {
-    setSidebarOpen(false)
-  }
 
   const handleBackClick = () => {
     sessionStorage.removeItem('doctor360Client')
@@ -210,60 +211,73 @@ function Doctor360({ onLogout, onBack, userName, onNavigate }: Doctor360Props) {
   const maxSamples = Math.max(...samplesGivenData.map(d => d.quantity))
 
   return (
-    <div className="doctor360-container">
-      <Header onLogout={onLogout} onMenuClick={handleMenuClick} onNavigateHome={() => onNavigate?.('home')} onNavigateOfflineRequests={() => onNavigate?.('offline-requests')} />
-      <Sidebar isOpen={sidebarOpen} onClose={handleSidebarClose} userName={userName} onNavigate={onNavigate} onLogout={onLogout} />
-      <main className="doctor360-content">
-        <div className="doctor360-header">
-          <button className="back-button" onClick={handleBackClick} aria-label="Go back">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M19 12H5M5 12L12 19M5 12L12 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </button>
-          <h1 className="doctor360-title">
-            {clientInfo.type === 'doctor' ? 'Doctor Details' : clientInfo.type === 'pharmacy' ? 'Pharmacy Details' : 'Distributor Details'}
-          </h1>
-        </div>
+    <div className={PAGE_CONTENT}>
+      <div className="flex items-center gap-3 mb-6">
+        <button className={BACK_BUTTON} onClick={handleBackClick} aria-label="Go back">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M19 12H5M5 12L12 19M5 12L12 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </button>
+        <h1 className={PAGE_TITLE}>
+          {clientInfo.type === 'doctor' ? 'Doctor Details' : clientInfo.type === 'pharmacy' ? 'Pharmacy Details' : 'Distributor Details'}
+        </h1>
+      </div>
 
-        {/* Client Info Card */}
-        <div className="info-card">
-          <div className="info-card-header">
-            <div className="client-avatar-large">
-              {(() => {
-                // Split name and filter out titles like "Dr.", "Mr.", etc.
-                const nameParts = clientInfo.name.trim().split(/\s+/).filter((part: string) => part && !part.match(/^[A-Z][a-z]?\.$/))
-                // Get first name (first part after filtering)
-                const firstName = nameParts.length > 0 ? nameParts[0] : ''
-                // Get last name (last part, which should be different from first name if multiple parts exist)
-                const lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : nameParts[0] || ''
-                const firstLetter = firstName ? firstName.charAt(0).toUpperCase() : ''
-                const lastLetter = lastName ? lastName.charAt(0).toUpperCase() : ''
-                return firstLetter + lastLetter
-              })()}
-            </div>
-            <div className="client-main-info">
-              <h2>{clientInfo.name}</h2>
-              {clientInfo.specialization && (
-                <p className="specialization">{clientInfo.specialization}</p>
-              )}
-              {clientInfo.qualification && (
-                <p className="qualification">{clientInfo.qualification}</p>
-              )}
+      {/* Client Info Card */}
+      <div className={`${CARD} ${CARD_PADDING}`}>
+        <div className="flex items-start gap-5 flex-wrap">
+          <div className="w-16 h-16 rounded-2xl bg-indigo-100 text-indigo-700 flex items-center justify-center text-xl font-bold shrink-0">
+            {(() => {
+              // Split name and filter out titles like "Dr.", "Mr.", etc.
+              const nameParts = clientInfo.name.trim().split(/\s+/).filter((part: string) => part && !part.match(/^[A-Z][a-z]?\.$/))
+              // Get first name (first part after filtering)
+              const firstName = nameParts.length > 0 ? nameParts[0] : ''
+              // Get last name (last part, which should be different from first name if multiple parts exist)
+              const lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : nameParts[0] || ''
+              const firstLetter = firstName ? firstName.charAt(0).toUpperCase() : ''
+              const lastLetter = lastName ? lastName.charAt(0).toUpperCase() : ''
+              return firstLetter + lastLetter
+            })()}
+          </div>
+          <div className="flex-1 min-w-0">
+            <h2 className="text-xl font-semibold text-slate-900">{clientInfo.name}</h2>
+            {clientInfo.specialization && (
+              <p className="text-sm text-indigo-600 font-medium">{clientInfo.specialization}</p>
+            )}
+            {clientInfo.qualification && (
+              <p className="text-sm text-slate-500">{clientInfo.qualification}</p>
+            )}
+            <div>
+                <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">Mobile: </span>
+                <span className="text-sm text-slate-700">{clientInfo.mobile}</span>
+              </div>
               <div>
-                  <span className="info-label">Mobile: </span>
-                  <span className="info-value">{clientInfo.mobile}</span>
-                </div>
-                <div>
-                  <span className="info-label">Email: </span>
-                  <span className="info-value">test@zenapp.com</span>
-                </div>
-            </div>
-            <div className="doctor-actions">
-              {/* DCR button - shown for doctor, pharmacy, and distributor */}
+                <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">Email: </span>
+                <span className="text-sm text-slate-700">test@zenapp.com</span>
+              </div>
+          </div>
+          <div className="flex gap-2 ml-auto">
+            {/* DCR button - shown for doctor, pharmacy, and distributor */}
+            <button
+              className={BTN_SECONDARY}
+              onClick={handleDCR}
+              aria-label="DCR"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M14 2V8H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M16 13H8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M16 17H8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M10 9H9H8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              <span>DCR</span>
+            </button>
+            {/* RCPA button - only shown for pharmacy */}
+            {clientInfo.type === 'pharmacy' && (
               <button
-                className="doctor-action-btn"
-                onClick={handleDCR}
-                aria-label="DCR"
+                className={BTN_SECONDARY}
+                onClick={() => onNavigate?.('enter-rcpa')}
+                aria-label="RCPA Entry"
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -272,241 +286,223 @@ function Doctor360({ onLogout, onBack, userName, onNavigate }: Doctor360Props) {
                   <path d="M16 17H8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                   <path d="M10 9H9H8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
-                <span>DCR</span>
+                <span>RCPA</span>
               </button>
-              {/* RCPA button - only shown for pharmacy */}
-              {clientInfo.type === 'pharmacy' && (
-                <button
-                  className="doctor-action-btn"
-                  onClick={() => onNavigate?.('enter-rcpa')}
-                  aria-label="RCPA Entry"
-                >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M14 2V8H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M16 13H8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M16 17H8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M10 9H9H8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                  <span>RCPA</span>
-                </button>
-              )}
-              {/* eDetailing button - shown for doctor, pharmacy, and distributor */}
-              <button
-                className="doctor-action-btn"
-                onClick={() => onNavigate?.('edetailing')}
-                aria-label="eDetailing"
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-                <span>eDetailing</span>
-              </button>
-            </div>
+            )}
+            {/* eDetailing button - shown for doctor, pharmacy, and distributor */}
+            <button
+              className={BTN_SECONDARY}
+              onClick={() => onNavigate?.('edetailing')}
+              aria-label="eDetailing"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              <span>eDetailing</span>
+            </button>
           </div>
-          <div className="info-card-body">
-            <div className="info-grid">
-              <div className="info-item">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M19.5 12C19.5 12.2761 19.2761 12.5 19 12.5C18.7239 12.5 18.5 12.2761 18.5 12C18.5 11.7239 18.7239 11.5 19 11.5C19.2761 11.5 19.5 11.7239 19.5 12Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M12 3L4 7V11C4 16.55 7.84 21.74 12 23C16.16 21.74 20 16.55 20 11V7L12 3Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
+        </div>
+        <div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 pt-6 border-t border-slate-100">
+            <div className="flex gap-3 text-slate-500">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M19.5 12C19.5 12.2761 19.2761 12.5 19 12.5C18.7239 12.5 18.5 12.2761 18.5 12C18.5 11.7239 18.7239 11.5 19 11.5C19.2761 11.5 19.5 11.7239 19.5 12Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M12 3L4 7V11C4 16.55 7.84 21.74 12 23C16.16 21.74 20 16.55 20 11V7L12 3Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              <div>
                 <div>
-                  <div>
-                    <span className="info-label">
-                      {clientInfo.type === 'doctor' ? 'Prescribed Medicines' : clientInfo.type === 'pharmacy' ? 'Prescribed Doctors' : 'Medicines'}
-                    </span>
-                  </div>
-                  {clientInfo.type === 'doctor' || clientInfo.type === 'distributor' ? (
-                    <>
-                      <div>
-                        <span className="info-value">1. Atorvastatin 20mg</span>
-                      </div>
-                      <div>
-                        <span className="info-value">2. Metoprolol 50mg</span>
-                      </div>
-                      <div>
-                        <span className="info-value">3. Aspirin 75mg</span>
-                      </div>
-                      <div>
-                        <span className="info-value">4. Enalapril 5mg</span>
-                      </div>
-                    </>
-                  ) : clientInfo.type === 'pharmacy' ? (
-                    <>
-                      <div>
-                        <span className="info-value">1. Dr. Anil Doshi, Cardiologist</span>
-                      </div>
-                      <div>
-                        <span className="info-value">2. Dr. Navin Chaddha, Neurologist</span>
-                      </div>
-                      <div>
-                        <span className="info-value">3. Dr. Surbhi Rel, Gynecologist</span>
-                      </div>
-                      <div>
-                        <span className="info-value">4. Dr. Rajesh Kumar, Orthopedic</span>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <div>
-                        <span className="info-value">1. Apollo Hospital, Mumbai</span>
-                      </div>
-                      <div>
-                        <span className="info-value">2. Fortis Hospital, Delhi</span>
-                      </div>
-                      <div>
-                        <span className="info-value">3. Max Hospital, Bangalore</span>
-                      </div>
-                      <div>
-                        <span className="info-value">4. New Life Hospital, Pune</span>
-                      </div>
-                    </>
-                  )}
+                  <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">
+                    {clientInfo.type === 'doctor' ? 'Prescribed Medicines' : clientInfo.type === 'pharmacy' ? 'Prescribed Doctors' : 'Medicines'}
+                  </span>
+                </div>
+                {clientInfo.type === 'doctor' || clientInfo.type === 'distributor' ? (
+                  <>
+                    <div>
+                      <span className="text-sm text-slate-700">1. Atorvastatin 20mg</span>
+                    </div>
+                    <div>
+                      <span className="text-sm text-slate-700">2. Metoprolol 50mg</span>
+                    </div>
+                    <div>
+                      <span className="text-sm text-slate-700">3. Aspirin 75mg</span>
+                    </div>
+                    <div>
+                      <span className="text-sm text-slate-700">4. Enalapril 5mg</span>
+                    </div>
+                  </>
+                ) : clientInfo.type === 'pharmacy' ? (
+                  <>
+                    <div>
+                      <span className="text-sm text-slate-700">1. Dr. Anil Doshi, Cardiologist</span>
+                    </div>
+                    <div>
+                      <span className="text-sm text-slate-700">2. Dr. Navin Chaddha, Neurologist</span>
+                    </div>
+                    <div>
+                      <span className="text-sm text-slate-700">3. Dr. Surbhi Rel, Gynecologist</span>
+                    </div>
+                    <div>
+                      <span className="text-sm text-slate-700">4. Dr. Rajesh Kumar, Orthopedic</span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div>
+                      <span className="text-sm text-slate-700">1. Apollo Hospital, Mumbai</span>
+                    </div>
+                    <div>
+                      <span className="text-sm text-slate-700">2. Fortis Hospital, Delhi</span>
+                    </div>
+                    <div>
+                      <span className="text-sm text-slate-700">3. Max Hospital, Bangalore</span>
+                    </div>
+                    <div>
+                      <span className="text-sm text-slate-700">4. New Life Hospital, Pune</span>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {clientInfo.type === 'doctor' ? (
+              <div className="flex gap-3 text-slate-500">
+                <div>
+                  <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">Address</span>
+                  <span className="text-sm text-slate-700">{clientInfo.homeAddress || clientInfo.address || 'N/A'}</span>
+                </div>
+                <div>
+                  <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">Hospital Address</span>
+                  <span className="text-sm text-slate-700">607, Mantra Hospital, Bandra West, Mumbai - 400050</span>
+                </div>
+                <div>
+                  <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">Clinic Address</span>
+                  <span className="text-sm text-slate-700">456, Health Care Center, Andheri East, Mumbai - 400069</span>
                 </div>
               </div>
-              
-              {clientInfo.type === 'doctor' ? (
-                <div className="info-item">
-                  <div>
-                    <span className="info-label">Address</span>
-                    <span className="info-value">{clientInfo.homeAddress || clientInfo.address || 'N/A'}</span>
-                  </div>
-                  <div>
-                    <span className="info-label">Hospital Address</span>
-                    <span className="info-value">607, Mantra Hospital, Bandra West, Mumbai - 400050</span>
-                  </div>
-                  <div>
-                    <span className="info-label">Clinic Address</span>
-                    <span className="info-value">456, Health Care Center, Andheri East, Mumbai - 400069</span>
-                  </div>
+            ) : (
+              <div className="flex gap-3 text-slate-500">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M21 10C21 17 12 23 12 23C12 23 3 17 3 10C3 7.61305 3.94821 5.32387 5.63604 3.63604C7.32387 1.94821 9.61305 1 12 1C14.3869 1 16.6761 1.94821 18.364 3.63604C20.0518 5.32387 21 7.61305 21 10Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M12 13C13.6569 13 15 11.6569 15 10C15 8.34315 13.6569 7 12 7C10.3431 7 9 8.34315 9 10C9 11.6569 10.3431 13 12 13Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                <div>
+                  <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">Address</span>
+                  <span className="text-sm text-slate-700">{clientInfo.address || (clientInfo as any).homeAddress || 'N/A'}</span>
                 </div>
-              ) : (
-                <div className="info-item">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M21 10C21 17 12 23 12 23C12 23 3 17 3 10C3 7.61305 3.94821 5.32387 5.63604 3.63604C7.32387 1.94821 9.61305 1 12 1C14.3869 1 16.6761 1.94821 18.364 3.63604C20.0518 5.32387 21 7.61305 21 10Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M12 13C13.6569 13 15 11.6569 15 10C15 8.34315 13.6569 7 12 7C10.3431 7 9 8.34315 9 10C9 11.6569 10.3431 13 12 13Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                  <div>
-                    <span className="info-label">Address</span>
-                    <span className="info-value">{clientInfo.address || (clientInfo as any).homeAddress || 'N/A'}</span>
-                  </div>
+              </div>
+            )}
+            {clientInfo.consultationFee && (
+              <div className="flex gap-3 text-slate-500">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 1V23M17 5H9.5C8.57174 5 7.6815 5.36875 7.02513 6.02513C6.36875 6.6815 6 7.57174 6 8.5C6 9.42826 6.36875 10.3185 7.02513 10.9749C7.6815 11.6313 8.57174 12 9.5 12H14.5C15.4283 12 16.3185 12.3687 16.9749 13.0251C17.6313 13.6815 18 14.5717 18 15.5C18 16.4283 17.6313 17.3185 16.9749 17.9749C16.3185 18.6313 15.4283 19 14.5 19H6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                <div>
+                  <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">Consultation Fee</span>
+                  <span className="text-sm text-slate-700">{clientInfo.consultationFee}</span>
                 </div>
-              )}
-              {clientInfo.consultationFee && (
-                <div className="info-item">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 1V23M17 5H9.5C8.57174 5 7.6815 5.36875 7.02513 6.02513C6.36875 6.6815 6 7.57174 6 8.5C6 9.42826 6.36875 10.3185 7.02513 10.9749C7.6815 11.6313 8.57174 12 9.5 12H14.5C15.4283 12 16.3185 12.3687 16.9749 13.0251C17.6313 13.6815 18 14.5717 18 15.5C18 16.4283 17.6313 17.3185 16.9749 17.9749C16.3185 18.6313 15.4283 19 14.5 19H6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                  <div>
-                    <span className="info-label">Consultation Fee</span>
-                    <span className="info-value">{clientInfo.consultationFee}</span>
-                  </div>
+              </div>
+            )}
+            {clientInfo.timings && (
+              <div className="flex gap-3 text-slate-500">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
+                  <path d="M12 6V12L16 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                </svg>
+                <div>
+                  <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">Timings</span>
+                  <span className="text-sm text-slate-700">{clientInfo.timings}</span>
                 </div>
-              )}
-              {clientInfo.timings && (
-                <div className="info-item">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
-                    <path d="M12 6V12L16 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                  </svg>
-                  <div>
-                    <span className="info-label">Timings</span>
-                    <span className="info-value">{clientInfo.timings}</span>
-                  </div>
-                </div>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </div>
+      </div>
 
-        {/* Charts Section */}
-        <div className="charts-grid">
-          {/* Number Of Visits Chart */}
-          <div className="chart-card">
-            <h3 className="chart-title">Number Of Visits</h3>
-            <div className="horizontal-bar-chart">
-              {callFrequencyData.map((item, index) => (
-                <div key={index} className="bar-item">
-                  <span className="bar-label">{item.month}</span>
-                  <div className="bar-wrapper">
-                    <div
-                      className="bar"
-                      style={{ width: `${(item.calls / maxCalls) * 100}%` }}
-                    >
-                      <span className="bar-value">{item.calls}</span>
-                    </div>
+      {/* Charts Section */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+        {/* Number Of Visits Chart */}
+        <div className={`${CARD} ${CARD_PADDING}`}>
+          <h3 className="text-sm font-semibold text-slate-900 mb-4">Number Of Visits</h3>
+          <div className="space-y-3">
+            {callFrequencyData.map((item, index) => (
+              <div key={index} className="flex items-center gap-3">
+                <span className="text-xs text-slate-500 w-8 shrink-0">{item.month}</span>
+                <div className="flex-1 bg-slate-100 rounded-full h-6 overflow-hidden">
+                  <div
+                    className="bg-indigo-500 h-full rounded-full flex items-center justify-end pr-2 text-xs text-white font-medium transition-all"
+                    style={{ width: `${(item.calls / maxCalls) * 100}%` }}
+                  >
+                    <span>{item.calls}</span>
                   </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-
-          {/* Samples Given Chart */}
-          <div className="chart-card">
-            <h3 className="chart-title">Samples Given</h3>
-            <div className="horizontal-bar-chart">
-              {samplesGivenData.map((item, index) => (
-                <div key={index} className="bar-item">
-                  <span className="bar-label">{item.sample}</span>
-                  <div className="bar-wrapper">
-                    <div
-                      className="bar samples-bar"
-                      style={{ width: `${(item.quantity / maxSamples) * 100}%` }}
-                    >
-                      <span className="bar-value">{item.quantity}</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* History Timeline */}
-        <div className="history-section">
-          <h2 className="section-title">Interaction History</h2>
-          <div className="timeline">
-            {historyData.map((item) => (
-              <div key={item.id} className="timeline-item">
-                <div className="timeline-marker">
-                  <div className="timeline-icon">{getHistoryIcon(item.type)}</div>
-                </div>
-                <div className="timeline-content">
-                  <div className="timeline-header">
-                    <h4 className="timeline-title">{item.title}</h4>
-                    <span className="timeline-date">{formatDate(item.date)}</span>
-                  </div>
-                  <p className="timeline-description">{item.description}</p>
-                  {item.brand && (
-                    <div className="timeline-meta">
-                      <span className="meta-badge brand-badge">{item.brand}</span>
-                    </div>
-                  )}
-                  {item.samples && item.samples.length > 0 && (
-                    <div className="timeline-meta">
-                      {item.samples.map((sample, idx) => (
-                        <span key={idx} className="meta-badge sample-badge">{sample}</span>
-                      ))}
-                    </div>
-                  )}
-                  {item.amount && (
-                    <div className="timeline-meta">
-                      <span className="meta-badge amount-badge">Order Value: ₹{item.amount.toLocaleString('en-IN')}</span>
-                    </div>
-                  )}
                 </div>
               </div>
             ))}
           </div>
         </div>
-      </main>
+
+
+        {/* Samples Given Chart */}
+        <div className={`${CARD} ${CARD_PADDING}`}>
+          <h3 className="text-sm font-semibold text-slate-900 mb-4">Samples Given</h3>
+          <div className="space-y-3">
+            {samplesGivenData.map((item, index) => (
+              <div key={index} className="flex items-center gap-3">
+                <span className="text-xs text-slate-500 w-8 shrink-0">{item.sample}</span>
+                <div className="flex-1 bg-slate-100 rounded-full h-6 overflow-hidden">
+                  <div
+                    className="bg-emerald-500 h-full rounded-full flex items-center justify-end pr-2 text-xs text-white font-medium transition-all"
+                    style={{ width: `${(item.quantity / maxSamples) * 100}%` }}
+                  >
+                    <span>{item.quantity}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* History Timeline */}
+      <div className="mt-6">
+        <h2 className={SECTION_TITLE}>Interaction History</h2>
+        <div className="space-y-4">
+          {historyData.map((item) => (
+            <div key={item.id} className={`${CARD} ${CARD_SM_PADDING} flex gap-4`}>
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-slate-100 text-slate-500">
+                {getHistoryIcon(item.type)}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-sm font-semibold text-slate-900">{item.title}</h4>
+                  <span className="text-xs text-slate-400">{formatDate(item.date)}</span>
+                </div>
+                <p className="text-sm text-slate-600 mt-1">{item.description}</p>
+                {item.brand && (
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    <span className={BADGE_PRIMARY}>{item.brand}</span>
+                  </div>
+                )}
+                {item.samples && item.samples.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {item.samples.map((sample, idx) => (
+                      <span key={idx} className={BADGE_INFO}>{sample}</span>
+                    ))}
+                  </div>
+                )}
+                {item.amount && (
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    <span className={BADGE_SUCCESS}>Order Value: ₹{item.amount.toLocaleString('en-IN')}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   )
 }
 
 export default Doctor360
-

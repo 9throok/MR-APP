@@ -1,9 +1,29 @@
 import { useState, useEffect } from 'react'
-import Header from './Header'
-import Sidebar from './Sidebar'
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, LineElement, PointElement, Title, Tooltip, Legend, Filler, ArcElement, RadialLinearScale } from 'chart.js'
 import { Bar, Line, Pie, Radar } from 'react-chartjs-2'
-import './MRDetail.css'
+import {
+  PAGE_CONTENT,
+  PAGE_TITLE,
+  PAGE_SUBTITLE,
+  BACK_BUTTON,
+  CARD,
+  CARD_PADDING,
+  TAB_CONTAINER,
+  TAB_ACTIVE,
+  TAB_ITEM,
+  STAT_CARD,
+  STAT_VALUE,
+  STAT_LABEL,
+  BADGE_SUCCESS,
+  BADGE_DANGER,
+  BADGE_DEFAULT,
+  TABLE_WRAPPER,
+  TABLE,
+  TABLE_HEAD,
+  TABLE_TH,
+  TABLE_TD,
+  TABLE_ROW,
+} from '../styles/designSystem'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, LineElement, PointElement, Title, Tooltip, Legend, Filler, ArcElement, RadialLinearScale)
 
@@ -25,8 +45,7 @@ interface MRDetailProps {
   onNavigate?: (page: string) => void
 }
 
-function MRDetail({ onLogout, onBack, userName, onNavigate }: MRDetailProps) {
-  const [sidebarOpen, setSidebarOpen] = useState(false)
+function MRDetail({ onLogout: _onLogout, onBack, userName: _userName, onNavigate: _onNavigate }: MRDetailProps) {
   const [selectedMR, setSelectedMR] = useState<MR | null>(null)
   const [activeTab, setActiveTab] = useState<'overview' | 'sales' | 'visits' | 'dcr' | 'rcpa' | 'commission'>('overview')
 
@@ -41,14 +60,6 @@ function MRDetail({ onLogout, onBack, userName, onNavigate }: MRDetailProps) {
       console.error('Error loading MR data:', error)
     }
   }, [])
-
-  const handleMenuClick = () => {
-    setSidebarOpen(true)
-  }
-
-  const handleSidebarClose = () => {
-    setSidebarOpen(false)
-  }
 
   // Get current and previous month names
   const getCurrentMonth = () => {
@@ -67,7 +78,7 @@ function MRDetail({ onLogout, onBack, userName, onNavigate }: MRDetailProps) {
     const now = new Date()
     const currentMonthIndex = now.getMonth()
     const currentYear = now.getFullYear()
-    
+
     // Sample commission data
     const sampleData = [
       { sales: 125000, target: 150000, achievement: 83.3, commissionRate: 5.0, commissionAmount: 6250, bonus: 0 },
@@ -83,7 +94,7 @@ function MRDetail({ onLogout, onBack, userName, onNavigate }: MRDetailProps) {
       { sales: 162000, target: 150000, achievement: 108.0, commissionRate: 6.5, commissionAmount: 10530, bonus: 3500 },
       { sales: 165000, target: 150000, achievement: 110.0, commissionRate: 7.0, commissionAmount: 11550, bonus: 4000 },
     ]
-    
+
     // Get previous 6 months (excluding current month)
     const commissionData = []
     for (let i = 6; i >= 1; i--) {
@@ -92,7 +103,7 @@ function MRDetail({ onLogout, onBack, userName, onNavigate }: MRDetailProps) {
       const monthName = months[monthIndex]
       const dataIndex = (currentMonthIndex - i + 12) % 12
       const data = sampleData[dataIndex] || sampleData[0]
-      
+
       commissionData.push({
         month: `${monthName} ${year}`,
         sales: data.sales,
@@ -105,7 +116,7 @@ function MRDetail({ onLogout, onBack, userName, onNavigate }: MRDetailProps) {
         totalEarning: data.commissionAmount + data.bonus
       })
     }
-    
+
     return commissionData
   }
 
@@ -148,11 +159,11 @@ function MRDetail({ onLogout, onBack, userName, onNavigate }: MRDetailProps) {
           Math.max(0, overviewData.sales.target - overviewData.sales.current)
         ],
         backgroundColor: [
-          'rgba(76, 175, 80, 0.8)',
+          'rgba(79, 70, 229, 0.8)',
           'rgba(255, 152, 0, 0.6)'
         ],
         borderColor: [
-          'rgba(76, 175, 80, 1)',
+          'rgba(79, 70, 229, 1)',
           'rgba(255, 152, 0, 1)'
         ],
         borderWidth: 2,
@@ -194,8 +205,8 @@ function MRDetail({ onLogout, onBack, userName, onNavigate }: MRDetailProps) {
       {
         label: 'Current Month',
         data: [5, 6, 7, 6],
-        borderColor: 'rgba(76, 175, 80, 1)',
-        backgroundColor: 'rgba(76, 175, 80, 0.1)',
+        borderColor: 'rgba(79, 70, 229, 1)',
+        backgroundColor: 'rgba(79, 70, 229, 0.1)',
         fill: true,
         tension: 0.4,
       },
@@ -242,12 +253,12 @@ function MRDetail({ onLogout, onBack, userName, onNavigate }: MRDetailProps) {
         data: [overviewData.dcr.previous, overviewData.dcr.current, overviewData.dcr.target],
         backgroundColor: [
           'rgba(156, 39, 176, 0.6)',
-          'rgba(76, 175, 80, 0.8)',
+          'rgba(79, 70, 229, 0.8)',
           'rgba(255, 152, 0, 0.6)'
         ],
         borderColor: [
           'rgba(156, 39, 176, 1)',
-          'rgba(76, 175, 80, 1)',
+          'rgba(79, 70, 229, 1)',
           'rgba(255, 152, 0, 1)'
         ],
         borderWidth: 2,
@@ -282,13 +293,13 @@ function MRDetail({ onLogout, onBack, userName, onNavigate }: MRDetailProps) {
           overviewData.dcr.achievement,
           overviewData.rcpa.achievement
         ],
-        backgroundColor: 'rgba(76, 175, 80, 0.2)',
-        borderColor: 'rgba(76, 175, 80, 1)',
+        backgroundColor: 'rgba(79, 70, 229, 0.2)',
+        borderColor: 'rgba(79, 70, 229, 1)',
         borderWidth: 2,
-        pointBackgroundColor: 'rgba(76, 175, 80, 1)',
+        pointBackgroundColor: 'rgba(79, 70, 229, 1)',
         pointBorderColor: '#fff',
         pointHoverBackgroundColor: '#fff',
-        pointHoverBorderColor: 'rgba(76, 175, 80, 1)',
+        pointHoverBorderColor: 'rgba(79, 70, 229, 1)',
       },
       {
         label: 'Previous Month Achievement %',
@@ -389,15 +400,15 @@ function MRDetail({ onLogout, onBack, userName, onNavigate }: MRDetailProps) {
       {
         label: 'Commission Earned (₹)',
         data: commissionData.map(item => item.commissionAmount),
-        backgroundColor: 'rgba(76, 175, 80, 0.8)',
-        borderColor: 'rgba(76, 175, 80, 1)',
+        backgroundColor: 'rgba(79, 70, 229, 0.8)',
+        borderColor: 'rgba(79, 70, 229, 1)',
         borderWidth: 2,
       },
       {
         label: 'Total Earning (₹)',
         data: commissionData.map(item => item.totalEarning),
-        backgroundColor: 'rgba(33, 150, 243, 0.8)',
-        borderColor: 'rgba(33, 150, 243, 1)',
+        backgroundColor: 'rgba(129, 140, 248, 0.8)',
+        borderColor: 'rgba(99, 102, 241, 1)',
         borderWidth: 2,
       },
     ],
@@ -436,15 +447,19 @@ function MRDetail({ onLogout, onBack, userName, onNavigate }: MRDetailProps) {
   const totalEarning = commissionData.reduce((sum, item) => sum + item.totalEarning, 0)
   const achievedMonths = commissionData.filter(item => item.status === 'Achieved').length
 
+  const getAchievementClasses = (value: number) => {
+    if (value >= 100) return 'text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full text-xs font-medium'
+    if (value >= 80) return 'text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full text-xs font-medium'
+    return 'text-red-700 bg-red-50 px-2 py-0.5 rounded-full text-xs font-medium'
+  }
+
   if (!selectedMR) {
     return (
-      <div className="mr-detail-container">
-        <Header onLogout={onLogout} onMenuClick={handleMenuClick} onNavigateHome={() => onNavigate?.('home')} onNavigateOfflineRequests={() => onNavigate?.('offline-requests')} />
-        <Sidebar isOpen={sidebarOpen} onClose={handleSidebarClose} userName={userName} onNavigate={onNavigate} onLogout={onLogout} />
-        <main className="mr-detail-content">
-          <div className="error-message">
+      <div className="flex-1 bg-slate-50 min-h-screen">
+        <main className={PAGE_CONTENT}>
+          <div className="text-red-600 bg-red-50 rounded-lg px-4 py-3">
             <p>MR data not found. Please go back and select an MR.</p>
-            <button className="back-btn" onClick={onBack}>Go Back</button>
+            <button className={`${BACK_BUTTON} mt-3`} onClick={onBack}>Go Back</button>
           </div>
         </main>
       </div>
@@ -452,156 +467,152 @@ function MRDetail({ onLogout, onBack, userName, onNavigate }: MRDetailProps) {
   }
 
   return (
-    <div className="mr-detail-container">
-      <Header onLogout={onLogout} onMenuClick={handleMenuClick} onNavigateHome={() => onNavigate?.('home')} onNavigateOfflineRequests={() => onNavigate?.('offline-requests')} />
-      <Sidebar isOpen={sidebarOpen} onClose={handleSidebarClose} userName={userName} onNavigate={onNavigate} onLogout={onLogout} />
-      <main className="mr-detail-content">
-        <div className="mr-detail-header">
-          <button className="back-button" onClick={onBack} aria-label="Go back">
+    <div className="flex-1 bg-slate-50 min-h-screen">
+      <main className={PAGE_CONTENT}>
+        <div className="flex items-center gap-3 mb-6">
+          <button className={BACK_BUTTON} onClick={onBack} aria-label="Go back">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M19 12H5M5 12L12 19M5 12L12 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </button>
-          <div className="header-info">
-            <h1 className="mr-detail-title">{selectedMR.name}</h1>
-            <p className="mr-detail-subtitle">{selectedMR.designation} • {selectedMR.region}</p>
+          <div>
+            <h1 className={PAGE_TITLE}>{selectedMR.name}</h1>
+            <p className={PAGE_SUBTITLE}>{selectedMR.designation} &bull; {selectedMR.region}</p>
           </div>
         </div>
 
-        <div className="mr-info-card">
-          <div className="info-grid">
-            <div className="info-item">
-              <span className="info-label">Employee ID</span>
-              <span className="info-value">{selectedMR.empId}</span>
+        <div className={`${CARD} ${CARD_PADDING} mb-6`}>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div>
+              <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">Employee ID</span>
+              <span className="text-sm text-slate-700 mt-1 block">{selectedMR.empId}</span>
             </div>
-            <div className="info-item">
-              <span className="info-label">Email</span>
-              <span className="info-value">{selectedMR.email}</span>
+            <div>
+              <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">Email</span>
+              <span className="text-sm text-slate-700 mt-1 block">{selectedMR.email}</span>
             </div>
-            <div className="info-item">
-              <span className="info-label">Mobile</span>
-              <span className="info-value">{selectedMR.mobile}</span>
+            <div>
+              <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">Mobile</span>
+              <span className="text-sm text-slate-700 mt-1 block">{selectedMR.mobile}</span>
             </div>
             {/* Status removed from MR view as requested */}
           </div>
         </div>
 
-        <div className="tabs-container">
-          <div className="tabs">
-            <button
-              className={`tab ${activeTab === 'overview' ? 'active' : ''}`}
-              onClick={() => setActiveTab('overview')}
-            >
-              Overview
-            </button>
-            <button
-              className={`tab ${activeTab === 'sales' ? 'active' : ''}`}
-              onClick={() => setActiveTab('sales')}
-            >
-              Sales Report
-            </button>
-            <button
-              className={`tab ${activeTab === 'visits' ? 'active' : ''}`}
-              onClick={() => setActiveTab('visits')}
-            >
-              Customer Visits
-            </button>
-            <button
-              className={`tab ${activeTab === 'dcr' ? 'active' : ''}`}
-              onClick={() => setActiveTab('dcr')}
-            >
-              DCR Submissions
-            </button>
-            <button
-              className={`tab ${activeTab === 'rcpa' ? 'active' : ''}`}
-              onClick={() => setActiveTab('rcpa')}
-            >
-              RCPA Report
-            </button>
-            <button
-              className={`tab ${activeTab === 'commission' ? 'active' : ''}`}
-              onClick={() => setActiveTab('commission')}
-            >
-              Commission
-            </button>
-          </div>
+        <div className={TAB_CONTAINER}>
+          <button
+            className={activeTab === 'overview' ? TAB_ACTIVE : TAB_ITEM}
+            onClick={() => setActiveTab('overview')}
+          >
+            Overview
+          </button>
+          <button
+            className={activeTab === 'sales' ? TAB_ACTIVE : TAB_ITEM}
+            onClick={() => setActiveTab('sales')}
+          >
+            Sales Report
+          </button>
+          <button
+            className={activeTab === 'visits' ? TAB_ACTIVE : TAB_ITEM}
+            onClick={() => setActiveTab('visits')}
+          >
+            Customer Visits
+          </button>
+          <button
+            className={activeTab === 'dcr' ? TAB_ACTIVE : TAB_ITEM}
+            onClick={() => setActiveTab('dcr')}
+          >
+            DCR Submissions
+          </button>
+          <button
+            className={activeTab === 'rcpa' ? TAB_ACTIVE : TAB_ITEM}
+            onClick={() => setActiveTab('rcpa')}
+          >
+            RCPA Report
+          </button>
+          <button
+            className={activeTab === 'commission' ? TAB_ACTIVE : TAB_ITEM}
+            onClick={() => setActiveTab('commission')}
+          >
+            Commission
+          </button>
         </div>
 
-        <div className="tab-content">
+        <div>
           {activeTab === 'overview' && (
-            <div className="overview-section">
-              <div className="stats-grid">
-                <div className="stat-card">
-                  <div className="stat-icon">💰</div>
-                  <div className="stat-info">
-                    <span className="stat-label">Total Sales</span>
-                    <span className="stat-value">₹{overviewData.sales.current.toLocaleString()}</span>
-                    <div className="stat-comparison">
-                      <span className={`comparison-badge ${overviewData.sales.current >= overviewData.sales.previous ? 'positive' : 'negative'}`}>
+            <div>
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <div className={STAT_CARD}>
+                  <div className="text-2xl mb-2">💰</div>
+                  <div>
+                    <span className={STAT_LABEL}>Total Sales</span>
+                    <span className={`${STAT_VALUE} block`}>₹{overviewData.sales.current.toLocaleString()}</span>
+                    <div className="flex items-center gap-2 mt-2">
+                      <span className={overviewData.sales.current >= overviewData.sales.previous ? BADGE_SUCCESS : BADGE_DANGER}>
                         {overviewData.sales.current >= overviewData.sales.previous ? '↑' : '↓'} {Math.abs(((overviewData.sales.current - overviewData.sales.previous) / overviewData.sales.previous) * 100).toFixed(1)}%
                       </span>
-                      <span className="comparison-text">vs {previousMonth}</span>
+                      <span className="text-xs text-slate-400">vs {previousMonth}</span>
                     </div>
-                    <div className="stat-target">
-                      <span className="target-label">Target: ₹{overviewData.sales.target.toLocaleString()}</span>
-                      <span className={`achievement-badge ${overviewData.sales.achievement >= 100 ? 'exceeded' : overviewData.sales.achievement >= 80 ? 'good' : 'low'}`}>
+                    <div className="flex items-center gap-2 mt-2">
+                      <span className="text-xs text-slate-400">Target: ₹{overviewData.sales.target.toLocaleString()}</span>
+                      <span className={getAchievementClasses(overviewData.sales.achievement)}>
                         {overviewData.sales.achievement.toFixed(1)}%
                       </span>
                     </div>
                   </div>
                 </div>
-                <div className="stat-card">
-                  <div className="stat-icon">👥</div>
-                  <div className="stat-info">
-                    <span className="stat-label">Total Visits</span>
-                    <span className="stat-value">{overviewData.visits.current}</span>
-                    <div className="stat-comparison">
-                      <span className={`comparison-badge ${overviewData.visits.current >= overviewData.visits.previous ? 'positive' : 'negative'}`}>
+                <div className={STAT_CARD}>
+                  <div className="text-2xl mb-2">👥</div>
+                  <div>
+                    <span className={STAT_LABEL}>Total Visits</span>
+                    <span className={`${STAT_VALUE} block`}>{overviewData.visits.current}</span>
+                    <div className="flex items-center gap-2 mt-2">
+                      <span className={overviewData.visits.current >= overviewData.visits.previous ? BADGE_SUCCESS : BADGE_DANGER}>
                         {overviewData.visits.current >= overviewData.visits.previous ? '↑' : '↓'} {Math.abs(((overviewData.visits.current - overviewData.visits.previous) / overviewData.visits.previous) * 100).toFixed(1)}%
                       </span>
-                      <span className="comparison-text">vs {previousMonth}</span>
+                      <span className="text-xs text-slate-400">vs {previousMonth}</span>
                     </div>
-                    <div className="stat-target">
-                      <span className="target-label">Target: {overviewData.visits.target}</span>
-                      <span className={`achievement-badge ${overviewData.visits.achievement >= 100 ? 'exceeded' : overviewData.visits.achievement >= 80 ? 'good' : 'low'}`}>
+                    <div className="flex items-center gap-2 mt-2">
+                      <span className="text-xs text-slate-400">Target: {overviewData.visits.target}</span>
+                      <span className={getAchievementClasses(overviewData.visits.achievement)}>
                         {overviewData.visits.achievement.toFixed(1)}%
                       </span>
                     </div>
                   </div>
                 </div>
-                <div className="stat-card">
-                  <div className="stat-icon">📋</div>
-                  <div className="stat-info">
-                    <span className="stat-label">DCR Submissions</span>
-                    <span className="stat-value">{overviewData.dcr.current}</span>
-                    <div className="stat-comparison">
-                      <span className={`comparison-badge ${overviewData.dcr.current >= overviewData.dcr.previous ? 'positive' : 'negative'}`}>
+                <div className={STAT_CARD}>
+                  <div className="text-2xl mb-2">📋</div>
+                  <div>
+                    <span className={STAT_LABEL}>DCR Submissions</span>
+                    <span className={`${STAT_VALUE} block`}>{overviewData.dcr.current}</span>
+                    <div className="flex items-center gap-2 mt-2">
+                      <span className={overviewData.dcr.current >= overviewData.dcr.previous ? BADGE_SUCCESS : BADGE_DANGER}>
                         {overviewData.dcr.current >= overviewData.dcr.previous ? '↑' : '↓'} {Math.abs(((overviewData.dcr.current - overviewData.dcr.previous) / overviewData.dcr.previous) * 100).toFixed(1)}%
                       </span>
-                      <span className="comparison-text">vs {previousMonth}</span>
+                      <span className="text-xs text-slate-400">vs {previousMonth}</span>
                     </div>
-                    <div className="stat-target">
-                      <span className="target-label">Target: {overviewData.dcr.target}</span>
-                      <span className={`achievement-badge ${overviewData.dcr.achievement >= 100 ? 'exceeded' : overviewData.dcr.achievement >= 80 ? 'good' : 'low'}`}>
+                    <div className="flex items-center gap-2 mt-2">
+                      <span className="text-xs text-slate-400">Target: {overviewData.dcr.target}</span>
+                      <span className={getAchievementClasses(overviewData.dcr.achievement)}>
                         {overviewData.dcr.achievement.toFixed(1)}%
                       </span>
                     </div>
                   </div>
                 </div>
-                <div className="stat-card">
-                  <div className="stat-icon">📊</div>
-                  <div className="stat-info">
-                    <span className="stat-label">RCPA Entries</span>
-                    <span className="stat-value">{overviewData.rcpa.current}</span>
-                    <div className="stat-comparison">
-                      <span className={`comparison-badge ${overviewData.rcpa.current >= overviewData.rcpa.previous ? 'positive' : 'negative'}`}>
+                <div className={STAT_CARD}>
+                  <div className="text-2xl mb-2">📊</div>
+                  <div>
+                    <span className={STAT_LABEL}>RCPA Entries</span>
+                    <span className={`${STAT_VALUE} block`}>{overviewData.rcpa.current}</span>
+                    <div className="flex items-center gap-2 mt-2">
+                      <span className={overviewData.rcpa.current >= overviewData.rcpa.previous ? BADGE_SUCCESS : BADGE_DANGER}>
                         {overviewData.rcpa.current >= overviewData.rcpa.previous ? '↑' : '↓'} {Math.abs(((overviewData.rcpa.current - overviewData.rcpa.previous) / overviewData.rcpa.previous) * 100).toFixed(1)}%
                       </span>
-                      <span className="comparison-text">vs {previousMonth}</span>
+                      <span className="text-xs text-slate-400">vs {previousMonth}</span>
                     </div>
-                    <div className="stat-target">
-                      <span className="target-label">Target: {overviewData.rcpa.target}</span>
-                      <span className={`achievement-badge ${overviewData.rcpa.achievement >= 100 ? 'exceeded' : overviewData.rcpa.achievement >= 80 ? 'good' : 'low'}`}>
+                    <div className="flex items-center gap-2 mt-2">
+                      <span className="text-xs text-slate-400">Target: {overviewData.rcpa.target}</span>
+                      <span className={getAchievementClasses(overviewData.rcpa.achievement)}>
                         {overviewData.rcpa.achievement.toFixed(1)}%
                       </span>
                     </div>
@@ -609,46 +620,46 @@ function MRDetail({ onLogout, onBack, userName, onNavigate }: MRDetailProps) {
                 </div>
               </div>
 
-              <div className="charts-grid">
-                <div className="chart-card">
-                  <h3 className="chart-title">Sales Achievement (Pie Chart)</h3>
-                  <div className="chart-wrapper">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+                <div className={`${CARD} ${CARD_PADDING}`}>
+                  <h3 className="text-sm font-semibold text-slate-900 mb-1">Sales Achievement (Pie Chart)</h3>
+                  <div className="h-64">
                     <Pie data={salesChartData} options={salesChartOptions} />
                   </div>
                 </div>
 
-                <div className="chart-card">
-                  <h3 className="chart-title">Visits Trend (Line Chart)</h3>
-                  <div className="chart-wrapper">
+                <div className={`${CARD} ${CARD_PADDING}`}>
+                  <h3 className="text-sm font-semibold text-slate-900 mb-1">Visits Trend (Line Chart)</h3>
+                  <div className="h-64">
                     <Line data={visitsChartData} options={visitsChartOptions} />
                   </div>
                 </div>
 
-                <div className="chart-card">
-                  <h3 className="chart-title">DCR Submissions Comparison (Bar Chart)</h3>
-                  <div className="chart-wrapper">
+                <div className={`${CARD} ${CARD_PADDING}`}>
+                  <h3 className="text-sm font-semibold text-slate-900 mb-1">DCR Submissions Comparison (Bar Chart)</h3>
+                  <div className="h-64">
                     <Bar data={dcrChartData} options={dcrChartOptions} />
                   </div>
-                  <div className="chart-legend">
-                    <div className="legend-item">
-                      <span className="legend-color" style={{ backgroundColor: 'rgba(156, 39, 176, 0.8)' }}></span>
+                  <div className="flex items-center gap-4 mt-4">
+                    <div className="flex items-center gap-2 text-xs text-slate-600">
+                      <span className="w-3 h-3 rounded-full" style={{ backgroundColor: 'rgba(156, 39, 176, 0.8)' }}></span>
                       <span>{previousMonth}</span>
                     </div>
-                    <div className="legend-item">
-                      <span className="legend-color" style={{ backgroundColor: 'rgba(76, 175, 80, 0.8)' }}></span>
+                    <div className="flex items-center gap-2 text-xs text-slate-600">
+                      <span className="w-3 h-3 rounded-full" style={{ backgroundColor: 'rgba(79, 70, 229, 0.8)' }}></span>
                       <span>{currentMonth}</span>
                     </div>
-                    <div className="legend-item">
-                      <span className="legend-color" style={{ backgroundColor: 'rgba(255, 152, 0, 0.8)' }}></span>
+                    <div className="flex items-center gap-2 text-xs text-slate-600">
+                      <span className="w-3 h-3 rounded-full" style={{ backgroundColor: 'rgba(255, 152, 0, 0.8)' }}></span>
                       <span>Target</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="chart-card">
-                  <h3 className="chart-title">Performance Overview (Radar Chart)</h3>
-                  <p className="chart-subtitle">Comparing achievement % across all metrics</p>
-                  <div className="chart-wrapper">
+                <div className={`${CARD} ${CARD_PADDING}`}>
+                  <h3 className="text-sm font-semibold text-slate-900 mb-1">Performance Overview (Radar Chart)</h3>
+                  <p className="text-xs text-slate-500 mb-4">Comparing achievement % across all metrics</p>
+                  <div className="h-64">
                     <Radar data={rcpaChartData} options={rcpaChartOptions} />
                   </div>
                 </div>
@@ -657,202 +668,212 @@ function MRDetail({ onLogout, onBack, userName, onNavigate }: MRDetailProps) {
           )}
 
           {activeTab === 'sales' && (
-            <div className="report-section">
-              <div className="report-table-container">
-                <table className="report-table">
-                  <thead>
-                    <tr>
-                      <th>Month</th>
-                      <th>Sales (₹)</th>
-                      <th>Target (₹)</th>
-                      <th>Achievement %</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {salesData.map((row, index) => (
-                      <tr key={index}>
-                        <td>{row.month}</td>
-                        <td>₹{row.sales.toLocaleString()}</td>
-                        <td>₹{row.target.toLocaleString()}</td>
-                        <td>
-                          <span className={`achievement ${row.achievement >= 100 ? 'exceeded' : row.achievement >= 80 ? 'good' : 'low'}`}>
-                            {row.achievement.toFixed(1)}%
-                          </span>
-                        </td>
+            <div>
+              <div className={`${CARD} overflow-hidden`}>
+                <div className={TABLE_WRAPPER}>
+                  <table className={TABLE}>
+                    <thead className={TABLE_HEAD}>
+                      <tr>
+                        <th className={TABLE_TH}>Month</th>
+                        <th className={TABLE_TH}>Sales (₹)</th>
+                        <th className={TABLE_TH}>Target (₹)</th>
+                        <th className={TABLE_TH}>Achievement %</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {salesData.map((row, index) => (
+                        <tr key={index} className={TABLE_ROW}>
+                          <td className={TABLE_TD}>{row.month}</td>
+                          <td className={TABLE_TD}>₹{row.sales.toLocaleString()}</td>
+                          <td className={TABLE_TD}>₹{row.target.toLocaleString()}</td>
+                          <td className={TABLE_TD}>
+                            <span className={getAchievementClasses(row.achievement)}>
+                              {row.achievement.toFixed(1)}%
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           )}
 
           {activeTab === 'visits' && (
-            <div className="report-section">
-              <div className="report-table-container">
-                <table className="report-table">
-                  <thead>
-                    <tr>
-                      <th>Date</th>
-                      <th>Customer Name</th>
-                      <th>Type</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {visitData.map((row, index) => (
-                      <tr key={index}>
-                        <td>{new Date(row.date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })}</td>
-                        <td>{row.doctor}</td>
-                        <td>{row.type}</td>
+            <div>
+              <div className={`${CARD} overflow-hidden`}>
+                <div className={TABLE_WRAPPER}>
+                  <table className={TABLE}>
+                    <thead className={TABLE_HEAD}>
+                      <tr>
+                        <th className={TABLE_TH}>Date</th>
+                        <th className={TABLE_TH}>Customer Name</th>
+                        <th className={TABLE_TH}>Type</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {visitData.map((row, index) => (
+                        <tr key={index} className={TABLE_ROW}>
+                          <td className={TABLE_TD}>{new Date(row.date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })}</td>
+                          <td className={TABLE_TD}>{row.doctor}</td>
+                          <td className={TABLE_TD}>{row.type}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           )}
 
           {activeTab === 'dcr' && (
-            <div className="report-section">
-              <div className="report-table-container">
-                <table className="report-table">
-                  <thead>
-                    <tr>
-                      <th>Date</th>
-                      <th>Doctor/Customer</th>
-                      <th>Products Discussed</th>
-                      <th>Samples Given</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {dcrData.map((row, index) => (
-                      <tr key={index}>
-                        <td>{new Date(row.date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })}</td>
-                        <td>{row.doctor}</td>
-                        <td>{row.products}</td>
-                        <td>{row.samples}</td>
+            <div>
+              <div className={`${CARD} overflow-hidden`}>
+                <div className={TABLE_WRAPPER}>
+                  <table className={TABLE}>
+                    <thead className={TABLE_HEAD}>
+                      <tr>
+                        <th className={TABLE_TH}>Date</th>
+                        <th className={TABLE_TH}>Doctor/Customer</th>
+                        <th className={TABLE_TH}>Products Discussed</th>
+                        <th className={TABLE_TH}>Samples Given</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {dcrData.map((row, index) => (
+                        <tr key={index} className={TABLE_ROW}>
+                          <td className={TABLE_TD}>{new Date(row.date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })}</td>
+                          <td className={TABLE_TD}>{row.doctor}</td>
+                          <td className={TABLE_TD}>{row.products}</td>
+                          <td className={TABLE_TD}>{row.samples}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           )}
 
           {activeTab === 'rcpa' && (
-            <div className="report-section">
-              <div className="report-table-container">
-                <table className="report-table">
-                  <thead>
-                    <tr>
-                      <th>Date</th>
-                      <th>Doctor</th>
-                      <th>Product</th>
-                      <th>Quantity</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {rcpaData.map((row, index) => (
-                      <tr key={index}>
-                        <td>{new Date(row.date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })}</td>
-                        <td>{row.doctor}</td>
-                        <td>{row.product}</td>
-                        <td>{row.quantity}</td>
+            <div>
+              <div className={`${CARD} overflow-hidden`}>
+                <div className={TABLE_WRAPPER}>
+                  <table className={TABLE}>
+                    <thead className={TABLE_HEAD}>
+                      <tr>
+                        <th className={TABLE_TH}>Date</th>
+                        <th className={TABLE_TH}>Doctor</th>
+                        <th className={TABLE_TH}>Product</th>
+                        <th className={TABLE_TH}>Quantity</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {rcpaData.map((row, index) => (
+                        <tr key={index} className={TABLE_ROW}>
+                          <td className={TABLE_TD}>{new Date(row.date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })}</td>
+                          <td className={TABLE_TD}>{row.doctor}</td>
+                          <td className={TABLE_TD}>{row.product}</td>
+                          <td className={TABLE_TD}>{row.quantity}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           )}
 
           {activeTab === 'commission' && (
-            <div className="report-section">
-              <div className="commission-summary">
-                <div className="summary-card">
-                  <div className="summary-icon">💰</div>
-                  <div className="summary-content">
-                    <span className="summary-label">Total Commission</span>
-                    <span className="summary-value">₹{totalCommission.toLocaleString()}</span>
+            <div>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <div className={STAT_CARD}>
+                  <div className="text-2xl mb-2">💰</div>
+                  <div>
+                    <span className={STAT_LABEL}>Total Commission</span>
+                    <span className={`${STAT_VALUE} block`}>₹{totalCommission.toLocaleString()}</span>
                   </div>
                 </div>
-                <div className="summary-card">
-                  <div className="summary-icon">🎁</div>
-                  <div className="summary-content">
-                    <span className="summary-label">Total Bonus</span>
-                    <span className="summary-value">₹{totalBonus.toLocaleString()}</span>
+                <div className={STAT_CARD}>
+                  <div className="text-2xl mb-2">🎁</div>
+                  <div>
+                    <span className={STAT_LABEL}>Total Bonus</span>
+                    <span className={`${STAT_VALUE} block`}>₹{totalBonus.toLocaleString()}</span>
                   </div>
                 </div>
-                <div className="summary-card">
-                  <div className="summary-icon">💵</div>
-                  <div className="summary-content">
-                    <span className="summary-label">Total Earning</span>
-                    <span className="summary-value">₹{totalEarning.toLocaleString()}</span>
+                <div className={STAT_CARD}>
+                  <div className="text-2xl mb-2">💵</div>
+                  <div>
+                    <span className={STAT_LABEL}>Total Earning</span>
+                    <span className={`${STAT_VALUE} block`}>₹{totalEarning.toLocaleString()}</span>
                   </div>
                 </div>
-                <div className="summary-card">
-                  <div className="summary-icon">📅</div>
-                  <div className="summary-content">
-                    <span className="summary-label">Months Achieved</span>
-                    <span className="summary-value">{achievedMonths}/{commissionData.length}</span>
+                <div className={STAT_CARD}>
+                  <div className="text-2xl mb-2">📅</div>
+                  <div>
+                    <span className={STAT_LABEL}>Months Achieved</span>
+                    <span className={`${STAT_VALUE} block`}>{achievedMonths}/{commissionData.length}</span>
                   </div>
                 </div>
               </div>
 
-              <div className="commission-chart-card">
-                <h3 className="chart-title">Commission Trend</h3>
-                <div className="chart-wrapper">
+              <div className={`${CARD} ${CARD_PADDING} mb-6`}>
+                <h3 className="text-sm font-semibold text-slate-900 mb-1">Commission Trend</h3>
+                <div className="h-64">
                   <Bar data={commissionChartData} options={commissionChartOptions} />
                 </div>
               </div>
 
-              <div className="report-table-container">
-                <table className="report-table">
-                  <thead>
-                    <tr>
-                      <th>Month</th>
-                      <th>Target (₹)</th>
-                      <th>Sales (₹)</th>
-                      <th>Achievement %</th>
-                      <th>Commission Rate</th>
-                      <th>Commission (₹)</th>
-                      <th>Bonus (₹)</th>
-                      <th>Total Earning (₹)</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {commissionData.map((row, index) => (
-                      <tr key={index}>
-                        <td><strong>{row.month}</strong></td>
-                        <td>₹{row.target.toLocaleString()}</td>
-                        <td>₹{row.sales.toLocaleString()}</td>
-                        <td>
-                          <span className={`achievement ${row.achievement >= 100 ? 'exceeded' : row.achievement >= 80 ? 'good' : 'low'}`}>
-                            {row.achievement.toFixed(1)}%
-                          </span>
-                        </td>
-                        <td>{row.commissionRate}%</td>
-                        <td><strong>₹{row.commissionAmount.toLocaleString()}</strong></td>
-                        <td>
-                          {row.bonus > 0 ? (
-                            <span className="bonus-badge">+₹{row.bonus.toLocaleString()}</span>
-                          ) : (
-                            <span className="no-bonus">-</span>
-                          )}
-                        </td>
-                        <td><strong className="total-earning">₹{row.totalEarning.toLocaleString()}</strong></td>
+              <div className={`${CARD} overflow-hidden`}>
+                <div className={TABLE_WRAPPER}>
+                  <table className={TABLE}>
+                    <thead className={TABLE_HEAD}>
+                      <tr>
+                        <th className={TABLE_TH}>Month</th>
+                        <th className={TABLE_TH}>Target (₹)</th>
+                        <th className={TABLE_TH}>Sales (₹)</th>
+                        <th className={TABLE_TH}>Achievement %</th>
+                        <th className={TABLE_TH}>Commission Rate</th>
+                        <th className={TABLE_TH}>Commission (₹)</th>
+                        <th className={TABLE_TH}>Bonus (₹)</th>
+                        <th className={TABLE_TH}>Total Earning (₹)</th>
                       </tr>
-                    ))}
-                  </tbody>
-                  <tfoot>
-                    <tr className="total-row">
-                      <td colSpan={5}><strong>Total</strong></td>
-                      <td><strong>₹{totalCommission.toLocaleString()}</strong></td>
-                      <td><strong>₹{totalBonus.toLocaleString()}</strong></td>
-                      <td><strong className="total-earning">₹{totalEarning.toLocaleString()}</strong></td>
-                    </tr>
-                  </tfoot>
-                </table>
+                    </thead>
+                    <tbody>
+                      {commissionData.map((row, index) => (
+                        <tr key={index} className={TABLE_ROW}>
+                          <td className={TABLE_TD}><strong>{row.month}</strong></td>
+                          <td className={TABLE_TD}>₹{row.target.toLocaleString()}</td>
+                          <td className={TABLE_TD}>₹{row.sales.toLocaleString()}</td>
+                          <td className={TABLE_TD}>
+                            <span className={getAchievementClasses(row.achievement)}>
+                              {row.achievement.toFixed(1)}%
+                            </span>
+                          </td>
+                          <td className={TABLE_TD}>{row.commissionRate}%</td>
+                          <td className={TABLE_TD}><strong>₹{row.commissionAmount.toLocaleString()}</strong></td>
+                          <td className={TABLE_TD}>
+                            {row.bonus > 0 ? (
+                              <span className={BADGE_SUCCESS}>+₹{row.bonus.toLocaleString()}</span>
+                            ) : (
+                              <span className={BADGE_DEFAULT}>-</span>
+                            )}
+                          </td>
+                          <td className={TABLE_TD}><strong className="text-indigo-600">₹{row.totalEarning.toLocaleString()}</strong></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    <tfoot>
+                      <tr className="font-bold bg-slate-50">
+                        <td className={TABLE_TD} colSpan={5}><strong>Total</strong></td>
+                        <td className={TABLE_TD}><strong>₹{totalCommission.toLocaleString()}</strong></td>
+                        <td className={TABLE_TD}><strong>₹{totalBonus.toLocaleString()}</strong></td>
+                        <td className={TABLE_TD}><strong className="text-indigo-600">₹{totalEarning.toLocaleString()}</strong></td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
               </div>
             </div>
           )}
