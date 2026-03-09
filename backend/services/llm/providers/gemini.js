@@ -54,13 +54,18 @@ class GeminiProvider extends BaseLLMProvider {
 
     const { systemInstruction, contents } = this._convertMessages(messages);
 
+    const generationConfig = {
+      temperature: temperature ?? this.config.temperature ?? 0.3,
+      maxOutputTokens: this.config.maxTokens || 1024,
+    };
+
+    if (requireJson) {
+      generationConfig.responseMimeType = 'application/json';
+    }
+
     const modelConfig = {
       model: this.modelName,
-      generationConfig: {
-        temperature: temperature ?? this.config.temperature ?? 0.3,
-        maxOutputTokens: this.config.maxTokens || 1024,
-
-      },
+      generationConfig,
     };
 
     if (systemInstruction) {

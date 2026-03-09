@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
+const { scanForAdverseEvents } = require('../services/aeDetection');
 
 // POST /api/dcr — MR submits a new Daily Call Report
 router.post('/', async (req, res) => {
@@ -24,7 +25,14 @@ router.post('/', async (req, res) => {
       ]
     );
 
-    res.status(201).json({ success: true, data: rows[0] });
+    const savedDcr = rows[0];
+
+    // Async AE detection — fire and forget, never blocks DCR response
+    scanForAdverseEvents(savedDcr).catch(err =>
+      console.error('[AE] Background scan error:', err.message)
+    );
+
+    res.status(201).json({ success: true, data: savedDcr });
   } catch (err) {
     console.error('[DCR] POST error:', err.message);
     res.status(500).json({ error: err.message });

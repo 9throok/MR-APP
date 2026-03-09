@@ -6,6 +6,8 @@ const { buildPreCallBriefingMessages } = require('../prompts/preCallBriefing');
 const { buildTerritoryGapMessages } = require('../prompts/territoryGap');
 const { buildManagerQueryMessages } = require('../prompts/managerQuery');
 const { buildProductSignalsMessages } = require('../prompts/productSignals');
+const { buildPostCallExtractionMessages } = require('../prompts/postCallExtraction');
+const { buildNextBestActionMessages } = require('../prompts/nextBestAction');
 
 // ─────────────────────────────────────────────────────────────────────────────
 // POST /api/ai/precall-briefing
@@ -240,6 +242,115 @@ router.get('/product-signals', async (req, res) => {
 
   } catch (err) {
     console.error('[AI] product-signals error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// POST /api/ai/post-call-extract
+//
+// Body: { user_id, doctor_name, transcript }
+//
+// Extracts structured DCR data from a raw transcript or call notes.
+// ─────────────────────────────────────────────────────────────────────────────
+router.post('/post-call-extract', async (req, res) => {
+  try {
+    const { doctor_name, transcript } = req.body;
+
+    if (!doctor_name || !transcript) {
+      return res.status(400).json({ error: 'doctor_name and transcript are required' });
+    }
+
+    // Fetch product list for context
+    const { rows: products } = await db.query('SELECT name FROM products ORDER BY id');
+
+    const llm = getLLMService();
+    const messages = buildPostCallExtractionMessages(transcript, doctor_name, products);
+    const extraction = await llm.chat(messages, { requireJson: true });
+
+    res.json({ success: true, extraction });
+  } catch (err) {
+    console.error('[AI] post-call-extract error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GET /api/ai/nba/:user_id
+//
+// Generates (or retrieves cached) Next Best Action recommendations for today.
+// Query params: refresh=true (force regeneration)
+// ─────────────────────────────────────────────────────────────────────────────
+router.get('/nba/:user_id', async (req, res) => {
+  try {
+    const { user_id } = req.params;
+    const refresh = req.query.refresh === 'true';
+
+    // Check for cached recommendations (unless refresh requested)
+    if (!refresh) {
+      const { rows: cached } = await db.query(
+        'SELECT * FROM nba_recommendations WHERE user_id = $1 AND date = CURRENT_DATE',
+        [user_id]
+      );
+      if (cached.length > 0) {
+        return res.json({
+          success: true,
+          date: cached[0].date,
+          recommendations: cached[0].recommendations,
+          cached: true,
+        });
+      }
+    }
+
+    // Gather data for NBA generation
+    // 1. Doctor profiles
+    const { rows: doctorProfiles } = await db.query(
+      'SELECT * FROM doctor_profiles ORDER BY tier ASC, name ASC'
+    );
+
+    // 2. Visit history aggregated per doctor
+    const { rows: visitHistory } = await db.query(
+      `SELECT
+         name AS "doctorName",
+         MAX(date)::text AS "lastVisitDate",
+         COUNT(*)::int AS "totalVisits",
+         (CURRENT_DATE - MAX(date))::int AS "daysSinceLastVisit",
+         STRING_AGG(DISTINCT product, ', ') AS products
+       FROM dcr
+       WHERE user_id = $1
+       GROUP BY name
+       ORDER BY "daysSinceLastVisit" DESC NULLS LAST`,
+      [user_id]
+    );
+
+    // 3. Pending follow-up tasks
+    const { rows: pendingTasks } = await db.query(
+      "SELECT * FROM follow_up_tasks WHERE user_id = $1 AND status = 'pending' ORDER BY due_date ASC NULLS LAST",
+      [user_id]
+    );
+
+    const dayOfWeek = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+
+    const llm = getLLMService();
+    const messages = buildNextBestActionMessages(user_id, doctorProfiles, visitHistory, pendingTasks, dayOfWeek);
+    const result = await llm.chat(messages, { requireJson: true });
+
+    // Cache the result
+    await db.query(
+      `INSERT INTO nba_recommendations (user_id, date, recommendations)
+       VALUES ($1, CURRENT_DATE, $2)
+       ON CONFLICT (user_id, date) DO UPDATE SET recommendations = $2, generated_at = NOW()`,
+      [user_id, JSON.stringify(result)]
+    );
+
+    res.json({
+      success: true,
+      date: new Date().toISOString().split('T')[0],
+      recommendations: result,
+      cached: false,
+    });
+  } catch (err) {
+    console.error('[AI] nba error:', err.message);
     res.status(500).json({ error: err.message });
   }
 });
