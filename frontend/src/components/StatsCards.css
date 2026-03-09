@@ -1,0 +1,141 @@
+.charts-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+.chart-card {
+  background: var(--bg-primary);
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border-color);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: relative;
+  overflow: hidden;
+}
+
+.chart-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-xl);
+  border-color: rgba(33, 150, 243, 0.2);
+}
+
+.chart-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+  text-align: center;
+  line-height: 1.4;
+  letter-spacing: 0.2px;
+}
+
+.chart-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  position: relative;
+  width: 100%;
+}
+
+.chart-wrapper {
+  width: 100%;
+  height: 180px;
+  position: relative;
+}
+
+.pie-charts-wrapper {
+  position: relative;
+  width: 100%;
+  height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pie-chart-outer {
+  position: absolute;
+  width: 180px;
+  height: 180px;
+  z-index: 1;
+}
+
+.pie-chart-inner {
+  position: absolute;
+  width: 120px;
+  height: 120px;
+  z-index: 2;
+}
+
+.chart-values {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.chart-value-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.chart-color-box {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.chart-value-text {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* Tablet responsiveness */
+@media (max-width: 1024px) and (min-width: 769px) {
+  .gauge-charts-container {
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 20px;
+  }
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .gauge-charts-container {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+
+  .gauge-card {
+    padding: 20px;
+  }
+
+  .gauge-title {
+    font-size: 14px;
+  }
+
+  .gauge-value-text {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .gauge-charts-container {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .gauge-card {
+    padding: 16px;
+  }
+}
+

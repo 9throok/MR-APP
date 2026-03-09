@@ -1,58 +1,75 @@
-# ZenApp Backend
+# MR-APP
 
-Express.js backend server for MR application with Supabase integration.
+Full-stack Medical Representative application with React frontend and Express.js backend.
+
+## Project Structure
+
+```
+MR-APP/
+├── frontend/                  # React + Vite + TypeScript
+│   ├── src/
+│   │   ├── components/        # React components (DCR, Chatbot, Reports, etc.)
+│   │   ├── constants/         # App constants
+│   │   ├── contexts/          # React context providers
+│   │   ├── services/          # API services
+│   │   ├── utils/             # Utility functions
+│   │   ├── assets/            # Static assets & images
+│   │   ├── App.tsx            # Root component
+│   │   └── main.tsx           # Entry point
+│   ├── public/                # Public assets
+│   ├── package.json
+│   ├── vite.config.ts
+│   └── tsconfig.json
+│
+├── backend/                   # Express.js + Supabase
+│   ├── config/                # Configuration files
+│   ├── db/                    # Database scripts & seed data
+│   ├── prompts/               # LLM prompt templates
+│   ├── routes/                # API routes
+│   ├── services/              # Business logic & LLM services
+│   ├── server.js              # Entry point
+│   ├── Dockerfile
+│   ├── docker-compose.yml
+│   ├── nginx.conf
+│   └── package.json
+│
+├── .gitignore
+└── README.md
+```
 
 ## Setup
 
+### Frontend
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+### Backend
+
 1. Install dependencies:
 ```bash
+cd backend
 npm install
 ```
 
-2. Create `.env` file with your Supabase credentials:
+2. Create `backend/.env` file:
 ```
 PORT=3001
 SUPABASE_URL=your_supabase_url
 SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
 
-## Run
-
-### Local Development
+3. Run:
 ```bash
 npm run dev
 ```
 
-### Production
-```bash
-npm start
-```
+### Docker (Backend)
 
-### Docker
-
-Build and run with Docker:
 ```bash
-docker build -t zenapp-backend .
-docker run -p 3001:3001 --env-file .env zenapp-backend
-```
-
-Or use Docker Compose:
-```bash
-# Start services
+cd backend
 docker compose up -d
-
-# Stop services
-docker compose down
-
-# Rebuild and restart (after code changes)
-docker compose down
-docker compose build --no-cache
-docker compose up -d
-
-# View logs
-docker compose logs app
-
-# Follow logs in real-time
-docker compose logs -f app
 ```
-

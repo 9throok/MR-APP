@@ -1,0 +1,267 @@
+.shortcuts-container {
+  width: 100%;
+  margin-bottom: 32px;
+}
+
+.shortcuts-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 20px 0;
+  letter-spacing: -0.3px;
+}
+
+.shortcuts-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 16px;
+  width: 100%;
+  padding-bottom: 8px;
+}
+
+.shortcut-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 12px;
+  width: 100%;
+}
+
+.shortcut-card:hover {
+  transform: translateY(-4px);
+}
+
+.shortcut-icon-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.shortcut-icon-circle {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+.shortcut-icon-inner {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.shortcut-icon-inner svg {
+  width: 24px;
+  height: 24px;
+}
+
+.shortcut-card:hover .shortcut-icon-circle {
+  transform: scale(1.05);
+  box-shadow: var(--shadow-lg);
+}
+
+.shortcut-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  text-align: center;
+  line-height: 1.3;
+  width: 100%;
+  word-wrap: break-word;
+}
+
+/* Desktop - full width grid (7 columns) */
+@media (min-width: 1201px) {
+  .shortcuts-grid {
+    grid-template-columns: repeat(7, 1fr);
+    gap: 20px;
+  }
+
+  .shortcut-icon-circle {
+    width: 90px;
+    height: 90px;
+  }
+
+  .shortcut-icon-inner {
+    width: 64px;
+    height: 64px;
+  }
+
+  .shortcut-icon-inner svg {
+    width: 28px;
+    height: 28px;
+  }
+
+  .shortcut-label {
+    font-size: 14px;
+  }
+}
+
+/* Large Tablet / Small Desktop (4 columns) */
+@media (max-width: 1200px) and (min-width: 769px) {
+  .shortcuts-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+  }
+
+  .shortcut-icon-circle {
+    width: 85px;
+    height: 85px;
+  }
+
+  .shortcut-icon-inner {
+    width: 60px;
+    height: 60px;
+  }
+
+  .shortcut-icon-inner svg {
+    width: 26px;
+    height: 26px;
+  }
+
+  .shortcut-label {
+    font-size: 13px;
+  }
+}
+
+/* Tablet / Mobile (4 columns) */
+@media (max-width: 768px) and (min-width: 481px) {
+  .shortcuts-container {
+    margin-bottom: 24px;
+  }
+
+  .shortcuts-title {
+    font-size: 18px;
+    margin-bottom: 16px;
+  }
+
+  .shortcuts-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+  }
+
+  .shortcut-card {
+    padding: 8px;
+  }
+
+  .shortcut-icon-circle {
+    width: 75px;
+    height: 75px;
+  }
+
+  .shortcut-icon-inner {
+    width: 54px;
+    height: 54px;
+  }
+
+  .shortcut-icon-inner svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  .shortcut-label {
+    font-size: 12px;
+    line-height: 1.2;
+  }
+}
+
+/* Small Mobile (3 columns) */
+@media (max-width: 480px) and (min-width: 361px) {
+  .shortcuts-container {
+    margin-bottom: 20px;
+  }
+
+  .shortcuts-title {
+    font-size: 16px;
+    margin-bottom: 12px;
+  }
+
+  .shortcuts-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+
+  .shortcut-card {
+    padding: 6px;
+    gap: 6px;
+  }
+
+  .shortcut-icon-circle {
+    width: 65px;
+    height: 65px;
+  }
+
+  .shortcut-icon-inner {
+    width: 48px;
+    height: 48px;
+  }
+
+  .shortcut-icon-inner svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .shortcut-label {
+    font-size: 11px;
+    line-height: 1.1;
+  }
+}
+
+/* Extra Small Mobile (2 columns) */
+@media (max-width: 360px) {
+  .shortcuts-container {
+    margin-bottom: 18px;
+  }
+
+  .shortcuts-title {
+    font-size: 15px;
+    margin-bottom: 10px;
+  }
+
+  .shortcuts-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .shortcut-card {
+    padding: 5px;
+    gap: 5px;
+  }
+
+  .shortcut-icon-circle {
+    width: 60px;
+    height: 60px;
+  }
+
+  .shortcut-icon-inner {
+    width: 44px;
+    height: 44px;
+  }
+
+  .shortcut-icon-inner svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .shortcut-label {
+    font-size: 10px;
+    line-height: 1.1;
+  }
+}
+

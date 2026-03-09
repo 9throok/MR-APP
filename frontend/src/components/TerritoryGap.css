@@ -1,0 +1,466 @@
+/* ── Container ─────────────────────────────────────────────────── */
+.territory-gap-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+}
+
+.territory-gap-content {
+  flex: 1;
+  padding: 28px 20px;
+  max-width: 680px;
+  width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+/* ── Page header ────────────────────────────────────────────────── */
+.tg-page-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.tg-back-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  cursor: pointer;
+  color: #334155;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  transition: all 0.25s ease;
+  flex-shrink: 0;
+}
+
+.tg-back-btn:hover {
+  background: #22c55e;
+  color: #ffffff;
+  border-color: #22c55e;
+  transform: translateX(-3px);
+}
+
+.tg-page-title {
+  font-size: 22px;
+  font-weight: 800;
+  margin: 0;
+  background: linear-gradient(135deg, #0f172a 0%, #7c3aed 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.tg-page-subtitle {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: #64748b;
+}
+
+/* ── Threshold control ──────────────────────────────────────────── */
+.tg-threshold-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+.tg-threshold-label {
+  font-size: 13px;
+  color: #475569;
+  font-weight: 500;
+  flex: 1;
+}
+
+.tg-threshold-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tg-threshold-input {
+  width: 58px;
+  text-align: center;
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: 1.5px solid #c7d2fe;
+  font-size: 14px;
+  font-weight: 700;
+  color: #4338ca;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.tg-threshold-input:focus {
+  border-color: #6366f1;
+}
+
+.tg-threshold-unit {
+  font-size: 13px;
+  color: #475569;
+}
+
+.tg-apply-btn {
+  padding: 7px 16px;
+  border-radius: 8px;
+  border: none;
+  background: #6366f1;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.2s, opacity 0.2s;
+}
+
+.tg-apply-btn:hover:not(:disabled) {
+  background: #4f46e5;
+}
+
+.tg-apply-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* ── Loading state ──────────────────────────────────────────────── */
+.tg-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 0;
+  gap: 16px;
+}
+
+.tg-loading-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #a855f7, #7c3aed);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 18px rgba(124, 58, 237, 0.3);
+}
+
+.tg-loading-title {
+  font-weight: 700;
+  color: #1e293b;
+  font-size: 15px;
+  margin: 0;
+  text-align: center;
+}
+
+.tg-loading-sub {
+  color: #94a3b8;
+  font-size: 13px;
+  margin: 4px 0 0;
+  text-align: center;
+}
+
+/* ── Error state ────────────────────────────────────────────────── */
+.tg-error-card {
+  background: #fef2f2;
+  border: 1.5px solid #fecaca;
+  border-radius: 14px;
+  padding: 28px 20px;
+  text-align: center;
+}
+
+.tg-error-emoji {
+  font-size: 2rem;
+  margin-bottom: 8px;
+}
+
+.tg-error-title {
+  font-weight: 700;
+  color: #991b1b;
+  font-size: 15px;
+  margin: 0 0 6px;
+}
+
+.tg-error-msg {
+  color: #b91c1c;
+  font-size: 13px;
+  margin: 0 0 16px;
+}
+
+.tg-retry-btn {
+  padding: 9px 22px;
+  border-radius: 10px;
+  border: none;
+  background: #dc2626;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.tg-retry-btn:hover {
+  background: #b91c1c;
+}
+
+/* ── Summary bar ────────────────────────────────────────────────── */
+.tg-summary-bar {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.tg-stat-card {
+  flex: 1;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 14px 10px;
+  text-align: center;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+.tg-stat-card.cold {
+  background: #fef2f2;
+  border-color: #fecaca;
+}
+
+.tg-stat-card.at-risk {
+  background: #fffbeb;
+  border-color: #fde68a;
+}
+
+.tg-stat-number {
+  font-size: 24px;
+  font-weight: 800;
+  color: #1e293b;
+  line-height: 1;
+}
+
+.tg-stat-card.cold .tg-stat-number  { color: #dc2626; }
+.tg-stat-card.at-risk .tg-stat-number { color: #d97706; }
+
+.tg-stat-label {
+  font-size: 11px;
+  color: #64748b;
+  margin-top: 4px;
+}
+
+.tg-stat-card.cold .tg-stat-label  { color: #dc2626; }
+.tg-stat-card.at-risk .tg-stat-label { color: #d97706; }
+
+/* ── AI Insight card ────────────────────────────────────────────── */
+.tg-insight-card {
+  background: linear-gradient(135deg, #f5f3ff, #ede9fe);
+  border: 1.5px solid #ddd6fe;
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.tg-insight-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.tg-insight-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #a855f7, #7c3aed);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.tg-insight-label {
+  font-weight: 700;
+  color: #4c1d95;
+  font-size: 14px;
+}
+
+.tg-insight-text {
+  margin: 0 0 14px;
+  font-size: 14px;
+  color: #3b0764;
+  line-height: 1.65;
+}
+
+.tg-recommendation {
+  border-top: 1px solid #ddd6fe;
+  padding-top: 12px;
+}
+
+.tg-recommendation-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #7c3aed;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 6px;
+}
+
+.tg-recommendation-text {
+  margin: 0;
+  font-size: 14px;
+  color: #3b0764;
+  line-height: 1.65;
+  font-weight: 600;
+}
+
+/* ── Doctor list section ────────────────────────────────────────── */
+.tg-section {
+  margin-bottom: 20px;
+}
+
+.tg-section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.tg-section-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.tg-section-title {
+  font-weight: 700;
+  color: #1e293b;
+  font-size: 15px;
+}
+
+.tg-section-badge {
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 20px;
+  padding: 2px 10px;
+}
+
+.tg-section-badge.cold {
+  color: #ef4444;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+}
+
+.tg-section-badge.at-risk {
+  color: #d97706;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+}
+
+.tg-doctor-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ── Doctor card ────────────────────────────────────────────────── */
+.tg-doctor-card {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 14px 16px;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.07);
+}
+
+.tg-doctor-card.cold {
+  border: 1.5px solid #fecaca;
+  border-left: 4px solid #ef4444;
+}
+
+.tg-doctor-card.at-risk {
+  border: 1.5px solid #fde68a;
+  border-left: 4px solid #f59e0b;
+}
+
+.tg-doctor-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.tg-doctor-name {
+  font-weight: 700;
+  color: #1e293b;
+  font-size: 15px;
+}
+
+.tg-doctor-badges {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.tg-badge {
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 20px;
+  padding: 3px 9px;
+}
+
+.tg-badge.days {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.tg-badge.days-ar {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.tg-badge.urgency-high   { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+.tg-badge.urgency-medium { background: #fffbeb; color: #78350f; border: 1px solid #fde68a; }
+.tg-badge.urgency-low    { background: #f0fdf4; color: #14532d; border: 1px solid #bbf7d0; }
+
+.tg-doctor-reason {
+  margin: 0;
+  font-size: 13px;
+  color: #475569;
+  line-height: 1.55;
+}
+
+/* ── All clear ──────────────────────────────────────────────────── */
+.tg-all-clear {
+  background: #f0fdf4;
+  border: 1.5px solid #bbf7d0;
+  border-radius: 14px;
+  padding: 36px 20px;
+  text-align: center;
+}
+
+.tg-all-clear-emoji {
+  font-size: 2.4rem;
+  margin-bottom: 10px;
+}
+
+.tg-all-clear-title {
+  font-weight: 700;
+  color: #14532d;
+  font-size: 16px;
+  margin: 0 0 6px;
+}
+
+.tg-all-clear-sub {
+  color: #16a34a;
+  font-size: 13px;
+  margin: 0;
+}

@@ -1,0 +1,368 @@
+.mydcrs-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+}
+
+.mydcrs-content {
+  flex: 1;
+  padding: 32px 24px;
+  max-width: 860px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* ── Page Header ── */
+.mydcrs-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.mydcrs-back-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  cursor: pointer;
+  color: #334155;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  transition: all 0.25s ease;
+  flex-shrink: 0;
+}
+
+.mydcrs-back-btn:hover {
+  background: #22c55e;
+  color: #ffffff;
+  border-color: #22c55e;
+  transform: translateX(-3px);
+}
+
+.mydcrs-title {
+  font-size: 24px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+  background: linear-gradient(135deg, #0f172a 0%, #166534 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.mydcrs-subtitle {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: #94a3b8;
+}
+
+/* ── Search ── */
+.mydcrs-search-wrapper {
+  position: relative;
+  margin-bottom: 24px;
+}
+
+.mydcrs-search-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  pointer-events: none;
+}
+
+.mydcrs-search {
+  width: 100%;
+  padding: 12px 40px 12px 42px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 14px;
+  font-size: 14px;
+  background: #ffffff;
+  color: #0f172a;
+  outline: none;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+
+.mydcrs-search:focus {
+  border-color: #22c55e;
+  box-shadow: 0 0 0 3px rgba(34,197,94,0.12);
+}
+
+.mydcrs-search-clear {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #94a3b8;
+  font-size: 13px;
+  padding: 4px;
+}
+
+/* ── Loader ── */
+.mydcrs-loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 60px 0;
+  color: #64748b;
+  font-size: 14px;
+}
+
+/* ── Error ── */
+.mydcrs-error {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 20px;
+  background: #fee2e2;
+  border: 1px solid #fecaca;
+  border-radius: 14px;
+  color: #991b1b;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* ── Empty ── */
+.mydcrs-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 64px 0;
+  color: #94a3b8;
+  font-size: 14px;
+}
+
+/* ── DCR Card List ── */
+.mydcrs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.mydcr-card {
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  transition: box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.mydcr-card:hover {
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+}
+
+.mydcr-card--expanded {
+  border-color: #86efac;
+  box-shadow: 0 4px 24px rgba(34,197,94,0.12);
+}
+
+/* ── Card Header (toggle button) ── */
+.mydcr-card-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  gap: 12px;
+}
+
+.mydcr-card-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex: 1;
+  min-width: 0;
+}
+
+.mydcr-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.mydcr-card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.mydcr-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mydcr-date-sub {
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.mydcr-card-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.mydcr-product-badge {
+  background: #f0fdf4;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.mydcr-chevron {
+  color: #94a3b8;
+  transition: transform 0.25s ease;
+  flex-shrink: 0;
+}
+
+.mydcr-chevron--up {
+  transform: rotate(180deg);
+}
+
+/* ── Card Body (expanded) ── */
+.mydcr-card-body {
+  border-top: 1px solid #f1f5f9;
+  padding: 20px;
+  background: #fafcff;
+}
+
+.mydcr-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.mydcr-detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mydcr-detail-full {
+  grid-column: 1 / -1;
+}
+
+.mydcr-detail-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.mydcr-detail-value {
+  font-size: 13px;
+  color: #334155;
+  font-weight: 500;
+}
+
+.mydcr-stars {
+  display: flex;
+  gap: 2px;
+}
+
+.mydcr-summary-text {
+  margin: 0;
+  font-size: 13px;
+  color: #475569;
+  line-height: 1.6;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+
+/* ── Samples ── */
+.mydcr-samples-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.mydcr-sample-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 20px;
+  padding: 5px 12px;
+}
+
+.mydcr-sample-name {
+  font-size: 12px;
+  color: #166534;
+  font-weight: 600;
+}
+
+.mydcr-sample-qty {
+  font-size: 11px;
+  color: #4ade80;
+  background: #166534;
+  color: #ffffff;
+  border-radius: 10px;
+  padding: 1px 8px;
+  font-weight: 700;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .mydcrs-content {
+    padding: 20px 16px;
+  }
+
+  .mydcrs-title {
+    font-size: 20px;
+  }
+
+  .mydcr-detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .mydcr-product-badge {
+    display: none;
+  }
+
+  .mydcr-card-header {
+    padding: 14px 16px;
+  }
+
+  .mydcr-card-body {
+    padding: 16px;
+  }
+}
