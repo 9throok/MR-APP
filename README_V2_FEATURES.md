@@ -74,10 +74,16 @@ docker exec -i zenapp-postgres psql -U postgres -d zenapp < backend/db/seed_user
 # 5. Seed doctor profiles
 docker exec -i zenapp-postgres psql -U postgres -d zenapp < backend/db/seed_doctors.sql
 
-# 6. Install & start frontend
+# 6. Seed knowledge base (chatbot KB articles)
+docker exec -i zenapp-postgres psql -U postgres -d zenapp < backend/db/seed_knowledge.sql
+
+# 7. Seed demo data (follow-up tasks, adverse events, varied DCR summaries)
+docker exec -i zenapp-postgres psql -U postgres -d zenapp < backend/db/seed_demo_data.sql
+
+# 8. Install & start frontend
 cd frontend && npm install && npm run dev
 
-# 7. Login with: username "robert" / password "password123"
+# 9. Login with: username "robert" / password "password123"
 ```
 
 ### Seeded Users
