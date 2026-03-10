@@ -12,6 +12,7 @@ function getAuthHeaders(): Record<string, string> {
   const token = getToken()
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
+    'ngrok-skip-browser-warning': 'true',
   }
   if (token) {
     headers['Authorization'] = `Bearer ${token}`
@@ -70,7 +71,9 @@ export async function apiDelete(path: string) {
 
 export async function apiUpload(path: string, formData: FormData) {
   const token = getToken()
-  const headers: Record<string, string> = {}
+  const headers: Record<string, string> = {
+    'ngrok-skip-browser-warning': 'true',
+  }
   if (token) {
     headers['Authorization'] = `Bearer ${token}`
   }
