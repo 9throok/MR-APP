@@ -489,6 +489,11 @@
 @media (max-width: 768px) {
   .tour-plans-content {
     padding: 20px 16px;
+    overflow-x: hidden;
+  }
+
+  .tour-plans-header {
+    flex-wrap: wrap;
   }
 
   .tour-plans-title {
@@ -498,6 +503,8 @@
   .view-toggle {
     margin-left: 0;
     margin-top: 12px;
+    width: 100%;
+    justify-content: flex-start;
   }
 
   .view-toggle-btn {
@@ -547,6 +554,66 @@
     font-size: 14px;
     width: 100%;
     justify-content: center;
+  }
+}
+
+/* Small mobile */
+@media (max-width: 480px) {
+  .tour-plans-content {
+    padding: 16px 12px;
+  }
+
+  .tour-plans-title {
+    font-size: 18px;
+  }
+
+  .tour-plans-header .back-button {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .calendar-container,
+  .weekly-view-container {
+    padding: 16px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .calendar-grid {
+    min-width: 280px;
+    gap: 4px;
+  }
+
+  .calendar-day-header {
+    padding: 6px 2px;
+    font-size: 11px;
+  }
+
+  .calendar-day {
+    padding: 4px 2px;
+    font-size: 13px;
+  }
+
+  .day-number {
+    font-size: 12px;
+  }
+
+  .calendar-month-year,
+  .week-range {
+    font-size: 16px;
+  }
+
+  .weekly-grid {
+    min-height: 400px;
+  }
+
+  .view-toggle-btn {
+    padding: 8px 14px;
+    font-size: 13px;
   }
 }
 

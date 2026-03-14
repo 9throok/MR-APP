@@ -2,6 +2,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.tsx'
+import './responsive-headings.css'
 import { LanguageProvider } from './contexts/LanguageContext.tsx'
 
 const rootElement = document.getElementById('root')

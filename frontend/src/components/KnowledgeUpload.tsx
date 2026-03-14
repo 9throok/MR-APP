@@ -113,6 +113,18 @@ function KnowledgeUpload({ onLogout, onBack, userName, onNavigate }: KnowledgeUp
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} userName={userName} onNavigate={onNavigate} onLogout={onLogout} currentPage="knowledge-upload" />
 
       <main className="knowledge-content">
+        <div className="knowledge-page-header">
+          <button className="back-button" onClick={onBack} aria-label="Go back">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M19 12H5M5 12L12 19M5 12L12 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
+          <div className="knowledge-header-content">
+            <h1 className="knowledge-page-title">Knowledge Base</h1>
+            <p className="knowledge-page-subtitle">Upload and manage drug information for AI-assisted detailing</p>
+          </div>
+        </div>
+
         <section className="upload-section">
           <h3>Upload Drug Information</h3>
           <form onSubmit={handleUpload} className="upload-form">
@@ -166,7 +178,10 @@ function KnowledgeUpload({ onLogout, onBack, userName, onNavigate }: KnowledgeUp
         </section>
 
         <section className="entries-section">
-          <h3>Uploaded Files ({entries.length})</h3>
+          <div className="entries-section-header">
+            <h3>Uploaded Files</h3>
+            <span className="entries-count">{entries.length} file{entries.length !== 1 ? 's' : ''}</span>
+          </div>
           {loading ? (
             <div className="knowledge-loading">Loading...</div>
           ) : entries.length === 0 ? (

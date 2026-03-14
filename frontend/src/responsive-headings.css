@@ -1,0 +1,41 @@
+/**
+ * Global responsive heading font sizes - applied across the application.
+ * Reduces heading/title font sizes on mobile devices for better fit and readability.
+ * Imported last so it overrides component-specific styles.
+ */
+
+/* Mobile (768px and below) - headings a bit smaller */
+@media (max-width: 768px) {
+  [class*="-title"]:not(.stat-value):not(.stat-label),
+  [class*="-heading"],
+  .section-title,
+  .chart-title,
+  .modal-title,
+  .banner-title,
+  h1, h2, h3, h4, h5, h6 {
+    font-size: 1.25rem !important; /* 20px - slightly smaller than typical 22-24px */
+  }
+
+  h3, h4, h5, h6,
+  .chart-title,
+  .section-title {
+    font-size: 1.125rem !important; /* 18px */
+  }
+}
+
+/* Small mobile (480px and below) - headings smaller still */
+@media (max-width: 480px) {
+  [class*="-title"]:not(.stat-value):not(.stat-label),
+  [class*="-heading"],
+  .modal-title,
+  .banner-title,
+  h1, h2 {
+    font-size: 1.125rem !important; /* 18px */
+  }
+
+  h3, h4, h5, h6,
+  .chart-title,
+  .section-title {
+    font-size: 1rem !important; /* 16px */
+  }
+}

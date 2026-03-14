@@ -101,6 +101,18 @@ function AdverseEvents({ onLogout, onBack, userName, onNavigate }: AdverseEvents
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} userName={userName} onNavigate={onNavigate} onLogout={onLogout} currentPage="adverse-events" />
 
       <main className="ae-content">
+        <div className="ae-page-header">
+          <button className="back-button" onClick={onBack} aria-label="Go back">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M19 12H5M5 12L12 19M5 12L12 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
+          <div className="ae-header-content">
+            <h1 className="ae-page-title">Adverse Events</h1>
+            <p className="ae-page-subtitle">Monitor and review reported adverse drug reactions</p>
+          </div>
+        </div>
+
         {stats && (
           <div className="ae-stats-row">
             <div className="ae-stat">
@@ -126,7 +138,7 @@ function AdverseEvents({ onLogout, onBack, userName, onNavigate }: AdverseEvents
           {(['all', 'pending', 'confirmed', 'dismissed'] as const).map(f => (
             <button
               key={f}
-              className={`filter-btn ${filter === f ? 'active' : ''}`}
+              className={`ae-filter-btn ${filter === f ? 'active' : ''}`}
               onClick={() => setFilter(f)}
             >
               {f.charAt(0).toUpperCase() + f.slice(1)}

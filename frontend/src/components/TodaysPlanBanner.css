@@ -244,12 +244,31 @@
 }
 
 @media (max-width: 480px) {
+  .todays-plan-banner {
+    margin-bottom: 24px;
+    border-radius: 16px;
+  }
+
   .todays-plan-banner-content {
-    padding: 24px 20px;
+    padding: 20px 16px;
+    gap: 16px;
+  }
+
+  .banner-icon {
+    width: 56px;
+    height: 56px;
   }
 
   .banner-title {
-    font-size: 20px;
+    font-size: 18px;
+  }
+
+  .banner-stat-item .stat-value {
+    font-size: 18px;
+  }
+
+  .banner-stat-item .stat-label {
+    font-size: 11px;
   }
 
   .banner-stats {
@@ -264,5 +283,25 @@
 
   .banner-stat-item.next-visit .stat-label {
     max-width: 100%;
+  }
+
+  .banner-action-button {
+    padding: 12px 20px;
+    font-size: 14px;
+    min-height: 44px;
+  }
+}
+
+@media (max-width: 360px) {
+  .todays-plan-banner-content {
+    padding: 16px 12px;
+  }
+
+  .banner-title {
+    font-size: 16px;
+  }
+
+  .banner-stat-item .stat-value {
+    font-size: 16px;
   }
 }

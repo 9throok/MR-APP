@@ -509,6 +509,11 @@
 @media (max-width: 768px) {
   .doctor360-content {
     padding: 20px 16px;
+    overflow-x: hidden;
+  }
+
+  .doctor360-header {
+    flex-wrap: wrap;
   }
 
   .doctor360-title {
@@ -574,6 +579,54 @@
   .timeline-header {
     flex-direction: column;
     align-items: flex-start;
+  }
+}
+
+/* Small mobile */
+@media (max-width: 480px) {
+  .doctor360-content {
+    padding: 16px 12px;
+  }
+
+  .doctor360-title {
+    font-size: 18px;
+  }
+
+  .doctor360-header .back-button {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .info-card {
+    padding: 20px 16px;
+  }
+
+  .client-avatar-large {
+    width: 64px;
+    height: 64px;
+    font-size: 24px;
+  }
+
+  .client-main-info h2 {
+    font-size: 20px;
+  }
+
+  .bar-label {
+    min-width: 80px;
+    font-size: 12px;
+  }
+
+  .quick-action-icon {
+    width: 52px;
+    height: 52px;
+  }
+
+  .quick-action-title {
+    font-size: 13px;
   }
 }
 

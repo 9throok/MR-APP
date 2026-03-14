@@ -716,6 +716,11 @@
 @media (max-width: 768px) {
   .dcr-content {
     padding: 20px 16px;
+    overflow-x: hidden;
+  }
+
+  .dcr-header {
+    flex-wrap: wrap;
   }
 
   .dcr-title {
@@ -751,6 +756,26 @@
   .submit-dcr-btn {
     width: 100%;
     justify-content: center;
+  }
+}
+
+/* Small mobile */
+@media (max-width: 480px) {
+  .dcr-content {
+    padding: 16px 12px;
+  }
+
+  .dcr-title {
+    font-size: 18px;
+  }
+
+  .dcr-form {
+    padding: 20px 16px;
+  }
+
+  .back-button {
+    width: 40px;
+    height: 40px;
   }
 }
 

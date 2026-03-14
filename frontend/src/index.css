@@ -4,6 +4,19 @@
   box-sizing: border-box;
 }
 
+/* Responsive breakpoints (use in media queries):
+   Desktop: 1201px+
+   Tablet: 769px - 1200px
+   Mobile: 481px - 768px
+   Small mobile: 360px - 480px
+   Extra small: < 360px
+*/
+
+html {
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
+}
+
 :root {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
@@ -44,8 +57,13 @@ body {
   min-width: 320px;
   min-height: 100vh;
   background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  -webkit-text-size-adjust: 100%;
 }
 
 #root {
   min-height: 100vh;
+  overflow-x: hidden;
+  min-width: 0;
 }

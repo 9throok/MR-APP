@@ -11,6 +11,7 @@
   max-width: 1400px;
   width: 100%;
   margin: 0 auto;
+  overflow-x: hidden;
 }
 
 .tour-plan-requests-header {
@@ -188,11 +189,14 @@
   background: var(--bg-primary);
   border-radius: 12px;
   box-shadow: var(--shadow-md);
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: visible;
+  -webkit-overflow-scrolling: touch;
 }
 
 .tour-plan-requests-table {
   width: 100%;
+  min-width: 600px;
   border-collapse: collapse;
 }
 
@@ -317,14 +321,22 @@
   color: #dc2626;
 }
 
+/* Tablet responsiveness */
+@media (max-width: 1024px) and (min-width: 769px) {
+  .tour-plan-requests-content {
+    padding: 28px 20px;
+  }
+}
+
 /* Mobile responsiveness */
 @media (max-width: 768px) {
   .tour-plan-requests-content {
-    padding: 24px 16px;
+    padding: 20px 16px;
   }
 
   .tour-plan-requests-header {
     flex-wrap: wrap;
+    gap: 12px;
   }
 
   .tour-plan-requests-title {
@@ -338,7 +350,7 @@
 
   .search-container {
     flex-direction: column;
-    min-width: 100%;
+    min-width: 0;
   }
 
   .tour-plan-requests-table {
@@ -359,5 +371,21 @@
   .reject-btn {
     width: 100%;
     padding: 8px 12px;
+  }
+}
+
+/* Small mobile */
+@media (max-width: 480px) {
+  .tour-plan-requests-content {
+    padding: 16px 12px;
+  }
+
+  .tour-plan-requests-title {
+    font-size: 18px;
+  }
+
+  .tour-plan-requests-header .back-button {
+    width: 40px;
+    height: 40px;
   }
 }

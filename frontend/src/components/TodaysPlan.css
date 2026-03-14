@@ -507,6 +507,11 @@
 @media (max-width: 768px) {
   .todays-plan-content {
     padding: 20px 16px;
+    overflow-x: hidden;
+  }
+
+  .todays-plan-header {
+    flex-wrap: wrap;
   }
 
   .todays-plan-title {
@@ -520,11 +525,15 @@
 
   .filter-tabs {
     gap: 8px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 4px;
   }
 
   .filter-tab {
     padding: 8px 16px;
     font-size: 13px;
+    flex-shrink: 0;
   }
 
   .plan-card {
@@ -566,6 +575,45 @@
   .skip-modal-submit {
     width: 100%;
     justify-content: center;
+  }
+}
+
+/* Small mobile */
+@media (max-width: 480px) {
+  .todays-plan-content {
+    padding: 16px 12px;
+  }
+
+  .todays-plan-title {
+    font-size: 18px;
+  }
+
+  .todays-plan-header .back-button {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .plan-card {
+    padding: 16px;
+  }
+
+  .plan-avatar {
+    width: 48px;
+    height: 48px;
+  }
+
+  .plan-name {
+    font-size: 16px;
+  }
+
+  .skip-modal-content {
+    margin: 8px;
+    max-height: calc(100vh - 16px);
+    overflow-y: auto;
   }
 }
 

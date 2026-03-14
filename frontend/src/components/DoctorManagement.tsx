@@ -103,10 +103,21 @@ function DoctorManagement({ onLogout, onBack, userName, onNavigate }: DoctorMana
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} userName={userName} onNavigate={onNavigate} onLogout={onLogout} currentPage="doctor-management" />
 
       <main className="doctor-mgmt-content">
-        <div className="doctor-mgmt-toolbar">
-          <span className="doctor-count">{doctors.length} doctors</span>
+        <div className="doctor-mgmt-page-header">
+          <button className="back-button" onClick={onBack} aria-label="Go back">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M19 12H5M5 12L12 19M5 12L12 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
+          <div className="doctor-mgmt-header-content">
+            <h1 className="doctor-mgmt-title">Doctor Management</h1>
+            <p className="doctor-mgmt-subtitle">{doctors.length} doctor{doctors.length !== 1 ? 's' : ''} in your territory</p>
+          </div>
           <button className="add-doctor-btn" onClick={() => { setForm(emptyDoctor); setEditingId(null); setShowForm(true) }}>
-            + Add Doctor
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 5V19M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            Add Doctor
           </button>
         </div>
 

@@ -8,7 +8,7 @@
 .mydcrs-content {
   flex: 1;
   padding: 32px 24px;
-  max-width: 860px;
+  max-width: 1400px;
   width: 100%;
   margin: 0 auto;
 }
@@ -25,34 +25,36 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  width: 44px;
+  height: 44px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
   border-radius: 12px;
   cursor: pointer;
-  color: #334155;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-  transition: all 0.25s ease;
+  color: var(--text-primary);
+  box-shadow: var(--shadow-sm);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   flex-shrink: 0;
 }
 
 .mydcrs-back-btn:hover {
-  background: #22c55e;
+  background: var(--primary-green);
   color: #ffffff;
-  border-color: #22c55e;
-  transform: translateX(-3px);
+  border-color: var(--primary-green);
+  transform: translateX(-4px);
+  box-shadow: var(--shadow-md);
 }
 
 .mydcrs-title {
   font-size: 24px;
   font-weight: 800;
-  color: #0f172a;
+  color: var(--text-primary);
   margin: 0;
-  background: linear-gradient(135deg, #0f172a 0%, #166534 100%);
+  background: linear-gradient(135deg, var(--text-primary) 0%, var(--primary-green-dark) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  letter-spacing: -0.5px;
 }
 
 .mydcrs-subtitle {
@@ -144,11 +146,12 @@
   font-size: 14px;
 }
 
-/* ── DCR Card List ── */
+/* ── DCR Card List — 3-col grid on desktop ── */
 .mydcrs-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  align-items: start;
 }
 
 .mydcr-card {
@@ -341,13 +344,33 @@
 }
 
 /* ── Responsive ── */
+@media (max-width: 1200px) and (min-width: 769px) {
+  .mydcrs-list {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .mydcrs-content {
+    padding: 28px 20px;
+  }
+}
+
 @media (max-width: 768px) {
   .mydcrs-content {
     padding: 20px 16px;
+    overflow-x: hidden;
+  }
+
+  .mydcrs-header {
+    flex-wrap: wrap;
   }
 
   .mydcrs-title {
     font-size: 20px;
+  }
+
+  .mydcrs-list {
+    grid-template-columns: 1fr;
+    gap: 12px;
   }
 
   .mydcr-detail-grid {
@@ -364,5 +387,21 @@
 
   .mydcr-card-body {
     padding: 16px;
+  }
+}
+
+/* Small mobile */
+@media (max-width: 480px) {
+  .mydcrs-content {
+    padding: 16px 12px;
+  }
+
+  .mydcrs-title {
+    font-size: 18px;
+  }
+
+  .mydcrs-back-btn {
+    width: 40px;
+    height: 40px;
   }
 }

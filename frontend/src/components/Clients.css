@@ -272,6 +272,11 @@
 @media (max-width: 768px) {
   .clients-content {
     padding: 20px 16px;
+    overflow-x: hidden;
+  }
+
+  .clients-header {
+    flex-wrap: wrap;
   }
 
   .clients-title {
@@ -312,7 +317,21 @@
   }
 }
 
+/* Small mobile */
 @media (max-width: 480px) {
+  .clients-content {
+    padding: 16px 12px;
+  }
+
+  .clients-title {
+    font-size: 18px;
+  }
+
+  .back-button {
+    width: 40px;
+    height: 40px;
+  }
+
   .clients-header {
     flex-direction: column;
     align-items: flex-start;

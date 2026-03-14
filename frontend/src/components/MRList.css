@@ -11,6 +11,7 @@
   max-width: 1400px;
   width: 100%;
   margin: 0 auto;
+  overflow-x: hidden;
 }
 
 .mr-list-header {
@@ -24,22 +25,24 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
-  background: linear-gradient(135deg, var(--primary-green-light) 0%, var(--primary-green) 100%);
-  border: none;
-  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  color: #ffffff;
-  box-shadow: var(--shadow-md);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-sm);
   flex-shrink: 0;
 }
 
 .back-button:hover {
-  background: linear-gradient(135deg, var(--primary-green) 0%, var(--primary-green-dark) 100%);
+  background: var(--primary-green);
+  color: #ffffff;
+  border-color: var(--primary-green);
   transform: translateX(-4px);
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--shadow-md);
 }
 
 .mr-list-title {
@@ -140,11 +143,14 @@
   background: var(--bg-primary);
   border-radius: 12px;
   box-shadow: var(--shadow-md);
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: visible;
+  -webkit-overflow-scrolling: touch;
 }
 
 .mr-table {
   width: 100%;
+  min-width: 700px;
   border-collapse: collapse;
 }
 
@@ -240,31 +246,75 @@
   margin: 0;
 }
 
+/* Tablet responsiveness */
+@media (max-width: 1024px) and (min-width: 769px) {
+  .mr-list-content {
+    padding: 28px 20px;
+  }
+
+  .search-bar {
+    max-width: 100%;
+  }
+}
+
 /* Mobile responsiveness */
 @media (max-width: 768px) {
   .mr-list-content {
-    padding: 24px 16px;
+    padding: 20px 16px;
+  }
+
+  .mr-list-header {
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 24px;
   }
 
   .mr-list-title {
     font-size: 20px;
+    flex: 1;
+    min-width: 0;
   }
 
   .mr-list-controls {
     flex-direction: column;
     align-items: stretch;
+    gap: 12px;
   }
 
   .search-bar {
-    min-width: 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .filter-tabs {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 4px;
   }
 
   .mr-table {
     font-size: 12px;
+    min-width: 600px;
   }
 
   .mr-table th,
   .mr-table td {
     padding: 12px 8px;
+  }
+}
+
+/* Small mobile */
+@media (max-width: 480px) {
+  .mr-list-content {
+    padding: 16px 12px;
+  }
+
+  .mr-list-title {
+    font-size: 18px;
+  }
+
+  .back-button {
+    width: 40px;
+    height: 40px;
   }
 }

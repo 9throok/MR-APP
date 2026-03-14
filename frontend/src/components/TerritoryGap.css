@@ -8,8 +8,8 @@
 
 .territory-gap-content {
   flex: 1;
-  padding: 28px 20px;
-  max-width: 680px;
+  padding: 32px 24px;
+  max-width: 1400px;
   width: 100%;
   margin: 0 auto;
   box-sizing: border-box;
@@ -19,41 +19,43 @@
 .tg-page-header {
   display: flex;
   align-items: center;
-  gap: 14px;
-  margin-bottom: 24px;
+  gap: 16px;
+  margin-bottom: 32px;
 }
 
 .tg-back-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  width: 44px;
+  height: 44px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
   border-radius: 12px;
   cursor: pointer;
-  color: #334155;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
-  transition: all 0.25s ease;
+  color: var(--text-primary);
+  box-shadow: var(--shadow-sm);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   flex-shrink: 0;
 }
 
 .tg-back-btn:hover {
-  background: #22c55e;
+  background: var(--primary-green);
   color: #ffffff;
-  border-color: #22c55e;
-  transform: translateX(-3px);
+  border-color: var(--primary-green);
+  transform: translateX(-4px);
+  box-shadow: var(--shadow-md);
 }
 
 .tg-page-title {
-  font-size: 22px;
+  font-size: 24px;
   font-weight: 800;
   margin: 0;
-  background: linear-gradient(135deg, #0f172a 0%, #7c3aed 100%);
+  background: linear-gradient(135deg, var(--text-primary) 0%, var(--primary-green-dark) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  letter-spacing: -0.5px;
 }
 
 .tg-page-subtitle {
@@ -213,19 +215,24 @@
 
 /* ── Summary bar ────────────────────────────────────────────────── */
 .tg-summary-bar {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
 }
 
 .tg-stat-card {
-  flex: 1;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  padding: 14px 10px;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  padding: 20px 16px;
   text-align: center;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  box-shadow: var(--shadow-md);
+  transition: transform 0.2s ease;
+}
+
+.tg-stat-card:hover {
+  transform: translateY(-2px);
 }
 
 .tg-stat-card.cold {
@@ -365,17 +372,25 @@
 }
 
 .tg-doctor-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
 }
 
 /* ── Doctor card ────────────────────────────────────────────────── */
 .tg-doctor-card {
-  background: #ffffff;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
   border-radius: 14px;
-  padding: 14px 16px;
-  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.07);
+  padding: 16px;
+  box-shadow: var(--shadow-md);
+  transition: all 0.3s ease;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.tg-doctor-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-xl);
 }
 
 .tg-doctor-card.cold {
@@ -463,4 +478,64 @@
   color: #16a34a;
   font-size: 13px;
   margin: 0;
+}
+
+/* ── Responsive ── */
+@media (max-width: 1200px) and (min-width: 769px) {
+  .tg-doctor-list {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .territory-gap-content {
+    padding: 28px 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .territory-gap-content {
+    padding: 20px 16px;
+  }
+
+  .tg-page-title {
+    font-size: 20px;
+  }
+
+  .tg-summary-bar {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+
+  .tg-doctor-list {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .territory-gap-content {
+    overflow-x: hidden;
+  }
+
+  .tg-page-header {
+    flex-wrap: wrap;
+  }
+}
+
+/* Small mobile */
+@media (max-width: 480px) {
+  .territory-gap-content {
+    padding: 16px 12px;
+  }
+
+  .tg-page-title {
+    font-size: 18px;
+  }
+
+  .tg-threshold-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .tg-back-btn {
+    width: 40px;
+    height: 40px;
+  }
 }
