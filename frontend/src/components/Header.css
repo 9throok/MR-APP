@@ -7,11 +7,19 @@
   backdrop-filter: blur(10px);
   box-shadow: var(--shadow-md);
   border-bottom: 1px solid var(--border-color);
-  position: sticky;
+  position: fixed;
   top: 0;
+  left: 0;
+  right: 0;
   z-index: 100;
   height: 56px;
   min-height: 56px;
+}
+
+.header-spacer {
+  height: 56px;
+  min-height: 56px;
+  flex-shrink: 0;
 }
 
 .header-left {
@@ -176,6 +184,11 @@
     min-height: 48px;
   }
 
+  .header-spacer {
+    height: 48px;
+    min-height: 48px;
+  }
+
   .menu-button {
     width: 32px;
     height: 32px;
@@ -223,6 +236,11 @@
 @media (max-width: 480px) {
   .app-header {
     padding: 6px 10px;
+    height: 44px;
+    min-height: 44px;
+  }
+
+  .header-spacer {
     height: 44px;
     min-height: 44px;
   }

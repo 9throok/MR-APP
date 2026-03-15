@@ -3,4 +3,5 @@ node_modules
 .DS_Store
 dist
 backend/uploads/
-.claude/frontend/.vite/
+.claude
+/frontend/.vite/
