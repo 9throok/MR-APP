@@ -16,10 +16,17 @@
 - `frontend/src/components/PostCallReview.tsx` — AI extraction review modal
 - `frontend/src/components/FollowUpTasks.tsx` — Task management page
 
-### Phase 2: Clinical Assistant Chatbot
-- `backend/services/knowledgeSearch.js` — PostgreSQL full-text search
-- `backend/prompts/clinicalChat.js` — Knowledge-grounded LLM prompt
-- `backend/routes/knowledge.js` — File upload, list, delete, chat
+### Phase 2: Clinical Assistant Chatbot (Enhanced RAG Pipeline)
+- `backend/services/knowledgeSearch.js` — Hybrid search: FTS + pgvector semantic similarity with RRF scoring
+- `backend/services/chunker.js` — Section-aware document chunking (~300 tokens) with auto medicine tag extraction
+- `backend/services/embeddings.js` — Gemini text-embedding-004 (768 dims) for semantic search
+- `backend/services/chatMemory.js` — Conversation session & message persistence
+- `backend/services/queryRewriter.js` — LLM-powered query rewriting for follow-up questions
+- `backend/services/queryPreprocessor.js` — Pharma synonym expansion (50+ medical term mappings)
+- `backend/prompts/clinicalChat.js` — Knowledge-grounded LLM prompt with conversation history support
+- `backend/routes/knowledge.js` — File upload (auto-chunks + embeds), chat with session memory, sessions list
+- `backend/scripts/rechunk.js` — One-time script to chunk + embed existing knowledge base
+- `backend/db/migration_v3_rag.sql` — knowledge_chunks (pgvector), chat_sessions, chat_messages tables
 - `frontend/src/components/KnowledgeUpload.tsx` — Admin file upload page
 - Updated `frontend/src/components/Chatbot.tsx` — Now uses clinical API backend
 
@@ -119,7 +126,8 @@ cd frontend && npm install && npm run dev
 | POST | `/api/knowledge/upload` | Upload text file (admin/manager) |
 | GET | `/api/knowledge?product_id=X` | List knowledge entries |
 | DELETE | `/api/knowledge/:id` | Delete entry (admin/manager) |
-| POST | `/api/knowledge/chat` | Clinical assistant query |
+| GET | `/api/knowledge/sessions` | List chat sessions for current user |
+| POST | `/api/knowledge/chat` | Clinical assistant query (accepts `session_id` for conversation continuity) |
 
 ### Adverse Events
 | Method | Endpoint | Description |
@@ -155,7 +163,8 @@ cd frontend && npm install && npm run dev
 ## Architecture Notes
 
 - **AE detection is async/non-blocking** — runs after DCR save, never slows submission
-- **Knowledge search uses PostgreSQL full-text search** — no external services needed
+- **Clinical assistant uses hybrid RAG** — combines FTS + pgvector semantic search via Reciprocal Rank Fusion (RRF). Documents are chunked (~300 tokens) with Gemini embeddings (768 dims). Conversation memory enables follow-up questions. Pharma synonym dictionary expands queries for better recall.
 - **NBA results are cached daily** per MR (UNIQUE constraint on user_id + date)
 - **All AI features use the existing `getLLMService()` factory pattern**
 - **All routes are JWT-protected** except `/api/auth/*` and `/health`
+- **pgvector optional** — if not installed, system gracefully falls back to FTS-only search

@@ -76,8 +76,14 @@ Aggregates product-level statistics from DCR data and surfaces performance signa
 ### 5. Post-Call Extraction
 Takes raw call transcript/notes and extracts structured data: products discussed, samples dropped, doctor feedback, sentiment, follow-up tasks, and competitor mentions. MR reviews before saving as DCR.
 
-### 6. Clinical Assistant Chatbot
-Knowledge-grounded chatbot that answers drug-related questions from uploaded text files. Uses PostgreSQL full-text search (GIN index) to find relevant content, then injects as LLM context. Only answers from the knowledge base — says "I don't know" otherwise.
+### 6. Clinical Assistant Chatbot (Enhanced RAG)
+Knowledge-grounded chatbot with an enhanced RAG pipeline:
+- **Document chunking** — Uploaded files are split into ~300-token section-aware chunks with auto-extracted medicine tags
+- **Hybrid search** — Combines PostgreSQL full-text search + pgvector semantic similarity via Reciprocal Rank Fusion (RRF)
+- **Gemini embeddings** — text-embedding-004 (768 dims) for semantic understanding ("sleepy" matches "somnolence")
+- **Conversation memory** — Session-based chat history with LLM-powered query rewriting for follow-ups
+- **Pharma synonym expansion** — 50+ medical term mappings for better FTS recall
+- Only answers from the knowledge base — says "I don't know" otherwise.
 
 ### 7. Adverse Event Detection
 NLP layer that auto-scans DCR call notes for potential adverse events after every DCR submission. Runs asynchronously (non-blocking — never slows submission). Flagged AEs appear on a pharmacovigilance dashboard for review (confirm/dismiss).
@@ -93,13 +99,14 @@ Generates a prioritized daily visit plan for each MR. Considers doctor profiles,
 - **Frontend:** React 19 + Vite + TypeScript
 - **Auth:** JWT (jsonwebtoken) + bcrypt
 - **AI:** Multi-LLM provider factory (OpenAI, Groq, Anthropic, Gemini)
-- **Search:** PostgreSQL full-text search (GIN index)
+- **Search:** Hybrid search — PostgreSQL full-text search (GIN index) + pgvector semantic similarity
+- **Embeddings:** Gemini text-embedding-004 (768 dims)
 - **File Upload:** Multer
 - **Containerization:** Docker + docker-compose
 
 ---
 
-## Database Tables (8 total)
+## Database Tables (12 total)
 
 | Table | Purpose |
 |-------|---------|
@@ -107,7 +114,11 @@ Generates a prioritized daily visit plan for each MR. Considers doctor profiles,
 | `dcr` | Daily Call Reports |
 | `users` | JWT auth with roles (mr, manager, admin) |
 | `follow_up_tasks` | Post-call follow-up tracking |
-| `drug_knowledge` | Knowledge base with full-text search |
+| `drug_knowledge` | Knowledge base source documents |
+| `knowledge_chunks` | Chunked knowledge with pgvector embeddings and medicine tags |
 | `adverse_events` | Pharmacovigilance AE records |
 | `doctor_profiles` | Doctor CRM with tier/specialty |
 | `nba_recommendations` | Cached daily AI visit plans |
+| `rcpa` | Retail chemist prescription audit data |
+| `chat_sessions` | Conversation sessions per user |
+| `chat_messages` | Chat message history (user + assistant turns) |
