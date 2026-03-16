@@ -1,11 +1,12 @@
 /**
  * Embeddings Service
  *
- * Uses Gemini text-embedding-004 (768 dimensions) via @google/generative-ai SDK.
+ * Uses Gemini gemini-embedding-001 (768 dimensions, truncated from 3072) via @google/generative-ai SDK.
+ * text-embedding-004 was deprecated — gemini-embedding-001 is the replacement.
  * Free tier available. No additional npm dependencies needed.
  */
 
-const EMBEDDING_MODEL = 'text-embedding-004';
+const EMBEDDING_MODEL = 'gemini-embedding-001';
 const EMBEDDING_DIMENSIONS = 768;
 
 let _genAI = null;
@@ -30,7 +31,10 @@ function getGenAI() {
 async function getEmbedding(text) {
   const genAI = getGenAI();
   const model = genAI.getGenerativeModel({ model: EMBEDDING_MODEL });
-  const result = await model.embedContent(text);
+  const result = await model.embedContent({
+    content: { parts: [{ text }] },
+    outputDimensionality: EMBEDDING_DIMENSIONS,
+  });
   return result.embedding.values;
 }
 
@@ -46,6 +50,7 @@ async function getEmbeddings(texts) {
   const result = await model.batchEmbedContents({
     requests: texts.map(text => ({
       content: { parts: [{ text }] },
+      outputDimensionality: EMBEDDING_DIMENSIONS,
     })),
   });
 
