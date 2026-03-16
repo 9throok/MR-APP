@@ -244,7 +244,7 @@ function Chatbot() {
                 {!message.isUser && message.sources && message.sources.length > 0 && (
                   <div className="chatbot-citations">
                     <div className="chatbot-citations-label">Supporting Citations:</div>
-                    {message.sources.map((s, i) => (
+                    {message.sources.slice(0, 3).map((s, i) => (
                       <button
                         key={i}
                         className="chatbot-citation-link"
