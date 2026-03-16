@@ -2,7 +2,7 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  background: var(--navy-deep);
 }
 
 .leaves-content {
@@ -36,9 +36,9 @@
 }
 
 .back-button:hover {
-  background: var(--primary-green);
-  color: #ffffff;
-  border-color: var(--primary-green);
+  background: var(--teal);
+  color: var(--navy-deep);
+  border-color: var(--teal);
   transform: translateX(-4px);
   box-shadow: var(--shadow-md);
 }
@@ -46,7 +46,7 @@
 .leaves-title {
   font-size: 24px;
   font-weight: 800;
-  background: linear-gradient(135deg, var(--text-primary) 0%, var(--primary-green-dark) 100%);
+  background: linear-gradient(135deg, var(--text-primary) 0%, var(--teal) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -55,7 +55,7 @@
 }
 
 .apply-leave-btn {
-  background: #28a745;
+  background: var(--teal);
   color: #ffffff;
   border: none;
   border-radius: 12px;
@@ -71,7 +71,7 @@
 }
 
 .apply-leave-btn:hover {
-  background: #218838;
+  background: var(--teal-dim);
   transform: translateY(-2px);
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
 }
@@ -95,7 +95,7 @@
 }
 
 .legends-header {
-  background: #BFDBFE;
+  background: rgba(33,150,243,0.15);
   padding: 12px 20px;
   font-weight: 600;
   color: var(--text-primary);
@@ -129,21 +129,21 @@
 }
 
 .legend-badge.present {
-  background: var(--primary-green);
+  background: var(--teal);
 }
 
 .legend-badge.absent {
-  background: #FCA5A5;
+  background: rgba(255,107,107,0.2);
   color: #991B1B;
 }
 
 .legend-badge.leave {
-  background: #E9D5FF;
+  background: rgba(156,39,176,0.15);
   color: #6B21A8;
 }
 
 .legend-badge.holiday {
-  background: #ffffff;
+  background: var(--card-bg);
   color: var(--text-primary);
   border: 1px solid var(--border-color);
 }
@@ -155,7 +155,7 @@
 }
 
 .selected-date-display {
-  background: #BFDBFE;
+  background: rgba(33,150,243,0.15);
   padding: 12px 20px;
   border-radius: 8px;
   margin-bottom: 24px;
@@ -169,7 +169,7 @@
 }
 
 .calendar-section {
-  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  background: var(--navy-deep);
   border-radius: 20px;
   padding: 32px;
   box-shadow: var(--shadow-lg);
@@ -227,9 +227,9 @@
 }
 
 .view-toggle-btn.active {
-  background: #374151;
+  background: var(--navy-light);
   color: #ffffff;
-  border-color: #374151;
+  border-color: var(--text-primary);
 }
 
 .view-toggle-btn:not(.active):hover {
@@ -280,22 +280,22 @@
 }
 
 .calendar-day.leave {
-  background: #E9D5FF;
+  background: rgba(156,39,176,0.15);
   border-color: #C084FC;
 }
 
 .calendar-day.holiday {
-  background: #F3F4F6;
+  background: rgba(255,255,255,0.04);
   border-color: #D1D5DB;
 }
 
 .calendar-day.absent {
-  background: #FEE2E2;
+  background: rgba(255,107,107,0.12);
   border-color: #FCA5A5;
 }
 
 .calendar-day.present {
-  background: #D1FAE5;
+  background: rgba(0,201,160,0.1);
   border-color: var(--primary-green);
 }
 
@@ -326,23 +326,23 @@
 }
 
 .calendar-day.leave .status-badge {
-  background: #6B21A8;
+  background: var(--accent-purple);
   color: #ffffff;
 }
 
 .calendar-day.holiday .status-badge {
-  background: #ffffff;
+  background: var(--card-bg);
   color: var(--text-primary);
   border: 1px solid var(--border-color);
 }
 
 .calendar-day.absent .status-badge {
-  background: #991B1B;
+  background: #991b1b;
   color: #ffffff;
 }
 
 .calendar-day.present .status-badge {
-  background: var(--primary-green);
+  background: var(--teal);
   color: #ffffff;
 }
 

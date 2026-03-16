@@ -2,7 +2,7 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  background: var(--navy-deep);
 }
 
 .mydcrs-content {
@@ -38,7 +38,7 @@
 }
 
 .mydcrs-back-btn:hover {
-  background: var(--primary-green);
+  background: var(--teal);
   color: #ffffff;
   border-color: var(--primary-green);
   transform: translateX(-4px);
@@ -50,7 +50,7 @@
   font-weight: 800;
   color: var(--text-primary);
   margin: 0;
-  background: linear-gradient(135deg, var(--text-primary) 0%, var(--primary-green-dark) 100%);
+  background: linear-gradient(135deg, var(--text-primary) 0%, var(--teal) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -84,7 +84,7 @@
   border: 1.5px solid #e2e8f0;
   border-radius: 14px;
   font-size: 14px;
-  background: #ffffff;
+  background: var(--card-bg);
   color: #0f172a;
   outline: none;
   box-shadow: 0 1px 4px rgba(0,0,0,0.06);
@@ -127,10 +127,10 @@
   align-items: center;
   gap: 10px;
   padding: 16px 20px;
-  background: #fee2e2;
-  border: 1px solid #fecaca;
+  background: rgba(255,107,107,0.12);
+  border: 1px solid rgba(255,107,107,0.2);
   border-radius: 14px;
-  color: #991b1b;
+  color: #FF6B6B;
   font-size: 14px;
   font-weight: 500;
 }
@@ -155,7 +155,7 @@
 }
 
 .mydcr-card {
-  background: #ffffff;
+  background: var(--card-bg);
   border: 1.5px solid #e2e8f0;
   border-radius: 16px;
   overflow: hidden;
@@ -237,9 +237,9 @@
 }
 
 .mydcr-product-badge {
-  background: #f0fdf4;
+  background: rgba(0,201,160,0.08);
   color: #166534;
-  border: 1px solid #bbf7d0;
+  border: 1px solid rgba(0,201,160,0.2);
   border-radius: 20px;
   padding: 4px 12px;
   font-size: 12px;
@@ -261,7 +261,7 @@
 .mydcr-card-body {
   border-top: 1px solid #f1f5f9;
   padding: 20px;
-  background: #fafcff;
+  background: rgba(255,255,255,0.03);
 }
 
 .mydcr-detail-grid {
@@ -290,7 +290,7 @@
 
 .mydcr-detail-value {
   font-size: 13px;
-  color: #334155;
+  color: var(--text-primary);
   font-weight: 500;
 }
 
@@ -302,10 +302,10 @@
 .mydcr-summary-text {
   margin: 0;
   font-size: 13px;
-  color: #475569;
+  color: var(--text-secondary);
   line-height: 1.6;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
   border-radius: 10px;
   padding: 12px 14px;
 }
@@ -321,8 +321,8 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  background: #f0fdf4;
-  border: 1px solid #bbf7d0;
+  background: rgba(0,201,160,0.08);
+  border: 1px solid rgba(0,201,160,0.2);
   border-radius: 20px;
   padding: 5px 12px;
 }

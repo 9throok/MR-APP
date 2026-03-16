@@ -2,7 +2,7 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  background: var(--navy-deep);
 }
 
 .create-expense-claim-content {
@@ -36,9 +36,9 @@
 }
 
 .back-button:hover {
-  background: var(--primary-green);
-  color: #ffffff;
-  border-color: var(--primary-green);
+  background: var(--teal);
+  color: var(--navy-deep);
+  border-color: var(--teal);
   transform: translateX(-4px);
   box-shadow: var(--shadow-md);
 }
@@ -46,7 +46,7 @@
 .create-expense-claim-title {
   font-size: 24px;
   font-weight: 800;
-  background: linear-gradient(135deg, var(--text-primary) 0%, var(--primary-green-dark) 100%);
+  background: linear-gradient(135deg, var(--text-primary) 0%, var(--teal) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -56,7 +56,7 @@
 
 /* Claim Card */
 .claim-card {
-  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  background: var(--navy-deep);
   border-radius: 20px;
   padding: 32px;
   margin-bottom: 24px;
@@ -144,7 +144,7 @@
 }
 
 .form-input:disabled {
-  background: #f3f4f6;
+  background: rgba(255,255,255,0.04);
   color: var(--text-secondary);
   cursor: not-allowed;
 }
@@ -154,7 +154,7 @@
 .form-textarea:focus {
   border-color: var(--primary-green);
   box-shadow: 0 0 0 3px rgba(0, 200, 83, 0.1);
-  background: #ffffff;
+  background: var(--card-bg);
 }
 
 .form-textarea {

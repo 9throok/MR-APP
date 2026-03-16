@@ -22,7 +22,7 @@
 .chart-card:hover {
   transform: translateY(-4px);
   box-shadow: var(--shadow-xl);
-  border-color: rgba(33, 150, 243, 0.2);
+  border-color: rgba(0, 201, 160, 0.2);
 }
 
 .chart-title {

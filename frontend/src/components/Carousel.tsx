@@ -64,7 +64,7 @@ function Carousel({ slides }: CarouselProps) {
               key={slide.id}
               className={`carousel-slide ${index === currentSlide ? 'active' : ''} ${slide.onClick && index === 0 ? 'clickable' : ''}`}
               style={{
-                background: slide.backgroundColor || 'linear-gradient(135deg, #00C853 0%, #00B248 100%)',
+                background: slide.backgroundColor || 'linear-gradient(135deg, #0A1A35 0%, #112347 50%, rgba(0,201,160,0.08) 100%)',
               }}
               onClick={slide.onClick && index === 0 && index === currentSlide ? slide.onClick : undefined}
             >

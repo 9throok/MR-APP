@@ -24,7 +24,7 @@
 }
 
 .tour-plan-modal {
-  background: #ffffff;
+  background: var(--card-bg);
   border-radius: 16px;
   width: 100%;
   max-width: 500px;
@@ -171,7 +171,7 @@
 }
 
 .dropdown-item.selected .checkbox {
-  background: var(--primary-green);
+  background: var(--teal);
   border-color: var(--primary-green);
   color: #ffffff;
 }
@@ -241,24 +241,24 @@
 }
 
 .cancel-button {
-  background: #DC2626;
+  background: #dc2626;
   color: #ffffff;
 }
 
 .cancel-button:hover {
-  background: #B91C1C;
+  background: #991b1b;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
 }
 
 .save-button {
-  background: #28a745;
+  background: var(--teal);
   color: #ffffff;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .save-button:hover {
-  background: #218838;
+  background: var(--teal-dim);
   transform: translateY(-2px);
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
 }

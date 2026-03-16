@@ -2,7 +2,7 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  background: var(--navy-deep);
 }
 
 .tour-plan-requests-content {
@@ -46,7 +46,7 @@
 .tour-plan-requests-title {
   font-size: 24px;
   font-weight: 800;
-  background: linear-gradient(135deg, var(--text-primary) 0%, var(--primary-green-dark) 100%);
+  background: linear-gradient(135deg, var(--text-primary) 0%, var(--teal) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;

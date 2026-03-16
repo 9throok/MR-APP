@@ -3,7 +3,7 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  background: var(--navy-deep);
 }
 
 .territory-gap-content {
@@ -40,7 +40,7 @@
 }
 
 .tg-back-btn:hover {
-  background: var(--primary-green);
+  background: var(--teal);
   color: #ffffff;
   border-color: var(--primary-green);
   transform: translateX(-4px);
@@ -51,7 +51,7 @@
   font-size: 24px;
   font-weight: 800;
   margin: 0;
-  background: linear-gradient(135deg, var(--text-primary) 0%, var(--primary-green-dark) 100%);
+  background: linear-gradient(135deg, var(--text-primary) 0%, var(--teal) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -70,8 +70,8 @@
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
   border-radius: 14px;
   padding: 14px 16px;
   margin-bottom: 20px;
@@ -80,7 +80,7 @@
 
 .tg-threshold-label {
   font-size: 13px;
-  color: #475569;
+  color: var(--text-secondary);
   font-weight: 500;
   flex: 1;
 }
@@ -105,19 +105,19 @@
 }
 
 .tg-threshold-input:focus {
-  border-color: #6366f1;
+  border-color: var(--teal);
 }
 
 .tg-threshold-unit {
   font-size: 13px;
-  color: #475569;
+  color: var(--text-secondary);
 }
 
 .tg-apply-btn {
   padding: 7px 16px;
   border-radius: 8px;
   border: none;
-  background: #6366f1;
+  background: var(--teal);
   color: #ffffff;
   font-weight: 700;
   font-size: 13px;
@@ -126,7 +126,7 @@
 }
 
 .tg-apply-btn:hover:not(:disabled) {
-  background: #4f46e5;
+  background: var(--teal-dim);
 }
 
 .tg-apply-btn:disabled {
@@ -172,7 +172,7 @@
 
 /* ── Error state ────────────────────────────────────────────────── */
 .tg-error-card {
-  background: #fef2f2;
+  background: rgba(255,107,107,0.1);
   border: 1.5px solid #fecaca;
   border-radius: 14px;
   padding: 28px 20px;
@@ -186,7 +186,7 @@
 
 .tg-error-title {
   font-weight: 700;
-  color: #991b1b;
+  color: #FF6B6B;
   font-size: 15px;
   margin: 0 0 6px;
 }
@@ -210,7 +210,7 @@
 }
 
 .tg-retry-btn:hover {
-  background: #b91c1c;
+  background: #991b1b;
 }
 
 /* ── Summary bar ────────────────────────────────────────────────── */
@@ -222,7 +222,7 @@
 }
 
 .tg-stat-card {
-  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  background: var(--navy-deep);
   border: 1px solid var(--border-color);
   border-radius: 14px;
   padding: 20px 16px;
@@ -236,12 +236,12 @@
 }
 
 .tg-stat-card.cold {
-  background: #fef2f2;
+  background: rgba(255,107,107,0.1);
   border-color: #fecaca;
 }
 
 .tg-stat-card.at-risk {
-  background: #fffbeb;
+  background: rgba(255,177,66,0.1);
   border-color: #fde68a;
 }
 
@@ -361,14 +361,14 @@
 
 .tg-section-badge.cold {
   color: #ef4444;
-  background: #fef2f2;
-  border: 1px solid #fecaca;
+  background: rgba(255,107,107,0.1);
+  border: 1px solid rgba(255,107,107,0.2);
 }
 
 .tg-section-badge.at-risk {
   color: #d97706;
-  background: #fffbeb;
-  border: 1px solid #fde68a;
+  background: rgba(255,177,66,0.1);
+  border: 1px solid rgba(255,177,66,0.2);
 }
 
 .tg-doctor-list {
@@ -379,7 +379,7 @@
 
 /* ── Doctor card ────────────────────────────────────────────────── */
 .tg-doctor-card {
-  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  background: var(--navy-deep);
   border-radius: 14px;
   padding: 16px;
   box-shadow: var(--shadow-md);
@@ -433,29 +433,29 @@
 }
 
 .tg-badge.days {
-  background: #fee2e2;
+  background: rgba(255,107,107,0.12);
   color: #dc2626;
 }
 
 .tg-badge.days-ar {
-  background: #fef3c7;
+  background: rgba(255,177,66,0.12);
   color: #92400e;
 }
 
-.tg-badge.urgency-high   { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
-.tg-badge.urgency-medium { background: #fffbeb; color: #78350f; border: 1px solid #fde68a; }
-.tg-badge.urgency-low    { background: #f0fdf4; color: #14532d; border: 1px solid #bbf7d0; }
+.tg-badge.urgency-high   { background: rgba(255,107,107,0.1); color: #FF6B6B; border: 1px solid rgba(255,107,107,0.2); }
+.tg-badge.urgency-medium { background: rgba(255,177,66,0.1); color: #FFB142; border: 1px solid rgba(255,177,66,0.2); }
+.tg-badge.urgency-low    { background: rgba(0,201,160,0.08); color: var(--teal); border: 1px solid rgba(0,201,160,0.2); }
 
 .tg-doctor-reason {
   margin: 0;
   font-size: 13px;
-  color: #475569;
+  color: var(--text-secondary);
   line-height: 1.55;
 }
 
 /* ── All clear ──────────────────────────────────────────────────── */
 .tg-all-clear {
-  background: #f0fdf4;
+  background: rgba(0,201,160,0.08);
   border: 1.5px solid #bbf7d0;
   border-radius: 14px;
   padding: 36px 20px;
@@ -469,7 +469,7 @@
 
 .tg-all-clear-title {
   font-weight: 700;
-  color: #14532d;
+  color: var(--teal);
   font-size: 16px;
   margin: 0 0 6px;
 }

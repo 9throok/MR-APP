@@ -34,8 +34,8 @@
 }
 
 .view-all-reports-btn:hover {
-  background: var(--primary-green);
-  color: #ffffff;
+  background: var(--teal);
+  color: var(--navy-deep);
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
 }
@@ -67,7 +67,7 @@
 .home-report-card:hover {
   transform: translateY(-4px);
   box-shadow: var(--shadow-xl);
-  border-color: rgba(0, 200, 83, 0.3);
+  border-color: rgba(0, 201, 160, 0.2);
 }
 
 .report-chart-title {

@@ -2,7 +2,7 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  background: var(--navy-deep);
 }
 
 .expense-claim-content {
@@ -45,9 +45,9 @@
 }
 
 .back-button:hover {
-  background: var(--primary-green);
-  color: #ffffff;
-  border-color: var(--primary-green);
+  background: var(--teal);
+  color: var(--navy-deep);
+  border-color: var(--teal);
   transform: translateX(-4px);
   box-shadow: var(--shadow-md);
 }
@@ -55,7 +55,7 @@
 .expense-claim-title {
   font-size: 24px;
   font-weight: 800;
-  background: linear-gradient(135deg, var(--text-primary) 0%, var(--primary-green-dark) 100%);
+  background: linear-gradient(135deg, var(--text-primary) 0%, var(--teal) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -123,7 +123,7 @@
 
 /* Table */
 .claims-table-container {
-  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  background: var(--navy-deep);
   border-radius: 20px;
   padding: 24px;
   box-shadow: var(--shadow-lg);
@@ -222,7 +222,7 @@
 }
 
 .send-approval-btn {
-  background: var(--primary-green);
+  background: var(--teal);
   color: #ffffff;
 }
 
@@ -283,7 +283,7 @@
 }
 
 .modal-content {
-  background: #ffffff;
+  background: var(--card-bg);
   border-radius: 20px;
   padding: 32px;
   max-width: 500px;
@@ -359,7 +359,7 @@
 }
 
 .modal-btn-danger:hover {
-  background: #b91c1c;
+  background: #991b1b;
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
 }

@@ -2,7 +2,7 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  background: var(--navy-deep);
 }
 
 .nba-content {
@@ -38,9 +38,9 @@
 }
 
 .back-button:hover {
-  background: var(--primary-green);
-  color: #ffffff;
-  border-color: var(--primary-green);
+  background: var(--teal);
+  color: var(--navy-deep);
+  border-color: var(--teal);
   transform: translateX(-4px);
   box-shadow: var(--shadow-md);
 }
@@ -53,7 +53,7 @@
 .nba-page-title {
   font-size: 24px;
   font-weight: 800;
-  background: linear-gradient(135deg, var(--text-primary) 0%, var(--primary-green-dark) 100%);
+  background: linear-gradient(135deg, var(--text-primary) 0%, var(--teal) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -75,12 +75,12 @@
 .nba-cached-badge {
   font-size: 11px;
   color: #64748b;
-  background: #f1f5f9;
+  background: rgba(255,255,255,0.03);
   padding: 3px 10px;
   border-radius: 8px;
   font-weight: 600;
   -webkit-text-fill-color: #64748b;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border-color);
 }
 
 .nba-refresh-btn {
@@ -120,7 +120,7 @@
   align-items: flex-start;
   gap: 10px;
   padding: 14px 18px;
-  background: #eff6ff;
+  background: rgba(33,150,243,0.08);
   border: 1px solid #bfdbfe;
   border-radius: 12px;
   font-size: 13px;
@@ -137,10 +137,10 @@
 /* ── Error ── */
 .nba-error {
   padding: 14px 18px;
-  background: #fef2f2;
-  color: #991b1b;
+  background: rgba(255,107,107,0.1);
+  color: #FF6B6B;
   border-radius: 12px;
-  border: 1px solid #fecaca;
+  border: 1px solid rgba(255,107,107,0.2);
   margin-bottom: 24px;
   text-align: center;
   font-size: 14px;
@@ -190,7 +190,7 @@
 
 /* ── Card ── */
 .nba-card {
-  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  background: var(--navy-deep);
   border-radius: 16px;
   padding: 20px;
   border: 1px solid var(--border-color);
@@ -268,17 +268,17 @@
 /* ── Reason ── */
 .nba-reason {
   font-size: 13px;
-  color: #475569;
+  color: var(--text-secondary);
   line-height: 1.6;
   padding: 12px 14px;
-  background: #f8fafc;
+  background: var(--navy-deep);
   border-radius: 10px;
   border-left: 3px solid var(--primary-green);
 }
 
 /* ── Talking Points ── */
 .nba-talking-points {
-  background: #f8fafc;
+  background: var(--navy-deep);
   border-radius: 10px;
   padding: 12px 14px;
 }
@@ -299,7 +299,7 @@
 
 .nba-talking-points li {
   font-size: 13px;
-  color: #334155;
+  color: var(--text-primary);
   line-height: 1.6;
   margin-bottom: 2px;
 }
@@ -312,7 +312,7 @@
 }
 
 .nba-product-tag {
-  background: #ecfdf5;
+  background: rgba(0,201,160,0.06);
   color: #065f46;
   font-size: 12px;
   font-weight: 600;

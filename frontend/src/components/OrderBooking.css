@@ -36,7 +36,7 @@
 
 .back-button:hover {
   background: var(--bg-tertiary);
-  border-color: var(--primary-green);
+  border-color: var(--teal);
   transform: translateX(-2px);
 }
 
@@ -52,7 +52,7 @@
 }
 
 .order-booking-form {
-  background: #ffffff;
+  background: var(--card-bg);
   border-radius: 16px;
   padding: 32px;
   box-shadow: var(--shadow-md);
@@ -94,7 +94,7 @@
 }
 
 .form-select:disabled {
-  background: #f3f4f6;
+  background: rgba(255,255,255,0.04);
   color: var(--text-secondary);
   cursor: not-allowed;
 }
@@ -141,7 +141,7 @@
 .order-table {
   width: 100%;
   border-collapse: collapse;
-  background: #ffffff;
+  background: var(--card-bg);
   min-width: 900px;
 }
 
@@ -181,7 +181,7 @@
   border-radius: 8px;
   font-size: 14px;
   color: var(--text-primary);
-  background: #ffffff;
+  background: var(--card-bg);
   outline: none;
   transition: all 0.3s ease;
 }
@@ -193,7 +193,7 @@
 }
 
 .order-select:disabled {
-  background: #f3f4f6;
+  background: rgba(255,255,255,0.04);
   color: var(--text-secondary);
   cursor: not-allowed;
 }
@@ -217,14 +217,14 @@
   height: 36px;
   border-radius: 8px;
   border: 1px solid var(--border-color);
-  background: #ffffff;
+  background: var(--card-bg);
   color: var(--text-primary);
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .add-row-btn:hover {
-  background: var(--primary-green);
+  background: var(--teal);
   border-color: var(--primary-green);
   color: #ffffff;
   transform: scale(1.05);
@@ -304,7 +304,7 @@
 }
 
 .order-history-item {
-  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  background: var(--navy-deep);
   border: 1px solid var(--border-color);
   border-radius: 16px;
   padding: 24px;
@@ -370,7 +370,7 @@
 }
 
 .order-history-table thead {
-  background: #f8fafc;
+  background: var(--navy-deep);
 }
 
 .order-history-table th {
@@ -395,7 +395,7 @@
 }
 
 .order-history-table tbody tr:hover {
-  background: #f8fafc;
+  background: var(--navy-deep);
 }
 
 /* Tablet responsiveness */

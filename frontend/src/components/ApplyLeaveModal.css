@@ -24,7 +24,7 @@
 }
 
 .apply-leave-modal {
-  background: #FEF3C7;
+  background: rgba(255,177,66,0.12);
   border-radius: 16px;
   width: 100%;
   max-width: 700px;
@@ -297,13 +297,13 @@
 }
 
 .submit-btn {
-  background: #28a745;
+  background: var(--teal);
   color: #ffffff;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .submit-btn:hover {
-  background: #218838;
+  background: var(--teal-dim);
   transform: translateY(-2px);
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
 }

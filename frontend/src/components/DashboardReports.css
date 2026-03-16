@@ -17,7 +17,7 @@
 }
 
 .report-card {
-  background: #ffffff;
+  background: var(--card-bg);
   border-radius: 12px;
   padding: 24px;
   box-shadow: var(--shadow-md);
@@ -26,6 +26,12 @@
   max-width: 100%;
   box-sizing: border-box;
   overflow: hidden;
+  transition: all 0.2s;
+}
+
+.report-card:hover {
+  background: var(--card-bg-hover);
+  border-color: rgba(0,201,160,0.15);
 }
 
 .chart-wrapper {
@@ -67,7 +73,7 @@
 }
 
 .cpc-table thead {
-  background: #E8F5E9;
+  background: rgba(0,201,160,0.08);
   position: sticky;
   top: 0;
   z-index: 10;
@@ -77,8 +83,8 @@
   padding: 12px;
   text-align: left;
   font-weight: 600;
-  color: #66BB6A;
-  border-bottom: 2px solid var(--border-color);
+  color: var(--teal);
+  border-bottom: 1px solid var(--border-color);
   white-space: nowrap;
 }
 
@@ -89,7 +95,7 @@
 }
 
 .cpc-table tbody tr:hover {
-  background: var(--bg-tertiary);
+  background: rgba(255,255,255,0.03);
 }
 
 /* Responsive adjustments */

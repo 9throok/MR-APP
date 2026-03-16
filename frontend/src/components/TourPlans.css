@@ -2,7 +2,7 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  background: var(--navy-deep);
 }
 
 .tour-plans-content {
@@ -36,9 +36,9 @@
 }
 
 .back-button:hover {
-  background: var(--primary-green);
-  color: #ffffff;
-  border-color: var(--primary-green);
+  background: var(--teal);
+  color: var(--navy-deep);
+  border-color: var(--teal);
   transform: translateX(-4px);
   box-shadow: var(--shadow-md);
 }
@@ -46,7 +46,7 @@
 .tour-plans-title {
   font-size: 24px;
   font-weight: 800;
-  background: linear-gradient(135deg, var(--text-primary) 0%, var(--primary-green-dark) 100%);
+  background: linear-gradient(135deg, var(--text-primary) 0%, var(--teal) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -55,7 +55,7 @@
 }
 
 .calendar-container {
-  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  background: var(--navy-deep);
   border-radius: 20px;
   padding: 32px;
   box-shadow: var(--shadow-lg);
@@ -83,7 +83,7 @@
 }
 
 .calendar-nav-button:hover {
-  background: var(--primary-green);
+  background: var(--teal);
   color: #ffffff;
   border-color: var(--primary-green);
 }
@@ -128,7 +128,7 @@
 }
 
 .calendar-day:hover {
-  background: var(--primary-green);
+  background: var(--teal);
   color: #ffffff;
   border-color: var(--primary-green);
   transform: scale(1.05);
@@ -166,7 +166,7 @@
 .doctor-badge {
   font-size: 8px;
   padding: 2px 5px;
-  background: var(--primary-green);
+  background: var(--teal);
   color: #ffffff;
   border-radius: 6px;
   font-weight: 600;
@@ -227,13 +227,13 @@
 }
 
 .view-toggle-btn.active {
-  background: var(--primary-green);
+  background: var(--teal);
   color: #ffffff;
   border-color: var(--primary-green);
 }
 
 .weekly-view-container {
-  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  background: var(--navy-deep);
   border-radius: 20px;
   padding: 32px;
   box-shadow: var(--shadow-lg);
@@ -261,7 +261,7 @@
 }
 
 .week-nav-button:hover {
-  background: var(--primary-green);
+  background: var(--teal);
   color: #ffffff;
   border-color: var(--primary-green);
 }
@@ -283,7 +283,7 @@
 .weekly-day-column {
   display: flex;
   flex-direction: column;
-  background: #ffffff;
+  background: var(--card-bg);
   border: 1px solid var(--border-color);
   border-radius: 12px;
   overflow: hidden;
@@ -312,7 +312,7 @@
   position: absolute;
   top: 8px;
   right: 8px;
-  background: #DC2626;
+  background: #dc2626;
   color: #ffffff;
   border-radius: 12px;
   padding: 4px 8px;
@@ -347,7 +347,7 @@
 }
 
 .doctor-entry-full {
-  background: #FEE2E2;
+  background: rgba(255,107,107,0.12);
   border: 1px solid #FCA5A5;
   border-radius: 8px;
   padding: 10px 12px;
@@ -360,7 +360,7 @@
 }
 
 .doctor-entry-full:hover {
-  background: #FECACA;
+  background: rgba(255,107,107,0.15);
   border-color: #F87171;
 }
 
@@ -375,7 +375,7 @@
 }
 
 .remove-doctor-btn-full {
-  background: #DC2626;
+  background: #dc2626;
   border: none;
   border-radius: 50%;
   width: 20px;
@@ -391,7 +391,7 @@
 }
 
 .remove-doctor-btn-full:hover {
-  background: #B91C1C;
+  background: #991b1b;
   transform: scale(1.1);
 }
 
@@ -440,7 +440,7 @@
   align-items: center;
   gap: 12px;
   padding: 16px 32px;
-  background: #28a745;
+  background: var(--teal);
   color: #ffffff;
   border: none;
   border-radius: 12px;
@@ -455,7 +455,7 @@
 .submit-tour-plans-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
-  background: #218838;
+  background: var(--teal-dim);
 }
 
 .submit-tour-plans-btn:active {

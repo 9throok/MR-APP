@@ -133,7 +133,7 @@
 }
 
 .carousel-action-button:hover {
-  background: #ffffff;
+  background: var(--card-bg);
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
   border-color: rgba(255, 255, 255, 0.5);
@@ -169,7 +169,7 @@
 }
 
 .carousel-button:hover {
-  background: #ffffff;
+  background: var(--card-bg);
   transform: translateY(-50%) scale(1.15);
   box-shadow: var(--shadow-xl);
   color: var(--primary-green);
@@ -199,19 +199,19 @@
   height: 10px;
   border-radius: 50%;
   border: none;
-  background: #cbd5e1;
+  background: var(--text-secondary);
   cursor: pointer;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   padding: 0;
 }
 
 .carousel-dot:hover {
-  background: var(--primary-green);
+  background: var(--teal);
   transform: scale(1.3);
 }
 
 .carousel-dot.active {
-  background: var(--primary-green);
+  background: var(--teal);
   width: 36px;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 200, 83, 0.4);

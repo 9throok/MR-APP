@@ -2,7 +2,7 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  background: var(--navy-deep);
 }
 
 .todays-plan-content {
@@ -36,9 +36,9 @@
 }
 
 .back-button:hover {
-  background: var(--primary-green);
-  color: #ffffff;
-  border-color: var(--primary-green);
+  background: var(--teal);
+  color: var(--navy-deep);
+  border-color: var(--teal);
   transform: translateX(-4px);
   box-shadow: var(--shadow-md);
 }
@@ -50,7 +50,7 @@
 .todays-plan-title {
   font-size: 24px;
   font-weight: 800;
-  background: linear-gradient(135deg, var(--text-primary) 0%, var(--primary-green-dark) 100%);
+  background: linear-gradient(135deg, var(--text-primary) 0%, var(--teal) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -110,7 +110,7 @@
 }
 
 .plan-card {
-  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  background: var(--navy-deep);
   border-radius: 16px;
   padding: 24px;
   box-shadow: var(--shadow-md);
@@ -255,13 +255,13 @@
 }
 
 .skip-btn {
-  background: #ffffff;
+  background: var(--card-bg);
   color: #DC2626;
   border: 2px solid #DC2626;
 }
 
 .skip-btn:hover {
-  background: #DC2626;
+  background: #dc2626;
   color: #ffffff;
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
@@ -310,7 +310,7 @@
 }
 
 .skip-modal-content {
-  background: #ffffff;
+  background: var(--card-bg);
   border-radius: 20px;
   max-width: 500px;
   width: 100%;
@@ -336,13 +336,13 @@
   justify-content: space-between;
   padding: 24px 28px;
   border-bottom: 2px solid #e5e7eb;
-  background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
+  background: linear-gradient(135deg, var(--navy-mid) 0%, #f9fafb 100%);
 }
 
 .skip-modal-header h2 {
   font-size: 20px;
   font-weight: 800;
-  color: #111827;
+  color: var(--text-primary);
   margin: 0;
   letter-spacing: -0.3px;
 }
@@ -433,7 +433,7 @@
 .skip-reason-input:focus {
   border-color: var(--primary-green);
   box-shadow: 0 0 0 3px rgba(0, 200, 83, 0.1);
-  background: #ffffff;
+  background: var(--card-bg);
 }
 
 .skip-reason-input::placeholder {
@@ -445,7 +445,7 @@
   gap: 12px;
   padding: 20px 28px;
   border-top: 1px solid var(--border-color);
-  background: #f9fafb;
+  background: rgba(255,255,255,0.03);
   justify-content: flex-end;
 }
 
@@ -464,7 +464,7 @@
 }
 
 .skip-modal-cancel {
-  background: #ffffff;
+  background: var(--card-bg);
   color: var(--text-primary);
   border: 2px solid var(--border-color);
 }

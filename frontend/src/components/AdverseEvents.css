@@ -2,7 +2,7 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  background: var(--navy-deep);
 }
 
 .ae-content {
@@ -38,9 +38,9 @@
 }
 
 .back-button:hover {
-  background: var(--primary-green);
-  color: #ffffff;
-  border-color: var(--primary-green);
+  background: var(--teal);
+  color: var(--navy-deep);
+  border-color: var(--teal);
   transform: translateX(-4px);
   box-shadow: var(--shadow-md);
 }
@@ -53,7 +53,7 @@
 .ae-page-title {
   font-size: 24px;
   font-weight: 800;
-  background: linear-gradient(135deg, var(--text-primary) 0%, var(--primary-green-dark) 100%);
+  background: linear-gradient(135deg, var(--text-primary) 0%, var(--teal) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -77,7 +77,7 @@
 }
 
 .ae-stat {
-  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  background: var(--navy-deep);
   border-radius: 14px;
   padding: 20px;
   text-align: center;
@@ -166,7 +166,7 @@
 
 /* ── AE Card ── */
 .ae-card {
-  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  background: var(--navy-deep);
   border-radius: 16px;
   padding: 20px;
   border: 1px solid var(--border-color);
@@ -226,19 +226,19 @@
 }
 
 .ae-symptom-tag {
-  background: #fef2f2;
-  color: #991b1b;
+  background: rgba(255,107,107,0.1);
+  color: #FF6B6B;
   font-size: 11px;
   font-weight: 600;
   padding: 4px 10px;
   border-radius: 16px;
-  border: 1px solid #fecaca;
+  border: 1px solid rgba(255,107,107,0.2);
 }
 
 .ae-details {
   font-size: 13px;
-  color: #475569;
-  background: #f8fafc;
+  color: var(--text-secondary);
+  background: var(--navy-deep);
   border-radius: 10px;
   padding: 12px 14px;
   display: flex;
@@ -270,7 +270,7 @@
 .review-trigger {
   width: 100%;
   padding: 11px;
-  background: #fef3c7;
+  background: rgba(255,177,66,0.12);
   color: #92400e;
   border: 1px solid #fcd34d;
   border-radius: 10px;
@@ -334,23 +334,23 @@
 }
 
 .review-btn.dismiss {
-  background: #e2e8f0;
-  color: #475569;
+  background: var(--border-color);
+  color: var(--text-secondary);
 }
 
 .review-btn.dismiss:hover {
-  background: #cbd5e1;
+  background: var(--text-secondary);
 }
 
 .review-btn.cancel {
-  background: white;
+  background: var(--card-bg);
   color: #64748b;
   border: 1px solid var(--border-color);
 }
 
 .ae-review-result {
   padding: 12px 14px;
-  background: #f8fafc;
+  background: var(--navy-deep);
   border-radius: 10px;
   border: 1px solid var(--border-color);
 }
@@ -365,18 +365,18 @@
 }
 
 .ae-status-badge.confirmed {
-  background: #fef2f2;
+  background: rgba(255,107,107,0.1);
   color: #dc2626;
 }
 
 .ae-status-badge.dismissed {
-  background: #f1f5f9;
+  background: rgba(255,255,255,0.03);
   color: #64748b;
 }
 
 .ae-review-notes {
   font-size: 13px;
-  color: #475569;
+  color: var(--text-secondary);
   margin: 6px 0 4px 0;
   line-height: 1.5;
 }

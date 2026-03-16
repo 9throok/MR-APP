@@ -18,48 +18,71 @@ html {
 }
 
 :root {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
-  color-scheme: light;
-  color: #1a1a1a;
-  background-color: #f8fafc;
+  color-scheme: dark;
+  color: #FFFFFF;
+  background-color: #060F1E;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 
-  /* Medical App Color Palette */
-  --primary-green: #00C853;
-  --primary-green-dark: #00B248;
-  --primary-green-light: #4CAF50;
+  /* MedRep Pro Dark Theme — Navy + Teal */
+  --primary-green: #00C9A0;
+  --primary-green-dark: #00896E;
+  --primary-green-light: #00E5B6;
   --accent-blue: #2196F3;
   --accent-purple: #9C27B0;
-  --accent-orange: #FF9800;
-  --text-primary: #1a1a1a;
-  --text-secondary: #64748b;
-  --bg-primary: #ffffff;
-  --bg-secondary: #f8fafc;
-  --bg-tertiary: #f1f5f9;
-  --border-color: #e2e8f0;
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --accent-orange: #FFB142;
+  --teal: #00C9A0;
+  --teal-dim: #00896E;
+  --teal-glow: rgba(0,201,160,0.15);
+  --navy-deep: #060F1E;
+  --navy-mid: #0A1A35;
+  --navy-light: #112347;
+  --text-primary: #FFFFFF;
+  --text-secondary: #8B9BB8;
+  --text-body: #C8D6F0;
+  --bg-primary: #0A1A35;
+  --bg-secondary: #060F1E;
+  --bg-tertiary: #112347;
+  --border-color: rgba(255,255,255,0.07);
+  --card-bg: rgba(255,255,255,0.04);
+  --card-bg-hover: rgba(255,255,255,0.07);
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.3);
 }
 
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  background: var(--navy-deep);
+  color: var(--text-primary);
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   -webkit-text-size-adjust: 100%;
+}
+
+/* Subtle grid background matching landing page */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(0,201,160,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,201,160,0.03) 1px, transparent 1px);
+  background-size: 60px 60px;
+  pointer-events: none;
+  z-index: 0;
 }
 
 #root {

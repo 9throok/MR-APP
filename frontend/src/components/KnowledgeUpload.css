@@ -2,7 +2,7 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  background: var(--navy-deep);
 }
 
 .knowledge-content {
@@ -38,9 +38,9 @@
 }
 
 .back-button:hover {
-  background: var(--primary-green);
-  color: #ffffff;
-  border-color: var(--primary-green);
+  background: var(--teal);
+  color: var(--navy-deep);
+  border-color: var(--teal);
   transform: translateX(-4px);
   box-shadow: var(--shadow-md);
 }
@@ -53,7 +53,7 @@
 .knowledge-page-title {
   font-size: 24px;
   font-weight: 800;
-  background: linear-gradient(135deg, var(--text-primary) 0%, var(--primary-green-dark) 100%);
+  background: linear-gradient(135deg, var(--text-primary) 0%, var(--teal) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -70,7 +70,7 @@
 
 /* ── Upload Section ── */
 .upload-section {
-  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  background: var(--navy-deep);
   border-radius: 20px;
   padding: 28px;
   margin-bottom: 28px;
@@ -104,7 +104,7 @@
   border-radius: 10px;
   font-size: 14px;
   color: var(--text-primary);
-  background: white;
+  background: var(--card-bg);
   transition: border-color 0.2s;
   outline: none;
   font-family: inherit;
@@ -178,15 +178,15 @@
 }
 
 .upload-message.success {
-  background: #ecfdf5;
+  background: rgba(0,201,160,0.06);
   color: #065f46;
   border: 1px solid #a7f3d0;
 }
 
 .upload-message.error {
-  background: #fef2f2;
-  color: #991b1b;
-  border: 1px solid #fecaca;
+  background: rgba(255,107,107,0.1);
+  color: #FF6B6B;
+  border: 1px solid rgba(255,107,107,0.2);
 }
 
 /* ── Entries Section ── */
@@ -240,7 +240,7 @@
   justify-content: space-between;
   gap: 12px;
   padding: 18px 20px;
-  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  background: var(--navy-deep);
   border-radius: 14px;
   border: 1px solid var(--border-color);
   box-shadow: var(--shadow-md);
@@ -306,7 +306,7 @@
 }
 
 .delete-btn:hover {
-  background: #fef2f2;
+  background: rgba(255,107,107,0.1);
 }
 
 /* ── Tablet (2 columns) ── */

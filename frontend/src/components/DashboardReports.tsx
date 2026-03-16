@@ -4,6 +4,12 @@ import { Bar, Line, Chart } from 'react-chartjs-2'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, LineElement, PointElement, Title, Tooltip, Legend, Filler)
 
+// Dark mode defaults for Chart.js
+ChartJS.defaults.color = '#8B9BB8'
+ChartJS.defaults.borderColor = 'rgba(255,255,255,0.07)'
+ChartJS.defaults.plugins.legend.labels.color = '#C8D6F0'
+ChartJS.defaults.plugins.title.color = '#FFFFFF'
+
 function DashboardReports() {
   // Doctor Calls Over Last 4 Months - Bar Chart
   const doctorCallsData = {
@@ -12,8 +18,8 @@ function DashboardReports() {
       {
         label: 'Doctor Calls',
         data: [95, 112, 127, 149],
-        backgroundColor: '#81C784',
-        borderColor: '#66BB6A',
+        backgroundColor: '#00C9A0',
+        borderColor: '#00896E',
         borderWidth: 1,
       },
     ],
@@ -79,12 +85,12 @@ function DashboardReports() {
       {
         label: 'Call Average',
         data: [7.2, 8.5, 9.36, 11.46],
-        borderColor: '#66BB6A',
+        borderColor: '#00896E',
         backgroundColor: 'rgba(129, 199, 132, 0.1)',
         fill: true,
         tension: 0.4,
         pointRadius: 6,
-        pointBackgroundColor: '#81C784',
+        pointBackgroundColor: '#00C9A0',
         pointBorderColor: '#fff',
         pointBorderWidth: 2,
       },
@@ -151,20 +157,20 @@ function DashboardReports() {
       {
         label: 'Pharmacy Coverage',
         data: [45, 52, 60, 68],
-        backgroundColor: '#81C784',
-        borderColor: '#66BB6A',
+        backgroundColor: '#00C9A0',
+        borderColor: '#00896E',
         borderWidth: 1,
         type: 'bar' as const,
       },
       {
         label: 'Doctor Coverage',
         data: [55, 58, 60, 65],
-        borderColor: '#66BB6A',
+        borderColor: '#00896E',
         backgroundColor: 'transparent',
         type: 'line' as const,
         tension: 0.4,
         pointRadius: 6,
-        pointBackgroundColor: '#81C784',
+        pointBackgroundColor: '#00C9A0',
         pointBorderColor: '#fff',
         pointBorderWidth: 2,
         yAxisID: 'y',
@@ -230,8 +236,8 @@ function DashboardReports() {
       {
         label: 'Field Working Days',
         data: [12, 13, 14, 13],
-        backgroundColor: '#81C784',
-        borderColor: '#66BB6A',
+        backgroundColor: '#00C9A0',
+        borderColor: '#00896E',
         borderWidth: 1,
       },
     ],
@@ -294,8 +300,8 @@ function DashboardReports() {
       {
         label: '% of CPC',
         data: [20, 35, 28],
-        backgroundColor: '#81C784',
-        borderColor: '#66BB6A',
+        backgroundColor: '#00C9A0',
+        borderColor: '#00896E',
         borderWidth: 1,
       },
     ],

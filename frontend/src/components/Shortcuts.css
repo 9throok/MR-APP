@@ -50,7 +50,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #ffffff;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
   box-shadow: var(--shadow-sm);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
@@ -73,7 +74,9 @@
 
 .shortcut-card:hover .shortcut-icon-circle {
   transform: scale(1.05);
-  box-shadow: var(--shadow-lg);
+  box-shadow: 0 0 20px rgba(0,201,160,0.15);
+  border-color: rgba(0,201,160,0.3);
+  background: var(--card-bg-hover);
 }
 
 .shortcut-label {
