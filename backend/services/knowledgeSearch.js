@@ -1,47 +1,150 @@
 const db = require('../config/db');
+const { getEmbedding, toPgVector } = require('./embeddings');
+const { preprocessQuery } = require('./queryPreprocessor');
 
 /**
- * Search the drug_knowledge table using PostgreSQL full-text search.
- * Falls back to ILIKE if FTS returns no results.
+ * Hybrid Knowledge Search
+ *
+ * Combines PostgreSQL full-text search (FTS) with vector similarity search
+ * using Reciprocal Rank Fusion (RRF) for optimal retrieval.
+ *
+ * Searches knowledge_chunks (not full documents) for precise context.
  */
-async function searchKnowledge(query, productId = null, limit = 5) {
-  const params = [];
-  let productFilter = '';
+async function searchKnowledge(query, productId = null, { limit = 10, tags = null } = {}) {
+  // Preprocess query: expand synonyms for FTS, clean for semantic
+  const { ftsQuery, semanticQuery } = preprocessQuery(query);
 
+  // Get query embedding for semantic search
+  let queryEmbedding;
+  try {
+    queryEmbedding = await getEmbedding(semanticQuery);
+  } catch (err) {
+    console.warn('[KnowledgeSearch] Embedding failed, falling back to FTS-only:', err.message);
+    queryEmbedding = null;
+  }
+
+  const params = [];
+  let paramIdx = 0;
+
+  // $1 = FTS query text
+  params.push(ftsQuery);
+  paramIdx++;
+  const ftsParam = `$${paramIdx}`;
+
+  // $2 = embedding vector (or null)
+  const embeddingLiteral = queryEmbedding ? toPgVector(queryEmbedding) : null;
+  params.push(embeddingLiteral);
+  paramIdx++;
+  const embParam = `$${paramIdx}`;
+
+  // $3 = limit
+  params.push(limit);
+  paramIdx++;
+  const limitParam = `$${paramIdx}`;
+
+  // Build optional filters
+  let productFilter = '';
   if (productId) {
     params.push(productId);
-    productFilter = `AND dk.product_id = $${params.length}`;
+    paramIdx++;
+    productFilter = `AND kc.product_id = $${paramIdx}`;
   }
 
-  // Convert query to tsquery format — split words and join with | (OR)
-  // Using OR ensures partial matches rank results instead of requiring ALL terms
-  const tsQuery = query
-    .replace(/[^\w\s]/g, '')
-    .split(/\s+/)
-    .filter(w => w.length > 2)
-    .join(' | ');
-
-  if (tsQuery) {
-    params.push(tsQuery);
-    const ftsParam = `$${params.length}`;
-
-    const { rows } = await db.query(
-      `SELECT dk.id, dk.product_id, dk.filename, dk.content, dk.category,
-              p.name as product_name,
-              ts_rank(to_tsvector('english', dk.content), to_tsquery('english', ${ftsParam})) AS rank
-       FROM drug_knowledge dk
-       LEFT JOIN products p ON dk.product_id = p.id
-       WHERE to_tsvector('english', dk.content) @@ to_tsquery('english', ${ftsParam})
-       ${productFilter}
-       ORDER BY rank DESC
-       LIMIT $${params.length + 1}`,
-      [...params, limit]
-    );
-
-    if (rows.length > 0) return rows;
+  let tagFilter = '';
+  if (tags && tags.length > 0) {
+    params.push(tags);
+    paramIdx++;
+    tagFilter = `AND kc.tags @> $${paramIdx}`;
   }
 
-  // Fallback: ILIKE search using key words (longest words from query)
+  // Hybrid search with RRF (Reciprocal Rank Fusion)
+  // If embeddings are unavailable, falls back to FTS-only
+  const sql = queryEmbedding
+    ? buildHybridQuery(ftsParam, embParam, limitParam, productFilter, tagFilter)
+    : buildFTSOnlyQuery(ftsParam, limitParam, productFilter, tagFilter);
+
+  try {
+    const { rows } = await db.query(sql, params);
+    return rows;
+  } catch (err) {
+    console.error('[KnowledgeSearch] Query error:', err.message);
+    // Fallback to simple FTS if hybrid query fails (e.g., pgvector not installed)
+    return fallbackFTSSearch(query, productId, limit);
+  }
+}
+
+/**
+ * Hybrid search: FTS + Vector similarity combined via RRF
+ */
+function buildHybridQuery(ftsParam, embParam, limitParam, productFilter, tagFilter) {
+  return `
+    WITH fts AS (
+      SELECT kc.id,
+             ts_rank(to_tsvector('english', kc.content), plainto_tsquery('english', ${ftsParam})) AS fts_score,
+             ROW_NUMBER() OVER (ORDER BY ts_rank(to_tsvector('english', kc.content), plainto_tsquery('english', ${ftsParam})) DESC) AS fts_rank
+      FROM knowledge_chunks kc
+      WHERE to_tsvector('english', kc.content) @@ plainto_tsquery('english', ${ftsParam})
+      ${productFilter}
+      ${tagFilter}
+      LIMIT 20
+    ),
+    semantic AS (
+      SELECT kc.id,
+             1 - (kc.embedding <=> ${embParam}::vector) AS sim_score,
+             ROW_NUMBER() OVER (ORDER BY kc.embedding <=> ${embParam}::vector) AS sem_rank
+      FROM knowledge_chunks kc
+      WHERE kc.embedding IS NOT NULL
+      ${productFilter}
+      ${tagFilter}
+      ORDER BY kc.embedding <=> ${embParam}::vector
+      LIMIT 20
+    ),
+    combined AS (
+      SELECT
+        COALESCE(f.id, s.id) AS id,
+        COALESCE(1.0 / (60 + f.fts_rank), 0) + COALESCE(1.0 / (60 + s.sem_rank), 0) AS rrf_score,
+        f.fts_score,
+        s.sim_score
+      FROM fts f
+      FULL OUTER JOIN semantic s ON f.id = s.id
+      WHERE COALESCE(1.0 / (60 + f.fts_rank), 0) + COALESCE(1.0 / (60 + s.sem_rank), 0) > 0.005
+    )
+    SELECT kc.id, kc.knowledge_id, kc.content, kc.chunk_index, kc.metadata, kc.tags,
+           kc.token_count, dk.filename, dk.category, p.name AS product_name,
+           c.rrf_score AS rank
+    FROM combined c
+    JOIN knowledge_chunks kc ON kc.id = c.id
+    JOIN drug_knowledge dk ON kc.knowledge_id = dk.id
+    LEFT JOIN products p ON kc.product_id = p.id
+    ORDER BY c.rrf_score DESC
+    LIMIT ${limitParam}
+  `;
+}
+
+/**
+ * FTS-only search (when embeddings are unavailable)
+ */
+function buildFTSOnlyQuery(ftsParam, limitParam, productFilter, tagFilter) {
+  return `
+    SELECT kc.id, kc.knowledge_id, kc.content, kc.chunk_index, kc.metadata, kc.tags,
+           kc.token_count, dk.filename, dk.category, p.name AS product_name,
+           ts_rank(to_tsvector('english', kc.content), plainto_tsquery('english', ${ftsParam})) AS rank
+    FROM knowledge_chunks kc
+    JOIN drug_knowledge dk ON kc.knowledge_id = dk.id
+    LEFT JOIN products p ON kc.product_id = p.id
+    WHERE to_tsvector('english', kc.content) @@ plainto_tsquery('english', ${ftsParam})
+    ${productFilter}
+    ${tagFilter}
+    AND ts_rank(to_tsvector('english', kc.content), plainto_tsquery('english', ${ftsParam})) > 0.01
+    ORDER BY rank DESC
+    LIMIT ${limitParam}
+  `;
+}
+
+/**
+ * Simple fallback if hybrid/FTS queries fail entirely
+ */
+async function fallbackFTSSearch(query, productId, limit) {
   const keywords = query
     .replace(/[^\w\s]/g, '')
     .split(/\s+/)
@@ -51,30 +154,28 @@ async function searchKnowledge(query, productId = null, limit = 5) {
 
   if (keywords.length === 0) return [];
 
-  const likeParams = [];
-  if (productId) {
-    likeParams.push(productId);
-  }
+  const params = [];
+  if (productId) params.push(productId);
 
-  // Build OR conditions for each keyword
   const likeClauses = keywords.map(kw => {
-    likeParams.push(`%${kw}%`);
-    return `dk.content ILIKE $${likeParams.length}`;
+    params.push(`%${kw}%`);
+    return `kc.content ILIKE $${params.length}`;
   });
 
-  const { rows: fallbackRows } = await db.query(
-    `SELECT dk.id, dk.product_id, dk.filename, dk.content, dk.category,
-            p.name as product_name
-     FROM drug_knowledge dk
-     LEFT JOIN products p ON dk.product_id = p.id
+  const { rows } = await db.query(
+    `SELECT kc.id, kc.knowledge_id, kc.content, kc.chunk_index, kc.metadata, kc.tags,
+            kc.token_count, dk.filename, dk.category, p.name AS product_name
+     FROM knowledge_chunks kc
+     JOIN drug_knowledge dk ON kc.knowledge_id = dk.id
+     LEFT JOIN products p ON kc.product_id = p.id
      WHERE (${likeClauses.join(' OR ')})
-     ${productId ? `AND dk.product_id = $1` : ''}
-     ORDER BY dk.uploaded_at DESC
-     LIMIT $${likeParams.length + 1}`,
-    [...likeParams, limit]
+     ${productId ? `AND kc.product_id = $1` : ''}
+     ORDER BY kc.created_at DESC
+     LIMIT $${params.length + 1}`,
+    [...params, limit]
   );
 
-  return fallbackRows;
+  return rows;
 }
 
 module.exports = { searchKnowledge };
