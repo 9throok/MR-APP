@@ -1,6 +1,8 @@
 -- Seed demo data for V2 features
 -- Run after: dummy_data.sql, migration_v2.sql, seed_users.sql, seed_doctors.sql
 -- Usage: docker exec -i zenapp-postgres psql -U postgres -d zenapp < backend/db/seed_demo_data.sql
+-- NOTE: DCR IDs assume sequences were reset before seeding dummy_data.sql.
+--       Robert's DCRs are IDs 19-28 (first block) and 37-38 (extra visits).
 
 -- Clear existing V2 data (idempotent)
 DELETE FROM follow_up_tasks;
@@ -12,22 +14,25 @@ DELETE FROM nba_recommendations;
 -- ============================================================================
 
 -- Robert's tasks (mr_robert_003)
+-- DCR ID mapping: 19=Reddy/Derise10, 20=Reddy/Derise20, 21=Kumar/RilastTab,
+--   22=Kumar/RilastCap, 23=Mehta/Bevaas5, 24=Mehta/Bevaas10, 25=Rao/Bevaas20,
+--   26=Rao/Derise50, 27=Thomas/RilastSyrup, 28=Thomas/RilastTab
 INSERT INTO follow_up_tasks (dcr_id, user_id, doctor_name, task, due_date, status, created_at) VALUES
 -- Pending tasks
-(44, 'mr_robert_003', 'Dr. Reddy', 'Share Derise 10mg clinical trial brochure — doctor interested in prescribing for allergy OPD', (CURRENT_DATE + 2), 'pending', NOW() - INTERVAL '1 day'),
-(46, 'mr_robert_003', 'Dr. Kumar', 'Send Rilast Tablet vs Capsule comparison chart as requested', (CURRENT_DATE + 3), 'pending', NOW() - INTERVAL '2 days'),
-(48, 'mr_robert_003', 'Dr. Mehta', 'Arrange meeting with MSL for Bevaas 20mg resistant hypertension data', (CURRENT_DATE + 5), 'pending', NOW() - INTERVAL '3 days'),
-(50, 'mr_robert_003', 'Dr. Rao', 'Follow up on Bevaas 20mg combination therapy results — doctor evaluating efficacy', (CURRENT_DATE + 1), 'pending', NOW() - INTERVAL '4 days'),
+(19, 'mr_robert_003', 'Dr. Reddy', 'Share Derise 10mg clinical trial brochure — doctor interested in prescribing for allergy OPD', (CURRENT_DATE + 2), 'pending', NOW() - INTERVAL '1 day'),
+(21, 'mr_robert_003', 'Dr. Kumar', 'Send Rilast Tablet vs Capsule comparison chart as requested', (CURRENT_DATE + 3), 'pending', NOW() - INTERVAL '2 days'),
+(23, 'mr_robert_003', 'Dr. Mehta', 'Arrange meeting with MSL for Bevaas 20mg resistant hypertension data', (CURRENT_DATE + 5), 'pending', NOW() - INTERVAL '3 days'),
+(25, 'mr_robert_003', 'Dr. Rao', 'Follow up on Bevaas 20mg combination therapy results — doctor evaluating efficacy', (CURRENT_DATE + 1), 'pending', NOW() - INTERVAL '4 days'),
 (NULL, 'mr_robert_003', 'Dr. Thomas', 'Deliver Rilast Syrup samples for paediatric ward trial', (CURRENT_DATE + 4), 'pending', NOW() - INTERVAL '2 days'),
 
 -- Overdue tasks
-(51, 'mr_robert_003', 'Dr. Rao', 'Submit adverse event follow-up form for Derise 50mg patient', (CURRENT_DATE - 3), 'overdue', NOW() - INTERVAL '10 days'),
-(47, 'mr_robert_003', 'Dr. Kumar', 'Provide updated Rilast Capsule prescribing information leaflet', (CURRENT_DATE - 5), 'overdue', NOW() - INTERVAL '12 days'),
+(26, 'mr_robert_003', 'Dr. Rao', 'Submit adverse event follow-up form for Derise 50mg patient', (CURRENT_DATE - 3), 'overdue', NOW() - INTERVAL '10 days'),
+(22, 'mr_robert_003', 'Dr. Kumar', 'Provide updated Rilast Capsule prescribing information leaflet', (CURRENT_DATE - 5), 'overdue', NOW() - INTERVAL '12 days'),
 
 -- Completed tasks
-(45, 'mr_robert_003', 'Dr. Reddy', 'Shared Derise 20mg dosage escalation guidelines', (CURRENT_DATE - 7), 'completed', NOW() - INTERVAL '14 days'),
-(49, 'mr_robert_003', 'Dr. Mehta', 'Delivered Bevaas 10mg patient education materials', (CURRENT_DATE - 10), 'completed', NOW() - INTERVAL '15 days'),
-(53, 'mr_robert_003', 'Dr. Thomas', 'Submitted Rilast Tablet sample request to warehouse', (CURRENT_DATE - 8), 'completed', NOW() - INTERVAL '16 days');
+(20, 'mr_robert_003', 'Dr. Reddy', 'Shared Derise 20mg dosage escalation guidelines', (CURRENT_DATE - 7), 'completed', NOW() - INTERVAL '14 days'),
+(24, 'mr_robert_003', 'Dr. Mehta', 'Delivered Bevaas 10mg patient education materials', (CURRENT_DATE - 10), 'completed', NOW() - INTERVAL '15 days'),
+(28, 'mr_robert_003', 'Dr. Thomas', 'Submitted Rilast Tablet sample request to warehouse', (CURRENT_DATE - 8), 'completed', NOW() - INTERVAL '16 days');
 
 -- Rahul's tasks (mr_rahul_001)
 INSERT INTO follow_up_tasks (dcr_id, user_id, doctor_name, task, due_date, status, created_at) VALUES
@@ -50,21 +55,21 @@ INSERT INTO follow_up_tasks (dcr_id, user_id, doctor_name, task, due_date, statu
 
 -- Pending adverse events (need review)
 INSERT INTO adverse_events (dcr_id, user_id, doctor_name, drug, symptoms, severity, patient_info, timeline, status, detected_at) VALUES
-(48, 'mr_robert_003', 'Dr. Mehta', 'Bevaas 10mg',
+(23, 'mr_robert_003', 'Dr. Mehta', 'Bevaas 10mg',
  ARRAY['peripheral edema', 'ankle swelling'],
  'mild',
  '{"age": "67", "gender": "male", "condition": "essential hypertension", "duration_on_drug": "3 weeks"}'::jsonb,
  'Swelling noticed after 2 weeks of starting Bevaas 10mg. No pain, mild discomfort.',
  'pending', NOW() - INTERVAL '3 days'),
 
-(50, 'mr_robert_003', 'Dr. Rao', 'Bevaas 20mg',
+(25, 'mr_robert_003', 'Dr. Rao', 'Bevaas 20mg',
  ARRAY['dizziness', 'fatigue', 'hypotension'],
  'moderate',
  '{"age": "72", "gender": "female", "condition": "resistant hypertension", "duration_on_drug": "1 week", "concomitant_drugs": "ramipril 5mg"}'::jsonb,
  'Patient experienced dizziness on standing after dose increase from 10mg to 20mg. BP dropped to 95/60.',
  'pending', NOW() - INTERVAL '2 days'),
 
-(44, 'mr_robert_003', 'Dr. Reddy', 'Derise 10mg',
+(19, 'mr_robert_003', 'Dr. Reddy', 'Derise 10mg',
  ARRAY['headache', 'dry mouth'],
  'mild',
  '{"age": "34", "gender": "female", "condition": "seasonal allergic rhinitis", "duration_on_drug": "5 days"}'::jsonb,
@@ -87,7 +92,7 @@ INSERT INTO adverse_events (dcr_id, user_id, doctor_name, drug, symptoms, severi
 
 -- Confirmed adverse events
 INSERT INTO adverse_events (dcr_id, user_id, doctor_name, drug, symptoms, severity, patient_info, timeline, status, detected_at, reviewed_by, review_notes, reviewed_at) VALUES
-(51, 'mr_robert_003', 'Dr. Rao', 'Derise 50mg',
+(26, 'mr_robert_003', 'Dr. Rao', 'Derise 50mg',
  ARRAY['somnolence', 'fatigue', 'impaired concentration'],
  'moderate',
  '{"age": "45", "gender": "male", "condition": "severe allergic dermatitis", "duration_on_drug": "1 week"}'::jsonb,
@@ -127,78 +132,5 @@ INSERT INTO adverse_events (dcr_id, user_id, doctor_name, drug, symptoms, severi
  'SERIOUS AE — confirmed. Bevaas 20mg contraindicated with severe aortic stenosis. Triple combination excessive for elderly patient. Reported to pharmacovigilance. Bevaas discontinued, patient stabilized.',
  NOW() - INTERVAL '28 days');
 
--- ============================================================================
--- UPDATE DCR SUMMARIES FOR VARIETY
--- ============================================================================
-
--- Make Robert's DCR summaries more varied and realistic
-UPDATE dcr SET
-  call_summary = 'Detailed Derise 10mg for seasonal allergy patients. Doctor showed strong interest in non-sedating profile. Shared ARIA trial data. Doctor plans to switch 5 patients from cetirizine.',
-  doctor_feedback = 'Impressed by drowsiness data. Will trial with morning-shift workers first.'
-WHERE id = 44;
-
-UPDATE dcr SET
-  call_summary = 'Discussed Rilast Tablet efficacy for chronic asthma add-on therapy. Doctor currently using competitor LTRA. Presented compliance advantage of once-daily evening dosing.',
-  doctor_feedback = 'Wants to see head-to-head data vs competitor. Positive about oral route for non-compliant patients.'
-WHERE id = 46;
-
-UPDATE dcr SET
-  call_summary = 'Follow-up on Bevaas 5mg initiation in elderly hypertensives. Doctor reports 3 out of 5 patients achieved BP goal. Discussed step-up to 10mg for remaining patients.',
-  doctor_feedback = 'Good tolerance in elderly. Minimal edema at 5mg. Will step up cautiously.'
-WHERE id = 48;
-
-UPDATE dcr SET
-  call_summary = 'Reviewed Bevaas 20mg outcomes for resistant hypertension. Doctor using triple combination (Bevaas + ACE-I + diuretic). 4 of 6 patients now at target.',
-  doctor_feedback = 'Effective in combination. One patient had syncope episode — needs review. Overall satisfied.'
-WHERE id = 50;
-
-UPDATE dcr SET
-  call_summary = 'Delivered Rilast Syrup samples to paediatric ward. Discussed dosing for 2-5 age group. Parents of current patients reporting improved nighttime breathing.',
-  doctor_feedback = 'Parents very positive. Compliance better than nebulizer. Wants more stock.'
-WHERE id = 52;
-
-UPDATE dcr SET
-  call_summary = 'Follow-up visit. Derise 20mg working well for moderate allergic rhinitis patients. Doctor now prescribing to 12+ patients regularly.',
-  doctor_feedback = 'Once-daily dosing is the key differentiator. Patients prefer it over twice-daily alternatives.'
-WHERE id = 45;
-
-UPDATE dcr SET
-  call_summary = 'Discussed Rilast Capsule sustained-release advantages. Doctor comparing with tablet formulation for overnight symptom control in asthma patients.',
-  doctor_feedback = 'Interested in capsule for patients with early morning wheeze. Requested clinical comparison data.'
-WHERE id = 47;
-
-UPDATE dcr SET
-  call_summary = 'Reviewed Derise 50mg use in severe allergic dermatitis. One patient reported drowsiness — unusual for desloratadine. Doctor reduced to 20mg.',
-  doctor_feedback = 'Concerned about sedation at 50mg. Most patients do well but this case needs AE reporting.'
-WHERE id = 51;
-
-UPDATE dcr SET
-  call_summary = 'Bevaas 10mg efficacy review. Doctor evaluating BP reduction data across 15 patients. Mean reduction 22 mmHg systolic. One patient switched to 20mg.',
-  doctor_feedback = 'Consistent BP reduction. Edema manageable with ACE-I combination. Good option for practice.'
-WHERE id = 49;
-
-UPDATE dcr SET
-  call_summary = 'Rilast Tablet long-term follow-up. Doctor managing 20+ adult asthma patients on Rilast. Reduction in rescue inhaler use observed across the board.',
-  doctor_feedback = 'Satisfied with long-term outcomes. No neuropsychiatric issues reported. Will continue prescribing.'
-WHERE id = 53;
-
--- Update some of Rahul's and Priya's DCRs too
-UPDATE dcr SET
-  call_summary = 'Presented Derise 10mg non-sedating advantage for allergy OPD. Doctor currently prescribing cetirizine. Highlighted 0.7% vs 3.1% drowsiness rates.',
-  doctor_feedback = 'Patients reporting less drowsiness is compelling. Will trial in 10 patients.'
-WHERE user_id = 'mr_rahul_001' AND name = 'Dr. Kapoor' AND date = CURRENT_DATE - 2;
-
-UPDATE dcr SET
-  call_summary = 'Discussed Bevaas 5mg for newly diagnosed hypertensives in OPD. Doctor treats 30+ hypertension patients monthly. Currently using amlodipine competitor.',
-  doctor_feedback = 'Open to switching if pricing is competitive. Wants samples for trial.'
-WHERE user_id = 'mr_rahul_001' AND name = 'Dr. Patil' AND date = CURRENT_DATE - 10;
-
-UPDATE dcr SET
-  call_summary = 'Derise 20mg follow-up in allergy OPD. Doctor now prescribing to 20+ patients. Compliance at 88% based on refill data. Patients prefer once-daily convenience.',
-  doctor_feedback = 'Patients prefer once daily dosing. Best antihistamine compliance I have seen.'
-WHERE user_id = 'mr_priya_002' AND name = 'Dr. Shah' AND date = CURRENT_DATE - 1;
-
-UPDATE dcr SET
-  call_summary = 'Bevaas 10mg review with cardiologist. Doctor has 40+ patients on Bevaas. Discussed ASCOT trial outcomes. Doctor impressed by 24% CV mortality reduction.',
-  doctor_feedback = 'Strong evidence base. Recommending to colleagues in cardiology department.'
-WHERE user_id = 'mr_priya_002' AND name = 'Dr. Desai' AND date = CURRENT_DATE - 5;
+-- NOTE: All DCR call_summary/doctor_feedback are now set directly in dummy_data.sql.
+-- No UPDATE statements needed here.
