@@ -8,6 +8,7 @@ const { buildManagerQueryMessages } = require('../prompts/managerQuery');
 const { buildProductSignalsMessages } = require('../prompts/productSignals');
 const { buildPostCallExtractionMessages } = require('../prompts/postCallExtraction');
 const { buildNextBestActionMessages } = require('../prompts/nextBestAction');
+const { buildCompetitorIntelMessages } = require('../prompts/competitorIntel');
 
 // ─────────────────────────────────────────────────────────────────────────────
 // POST /api/ai/precall-briefing
@@ -180,7 +181,7 @@ router.post('/manager-query', async (req, res) => {
 // ─────────────────────────────────────────────────────────────────────────────
 router.get('/product-signals', async (req, res) => {
   try {
-    const { from_date, to_date, user_ids } = req.query;
+    const { from_date, to_date, user_ids, products } = req.query;
 
     const conditions = [];
     const params = [];
@@ -198,6 +199,13 @@ router.get('/product-signals', async (req, res) => {
       if (ids.length > 0) {
         params.push(ids);
         conditions.push(`user_id = ANY($${params.length})`);
+      }
+    }
+    if (products) {
+      const prods = products.split(',').map(s => s.trim()).filter(Boolean);
+      if (prods.length > 0) {
+        params.push(prods);
+        conditions.push(`product = ANY($${params.length})`);
       }
     }
 
@@ -457,6 +465,121 @@ router.get('/nba/:user_id', async (req, res) => {
     });
   } catch (err) {
     console.error('[AI] nba error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GET /api/ai/competitor-intel
+//
+// Query params: from_date (optional), to_date (optional), user_ids (optional CSV)
+//
+// Combines DCR call reports (competitor mentions in call_summary/doctor_feedback)
+// and RCPA prescription audit data to generate competitor intelligence.
+// ─────────────────────────────────────────────────────────────────────────────
+router.get('/competitor-intel', async (req, res) => {
+  try {
+    const { from_date, to_date, user_ids } = req.query;
+
+    // ── Build shared filter conditions ────────────────────────────────
+    const dcrConditions = [];
+    const dcrParams = [];
+    const rcpaConditions = [];
+    const rcpaParams = [];
+
+    if (from_date) {
+      dcrParams.push(from_date);
+      dcrConditions.push(`date >= $${dcrParams.length}`);
+      rcpaParams.push(from_date);
+      rcpaConditions.push(`date >= $${rcpaParams.length}`);
+    }
+    if (to_date) {
+      dcrParams.push(to_date);
+      dcrConditions.push(`date <= $${dcrParams.length}`);
+      rcpaParams.push(to_date);
+      rcpaConditions.push(`date <= $${rcpaParams.length}`);
+    }
+    if (user_ids) {
+      const ids = user_ids.split(',').map(s => s.trim()).filter(Boolean);
+      if (ids.length > 0) {
+        dcrParams.push(ids);
+        dcrConditions.push(`user_id = ANY($${dcrParams.length})`);
+        rcpaParams.push(ids);
+        rcpaConditions.push(`user_id = ANY($${rcpaParams.length})`);
+      }
+    }
+
+    const dcrWhere = dcrConditions.length > 0 ? `AND ${dcrConditions.join(' AND ')}` : '';
+    const rcpaWhere = rcpaConditions.length > 0 ? `WHERE ${rcpaConditions.join(' AND ')}` : '';
+
+    // ── Fetch DCR records that mention competitors ────────────────────
+    const { rows: dcrMentions } = await db.query(
+      `SELECT name, product, date::text, call_summary, doctor_feedback
+       FROM dcr
+       WHERE (
+         call_summary ILIKE '%competitor%' OR call_summary ILIKE '%cipla%' OR
+         call_summary ILIKE '%sun pharma%' OR call_summary ILIKE '%glenmark%' OR
+         call_summary ILIKE '%mankind%' OR call_summary ILIKE '%abbott%' OR
+         call_summary ILIKE '%usv%' OR call_summary ILIKE '%sanofi%' OR
+         call_summary ILIKE '%montair%' OR call_summary ILIKE '%singulair%' OR
+         call_summary ILIKE '%amtas%' OR call_summary ILIKE '%stamlo%' OR
+         call_summary ILIKE '%allegra%' OR call_summary ILIKE '%zyrtec%' OR
+         call_summary ILIKE '%amlokind%' OR call_summary ILIKE '%bilastine%' OR
+         call_summary ILIKE '%telma%' OR call_summary ILIKE '%hydroxyzine%' OR
+         doctor_feedback ILIKE '%competitor%' OR doctor_feedback ILIKE '%cipla%' OR
+         doctor_feedback ILIKE '%sun pharma%' OR doctor_feedback ILIKE '%glenmark%' OR
+         doctor_feedback ILIKE '%mankind%' OR doctor_feedback ILIKE '%abbott%' OR
+         doctor_feedback ILIKE '%usv%' OR doctor_feedback ILIKE '%montair%' OR
+         doctor_feedback ILIKE '%bilastine%' OR doctor_feedback ILIKE '%amtas%' OR
+         doctor_feedback ILIKE '%stamlo%' OR doctor_feedback ILIKE '%amlokind%' OR
+         doctor_feedback ILIKE '%allegra%' OR doctor_feedback ILIKE '%telma%'
+       ) ${dcrWhere}
+       ORDER BY date DESC
+       LIMIT 200`,
+      dcrParams
+    );
+
+    // ── Fetch RCPA aggregated stats ───────────────────────────────────
+    const { rows: rcpaStats } = await db.query(
+      `SELECT
+         competitor_brand,
+         competitor_company,
+         our_brand,
+         SUM(competitor_value)::numeric AS total_competitor_value,
+         SUM(our_value)::numeric AS total_our_value,
+         COUNT(DISTINCT pharmacy)::int AS pharmacy_count,
+         COUNT(DISTINCT doctor_name)::int AS doctor_count
+       FROM rcpa
+       ${rcpaWhere}
+       GROUP BY competitor_brand, competitor_company, our_brand
+       ORDER BY total_competitor_value DESC`,
+      rcpaParams
+    );
+
+    if (dcrMentions.length === 0 && rcpaStats.length === 0) {
+      return res.status(200).json({
+        success: true,
+        message: 'No competitor data found for the specified filters',
+        analysis: null,
+      });
+    }
+
+    const period = from_date && to_date ? `${from_date} to ${to_date}` : 'all available data';
+
+    const llm = getLLMService();
+    const messages = buildCompetitorIntelMessages(dcrMentions, rcpaStats, period);
+    const analysis = await llm.chat(messages, { requireJson: true });
+
+    res.status(200).json({
+      success: true,
+      period,
+      dcrMentionsCount: dcrMentions.length,
+      rcpaRecords: rcpaStats.length,
+      analysis,
+    });
+
+  } catch (err) {
+    console.error('[AI] competitor-intel error:', err.message);
     res.status(500).json({ error: err.message });
   }
 });

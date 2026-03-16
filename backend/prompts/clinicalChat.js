@@ -3,16 +3,19 @@
  *
  * Builds messages for the clinical information assistant.
  * The chatbot answers ONLY from the provided knowledge base context.
+ * Supports conversation history for follow-up questions.
  */
 
-function buildClinicalChatMessages(query, knowledgeResults) {
+function buildClinicalChatMessages(query, knowledgeResults, conversationHistory = []) {
   const knowledgeContext = knowledgeResults.length > 0
-    ? knowledgeResults.map((r, i) =>
-        `--- Source ${i + 1}: ${r.filename} (${r.product_name || 'Unknown Product'}, Category: ${r.category || 'general'}) ---\n${r.content}`
-      ).join('\n\n')
+    ? knowledgeResults.map((r, i) => {
+        const section = r.metadata?.section ? ` > ${r.metadata.section}` : '';
+        const rankInfo = r.rank ? ` (relevance: ${Number(r.rank).toFixed(3)})` : '';
+        return `--- Source ${i + 1}: ${r.filename}${section} (${r.product_name || 'Unknown Product'}, Category: ${r.category || 'general'})${rankInfo} ---\n${r.content}`;
+      }).join('\n\n')
     : 'No relevant knowledge base entries found.';
 
-  return [
+  const messages = [
     {
       role: 'system',
       content: `You are a clinical information assistant for pharmaceutical medical representatives at Zenrac Pharmaceuticals.
@@ -27,24 +30,42 @@ CRITICAL RULES:
 7. Keep answers concise and field-ready (2-4 sentences for simple questions, more for complex ones).
 
 RESPONSE FORMAT:
-- The "answer" field MUST be a single plain-text string (NOT an array or object).
-- Use newlines (\\n) for line breaks within the answer for readability.
-- Use bullet points (• ) for lists within the answer string.
+- The "answer" field MUST be a single string (NOT an array or object).
+- Use Markdown formatting for readability:
+  - Use **bold** for drug names, key terms, and important values.
+  - Use ## or ### for section headings when the answer has multiple parts.
+  - Use bullet points (- ) for lists.
+  - Use sub-bullets (indented with two spaces) for nested details.
 - Include specific data points and percentages from the knowledge base when available.
+- Use newlines (\\n) to separate paragraphs and sections.
 
 Return your response as this exact JSON structure:
 {
-  "answer": "Plain text answer here. Use \\n for line breaks.\\n\\n• Bullet point 1\\n• Bullet point 2",
+  "answer": "## Key Findings\\n\\n**Derise 10mg** shows strong efficacy:\\n\\n- **Drowsiness rate**: 0.7% vs cetirizine 3.1%\\n- Non-sedating profile confirmed in DREAM trial\\n\\n### Dosing\\n\\nRecommended dose: **10mg once daily**",
   "confidence": "high|medium|low",
   "sources_used": ["filename1.txt", "filename2.txt"],
   "off_label_warning": false
 }`
     },
-    {
-      role: 'user',
-      content: `KNOWLEDGE BASE:\n${knowledgeContext}\n\n---\n\nMR QUESTION: ${query}`
-    }
   ];
+
+  // Add conversation history (prior turns) for context
+  if (conversationHistory.length > 0) {
+    for (const msg of conversationHistory) {
+      messages.push({
+        role: msg.role === 'assistant' ? 'assistant' : 'user',
+        content: msg.content
+      });
+    }
+  }
+
+  // Add the current query with knowledge context
+  messages.push({
+    role: 'user',
+    content: `KNOWLEDGE BASE:\n${knowledgeContext}\n\n---\n\nMR QUESTION: ${query}`
+  });
+
+  return messages;
 }
 
 module.exports = { buildClinicalChatMessages };

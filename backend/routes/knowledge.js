@@ -8,6 +8,10 @@ const { authenticateToken, requireRole } = require('../middleware/auth');
 const { getLLMService } = require('../services/llm');
 const { searchKnowledge } = require('../services/knowledgeSearch');
 const { buildClinicalChatMessages } = require('../prompts/clinicalChat');
+const { chunkDocument } = require('../services/chunker');
+const { getEmbeddings, toPgVector } = require('../services/embeddings');
+const { getOrCreateSession, getRecentMessages, saveMessage, listSessions } = require('../services/chatMemory');
+const { rewriteQuery } = require('../services/queryRewriter');
 
 // Multer config for text file uploads
 const storage = multer.diskStorage({
@@ -53,6 +57,7 @@ router.post('/upload', authenticateToken, requireRole('admin', 'manager'), uploa
 
     const content = fs.readFileSync(req.file.path, 'utf-8');
 
+    // Insert into drug_knowledge (source of truth)
     const { rows } = await db.query(
       `INSERT INTO drug_knowledge (product_id, filename, content, category, uploaded_by)
        VALUES ($1, $2, $3, $4, $5)
@@ -60,7 +65,45 @@ router.post('/upload', authenticateToken, requireRole('admin', 'manager'), uploa
       [product_id, req.file.originalname, content, category || 'general', req.user.user_id]
     );
 
-    res.status(201).json({ success: true, data: rows[0] });
+    const knowledgeId = rows[0].id;
+
+    // Get product name for tagging
+    const productResult = await db.query('SELECT name FROM products WHERE id = $1', [product_id]);
+    const productName = productResult.rows[0]?.name || null;
+
+    // Chunk the document
+    const chunks = chunkDocument(content, { productName });
+    console.log(`[Knowledge] Chunked "${req.file.originalname}" into ${chunks.length} chunks`);
+
+    // Compute embeddings for all chunks
+    let embeddings = [];
+    try {
+      embeddings = await getEmbeddings(chunks.map(c => c.content));
+    } catch (err) {
+      console.warn('[Knowledge] Embedding generation failed, storing chunks without embeddings:', err.message);
+    }
+
+    // Batch insert chunks
+    for (let i = 0; i < chunks.length; i++) {
+      const chunk = chunks[i];
+      const embedding = embeddings[i] ? toPgVector(embeddings[i]) : null;
+
+      await db.query(
+        `INSERT INTO knowledge_chunks (knowledge_id, product_id, chunk_index, content, token_count, metadata, tags, embedding)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8::vector)`,
+        [
+          knowledgeId, product_id, chunk.chunkIndex, chunk.content,
+          chunk.tokenCount, JSON.stringify(chunk.metadata), chunk.tags,
+          embedding
+        ]
+      );
+    }
+
+    res.status(201).json({
+      success: true,
+      data: rows[0],
+      chunks_created: chunks.length
+    });
   } catch (err) {
     console.error('[Knowledge] Upload error:', err.message);
     res.status(500).json({ error: err.message });
@@ -91,7 +134,7 @@ router.get('/', authenticateToken, async (req, res) => {
   }
 });
 
-// DELETE /api/knowledge/:id — delete a knowledge entry
+// DELETE /api/knowledge/:id — delete a knowledge entry (chunks cascade-deleted)
 router.delete('/:id', authenticateToken, requireRole('admin', 'manager'), async (req, res) => {
   try {
     const { id } = req.params;
@@ -108,20 +151,62 @@ router.delete('/:id', authenticateToken, requireRole('admin', 'manager'), async 
   }
 });
 
-// POST /api/knowledge/chat — clinical assistant chat
+// GET /api/knowledge/preview/:filename — get document content for preview
+router.get('/preview/:filename', authenticateToken, async (req, res) => {
+  try {
+    const { filename } = req.params;
+    const { rows } = await db.query(
+      `SELECT dk.id, dk.filename, dk.content, dk.category, p.name as product_name
+       FROM drug_knowledge dk
+       LEFT JOIN products p ON dk.product_id = p.id
+       WHERE dk.filename = $1
+       LIMIT 1`,
+      [filename]
+    );
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Document not found' });
+    }
+    res.json({ success: true, data: rows[0] });
+  } catch (err) {
+    console.error('[Knowledge] Preview error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/knowledge/sessions — list chat sessions for the current user
+router.get('/sessions', authenticateToken, async (req, res) => {
+  try {
+    const sessions = await listSessions(req.user.user_id);
+    res.json({ success: true, data: sessions });
+  } catch (err) {
+    console.error('[Knowledge] Sessions error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/knowledge/chat — clinical assistant chat with conversation memory
 router.post('/chat', authenticateToken, async (req, res) => {
   try {
-    const { query, product_id } = req.body;
+    const { query, product_id, session_id } = req.body;
 
     if (!query) {
       return res.status(400).json({ error: 'query is required' });
     }
 
-    // Search knowledge base
-    const knowledgeResults = await searchKnowledge(query, product_id);
+    // Get or create conversation session
+    const sessionId = await getOrCreateSession(req.user.user_id, session_id, product_id);
 
-    // Build LLM messages with knowledge context
-    const messages = buildClinicalChatMessages(query, knowledgeResults);
+    // Get conversation history for context
+    const conversationHistory = await getRecentMessages(sessionId);
+
+    // Rewrite query to be self-contained if there's history
+    const rewrittenQuery = await rewriteQuery(query, conversationHistory);
+
+    // Search knowledge base with rewritten query
+    const knowledgeResults = await searchKnowledge(rewrittenQuery, product_id);
+
+    // Build LLM messages with knowledge context and conversation history
+    const messages = buildClinicalChatMessages(rewrittenQuery, knowledgeResults, conversationHistory);
 
     const llm = getLLMService();
     const result = await llm.chat(messages, { requireJson: true });
@@ -145,10 +230,22 @@ router.post('/chat', authenticateToken, async (req, res) => {
 
     let answer = flatten(result.answer || result);
 
+    const sources = knowledgeResults.map(r => ({
+      filename: r.filename,
+      category: r.category,
+      product_name: r.product_name,
+      section: r.metadata?.section || null
+    }));
+
+    // Save messages to conversation history
+    await saveMessage(sessionId, 'user', query);
+    await saveMessage(sessionId, 'assistant', answer, sources);
+
     res.json({
       success: true,
       answer,
-      sources: knowledgeResults.map(r => ({ filename: r.filename, category: r.category, product_name: r.product_name }))
+      sources,
+      session_id: sessionId
     });
   } catch (err) {
     console.error('[Knowledge] Chat error:', err.message);

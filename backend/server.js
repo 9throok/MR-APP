@@ -10,6 +10,7 @@ const taskRoutes = require('./routes/tasks');
 const knowledgeRoutes = require('./routes/knowledge');
 const adverseEventRoutes = require('./routes/adverse-events');
 const doctorRoutes = require('./routes/doctors');
+const rcpaRoutes = require('./routes/rcpa');
 const { authenticateToken } = require('./middleware/auth');
 
 const app = express();
@@ -32,6 +33,7 @@ app.use('/api/tasks', authenticateToken, taskRoutes);
 app.use('/api/knowledge', knowledgeRoutes);
 app.use('/api/adverse-events', authenticateToken, adverseEventRoutes);
 app.use('/api/doctors', authenticateToken, doctorRoutes);
+app.use('/api/rcpa', authenticateToken, rcpaRoutes);
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', message: 'Server is running' });
