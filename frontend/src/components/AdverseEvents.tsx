@@ -108,7 +108,7 @@ function AdverseEvents({ onLogout, onBack, userName, onNavigate }: AdverseEvents
             </svg>
           </button>
           <div className="ae-header-content">
-            <h1 className="ae-page-title">Adverse Events</h1>
+            <h1 className="ae-page-title">Drug Safety</h1>
             <p className="ae-page-subtitle">Monitor and review reported adverse drug reactions</p>
           </div>
         </div>

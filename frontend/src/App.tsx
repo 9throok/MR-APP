@@ -41,19 +41,13 @@ function AppContent() {
   const [showSplash, setShowSplash] = useState(true)
   const [splashComplete, setSplashComplete] = useState(false)
 
-  const [currentPage, setCurrentPage] = useState<Page>(() => {
-    try {
-      if (typeof window !== 'undefined' && window.localStorage) {
-        const saved = localStorage.getItem('currentPage')
-        if (saved && ALL_PAGES.includes(saved)) {
-          return saved as Page
-        }
-      }
-    } catch (error) {
-      console.error('Error reading from localStorage:', error)
-    }
+  const getPageFromURL = (): Page => {
+    const path = window.location.pathname.replace(/^\//, '').replace(/\/$/, '')
+    if (path && ALL_PAGES.includes(path)) return path as Page
     return 'home'
-  })
+  }
+
+  const [currentPage, setCurrentPage] = useState<Page>(getPageFromURL)
 
   const userName = user?.name || (() => {
     try {
@@ -73,16 +67,22 @@ function AppContent() {
     } catch { return '+91 98765 43210' }
   })()
 
-  // Persist current page to localStorage
+  // Sync URL with current page
   useEffect(() => {
-    try {
-      if (typeof window !== 'undefined' && window.localStorage) {
-        localStorage.setItem('currentPage', currentPage)
-      }
-    } catch (error) {
-      console.error('Error writing to localStorage:', error)
+    const urlPath = currentPage === 'home' ? '/' : `/${currentPage}`
+    if (window.location.pathname !== urlPath) {
+      window.history.pushState({ page: currentPage }, '', urlPath)
     }
   }, [currentPage])
+
+  // Handle browser back/forward
+  useEffect(() => {
+    const onPopState = () => {
+      setCurrentPage(getPageFromURL())
+    }
+    window.addEventListener('popstate', onPopState)
+    return () => window.removeEventListener('popstate', onPopState)
+  }, [])
 
   // Persist authentication state to localStorage (for splash screen)
   useEffect(() => {
@@ -122,7 +122,11 @@ function AppContent() {
   }
 
   const handleBack = () => {
-    setCurrentPage('home')
+    if (window.history.length > 1) {
+      window.history.back()
+    } else {
+      setCurrentPage('home')
+    }
   }
 
   if (showSplash) {

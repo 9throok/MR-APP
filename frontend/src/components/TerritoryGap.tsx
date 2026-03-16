@@ -170,7 +170,14 @@ function TerritoryGap({ onLogout, onBack, userName, onNavigate }: TerritoryGapPr
         )}
 
         {/* Results */}
-        {!loading && data && (
+        {!loading && data && !data.analysis && (
+          <div className="tg-all-clear">
+            <div className="tg-all-clear-emoji">📋</div>
+            <p className="tg-all-clear-title">No DCR data found</p>
+            <p className="tg-all-clear-sub">This user has no visit records to analyse. Territory gap analysis requires DCR submissions.</p>
+          </div>
+        )}
+        {!loading && data && data.analysis && (
           <>
             {/* Summary bar */}
             <div className="tg-summary-bar">

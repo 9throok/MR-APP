@@ -1,33 +1,116 @@
 import { useState, useRef, useEffect } from 'react'
-import { apiPost } from '../services/apiService'
+import { apiPost, apiGet } from '../services/apiService'
 import './Chatbot.css'
+
+interface MessageSource {
+  filename: string
+  category: string
+  product_name?: string
+}
 
 interface Message {
   id: number
   text: string
   isUser: boolean
   timestamp: Date
-  sources?: { filename: string; category: string }[]
+  sources?: MessageSource[]
 }
 
-interface QuickQuestion {
-  question: string
+interface PreviewDoc {
+  filename: string
+  content: string
+  category: string
+  product_name: string
 }
 
+/* ── Lightweight markdown renderer ──────────────────────────────────────── */
+function renderFormattedText(text: string) {
+  const lines = text.split('\n')
+  const elements: JSX.Element[] = []
+  let listItems: JSX.Element[] = []
+  let listKey = 0
+
+  const flushList = () => {
+    if (listItems.length > 0) {
+      elements.push(<ul key={`ul-${listKey++}`}>{listItems}</ul>)
+      listItems = []
+    }
+  }
+
+  const formatInline = (line: string): (string | JSX.Element)[] => {
+    const parts: (string | JSX.Element)[] = []
+    let remaining = line
+    let idx = 0
+    const boldRegex = /\*\*(.+?)\*\*/g
+    let match: RegExpExecArray | null
+    let lastIndex = 0
+
+    while ((match = boldRegex.exec(remaining)) !== null) {
+      if (match.index > lastIndex) {
+        parts.push(remaining.slice(lastIndex, match.index))
+      }
+      parts.push(<strong key={`b-${idx++}`}>{match[1]}</strong>)
+      lastIndex = match.index + match[0].length
+    }
+    if (lastIndex < remaining.length) {
+      parts.push(remaining.slice(lastIndex))
+    }
+    return parts.length > 0 ? parts : [line]
+  }
+
+  lines.forEach((line, i) => {
+    const trimmed = line.trimStart()
+
+    // Headings
+    if (trimmed.startsWith('### ')) {
+      flushList()
+      elements.push(<h5 key={`h-${i}`}>{formatInline(trimmed.slice(4))}</h5>)
+      return
+    }
+    if (trimmed.startsWith('## ')) {
+      flushList()
+      elements.push(<h4 key={`h-${i}`}>{formatInline(trimmed.slice(3))}</h4>)
+      return
+    }
+    if (trimmed.startsWith('# ')) {
+      flushList()
+      elements.push(<h4 key={`h-${i}`}>{formatInline(trimmed.slice(2))}</h4>)
+      return
+    }
+
+    // Bullet points
+    if (/^[-*•]\s/.test(trimmed)) {
+      listItems.push(<li key={`li-${i}`}>{formatInline(trimmed.replace(/^[-*•]\s+/, ''))}</li>)
+      return
+    }
+    // Sub-bullets (indented)
+    if (/^\s{2,}[-*•]\s/.test(line)) {
+      listItems.push(<li key={`li-${i}`} className="chatbot-sub-bullet">{formatInline(trimmed.replace(/^[-*•]\s+/, ''))}</li>)
+      return
+    }
+
+    flushList()
+
+    // Empty lines
+    if (trimmed === '') return
+
+    // Regular text
+    elements.push(<p key={`p-${i}`}>{formatInline(trimmed)}</p>)
+  })
+
+  flushList()
+  return <div className="chatbot-formatted-text">{elements}</div>
+}
+
+/* ── Component ──────────────────────────────────────────────────────────── */
 function Chatbot() {
   const [isOpen, setIsOpen] = useState(false)
   const [messages, setMessages] = useState<Message[]>([])
   const [inputValue, setInputValue] = useState('')
-  const [showQuestions, setShowQuestions] = useState(true)
   const [isTyping, setIsTyping] = useState(false)
+  const [previewDoc, setPreviewDoc] = useState<PreviewDoc | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
-
-  const quickQuestions: QuickQuestion[] = [
-    { question: 'What are the contraindications of Derise?' },
-    { question: 'Compare Rilast Tablet vs Rilast Capsule' },
-    { question: 'What clinical trials support Bevaas?' },
-  ]
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -50,7 +133,6 @@ function Chatbot() {
 
     setMessages(prev => [...prev, userMessage])
     setInputValue('')
-    setShowQuestions(false)
     setIsTyping(true)
 
     try {
@@ -79,21 +161,25 @@ function Chatbot() {
       setMessages(prev => [...prev, errorResponse])
     } finally {
       setIsTyping(false)
-      setShowQuestions(true)
       setTimeout(() => inputRef.current?.focus(), 100)
     }
-  }
-
-  const handleQuickQuestion = (question: string) => {
-    setInputValue(question)
-    setShowQuestions(false)
-    setTimeout(() => handleSendMessage(), 100)
   }
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
       handleSendMessage()
+    }
+  }
+
+  const handlePreviewDoc = async (filename: string) => {
+    try {
+      const data = await apiGet(`/knowledge/preview/${encodeURIComponent(filename)}`)
+      if (data.success && data.data) {
+        setPreviewDoc(data.data)
+      }
+    } catch {
+      // silently fail
     }
   }
 
@@ -107,12 +193,12 @@ function Chatbot() {
           <div className="chatbot-header-content">
             <div className="chatbot-avatar">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM13 17H11V15H13V17ZM13 13H11V7H13V13Z" fill="currentColor"/>
+                <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="currentColor" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </div>
             <div className="chatbot-header-text">
-              <h3>ZenApp Assistant</h3>
-              <p>Online</p>
+              <h3>ZenApp AI</h3>
+              <p>Clinical Assistant</p>
             </div>
           </div>
           <button className="chatbot-close" onClick={() => setIsOpen(false)} aria-label="Close chatbot">
@@ -123,16 +209,16 @@ function Chatbot() {
         </div>
 
         <div className="chatbot-messages">
-          {messages.length === 0 && showQuestions && (
+          {messages.length === 0 && (
             <div className="chatbot-welcome">
               <div className="chatbot-message bot">
                 <div className="chatbot-message-avatar">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM13 17H11V15H13V17ZM13 13H11V7H13V13Z" fill="currentColor"/>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="currentColor"/>
                   </svg>
                 </div>
                 <div className="chatbot-message-content">
-                  <p>Hello! I'm your Clinical Assistant. Ask me about drug information, prescribing details, or clinical data from our knowledge base.</p>
+                  <p>Hello! How can I help you today?</p>
                 </div>
               </div>
             </div>
@@ -144,16 +230,33 @@ function Chatbot() {
             >
               {!message.isUser && (
                 <div className="chatbot-message-avatar">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM13 17H11V15H13V17ZM13 13H11V7H13V13Z" fill="currentColor"/>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="currentColor"/>
                   </svg>
                 </div>
               )}
               <div className="chatbot-message-content">
-                <p style={{ whiteSpace: 'pre-wrap' }}>{message.text}</p>
-                {message.sources && message.sources.length > 0 && (
-                  <div style={{ fontSize: '11px', color: '#64748b', marginTop: '4px' }}>
-                    Sources: {message.sources.map(s => s.filename).join(', ')}
+                {message.isUser ? (
+                  <p>{message.text}</p>
+                ) : (
+                  renderFormattedText(message.text)
+                )}
+                {!message.isUser && message.sources && message.sources.length > 0 && (
+                  <div className="chatbot-citations">
+                    <div className="chatbot-citations-label">Supporting Citations:</div>
+                    {message.sources.map((s, i) => (
+                      <button
+                        key={i}
+                        className="chatbot-citation-link"
+                        onClick={() => handlePreviewDoc(s.filename)}
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          <polyline points="14,2 14,8 20,8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                        {s.filename}
+                      </button>
+                    ))}
                   </div>
                 )}
                 <span className="chatbot-message-time">
@@ -165,8 +268,8 @@ function Chatbot() {
           {isTyping && (
             <div className="chatbot-message bot">
               <div className="chatbot-message-avatar">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM13 17H11V15H13V17ZM13 13H11V7H13V13Z" fill="currentColor"/>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                  <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="currentColor"/>
                 </svg>
               </div>
               <div className="chatbot-message-content">
@@ -177,29 +280,12 @@ function Chatbot() {
           <div ref={messagesEndRef} />
         </div>
 
-        {showQuestions && !isTyping && (
-          <div className="chatbot-quick-questions">
-            <p className="quick-questions-title">Quick Questions:</p>
-            <div className="quick-questions-grid">
-              {quickQuestions.map((q, index) => (
-                <button
-                  key={index}
-                  className="quick-question-btn"
-                  onClick={() => handleQuickQuestion(q.question)}
-                >
-                  {q.question}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
         <div className="chatbot-input-container">
           <input
             ref={inputRef}
             type="text"
             className="chatbot-input"
-            placeholder="Type your question..."
+            placeholder="Ask ZenApp AI"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyPress={handleKeyPress}
@@ -207,23 +293,40 @@ function Chatbot() {
           />
           <button className="chatbot-send-btn" onClick={handleSendMessage} aria-label="Send message">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M22 2L11 13M22 2L15 22L11 13M22 2L2 9L11 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M12 19V5M12 5L5 12M12 5L19 12" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </button>
         </div>
       </div>
+
+      {/* Document Preview Modal */}
+      {previewDoc && (
+        <div className="chatbot-preview-overlay" onClick={() => setPreviewDoc(null)}>
+          <div className="chatbot-preview-panel" onClick={e => e.stopPropagation()}>
+            <div className="chatbot-preview-header">
+              <div>
+                <h4>{previewDoc.filename}</h4>
+                <span>{previewDoc.product_name}{previewDoc.category ? ` \u2022 ${previewDoc.category}` : ''}</span>
+              </div>
+              <button onClick={() => setPreviewDoc(null)} aria-label="Close preview">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+            </div>
+            <div className="chatbot-preview-body">
+              <pre>{previewDoc.content}</pre>
+            </div>
+          </div>
+        </div>
+      )}
 
       <button
         className="chatbot-toggle"
         onClick={() => {
           setIsOpen(!isOpen)
           if (!isOpen) {
-            setShowQuestions(true) // Show questions when opening
-            setTimeout(() => {
-              inputRef.current?.focus()
-            }, 300)
-          } else {
-            setShowQuestions(false) // Hide questions when closing
+            setTimeout(() => inputRef.current?.focus(), 300)
           }
         }}
         aria-label="Open chatbot"
@@ -243,4 +346,3 @@ function Chatbot() {
 }
 
 export default Chatbot
-

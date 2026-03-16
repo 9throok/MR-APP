@@ -25,6 +25,57 @@ interface QueryResponse {
   result: QueryResult
 }
 
+// ── Competitor Intelligence types ─────────────────────────────────
+interface CompetitorTop {
+  company: string
+  mentions: number
+  brands: string[]
+  threat_level: 'high' | 'medium' | 'low'
+  key_insight: string
+}
+
+interface CompetitorSegment {
+  segment: string
+  our_brand: string
+  competitor_brand: string
+  competitor_company: string
+  insight: string
+}
+
+interface DoctorFeedbackTheme {
+  theme: string
+  frequency: string
+  example: string
+  action: string
+}
+
+interface MarketShareInsight {
+  our_brand: string
+  competitor_brand: string
+  competitor_company: string
+  our_value: number
+  competitor_value: number
+  gap_pct: number
+  recommendation: string
+}
+
+interface CompetitorAnalysis {
+  topCompetitors: CompetitorTop[]
+  competitorBySegment: CompetitorSegment[]
+  doctorFeedbackThemes: DoctorFeedbackTheme[]
+  marketShareInsights: MarketShareInsight[]
+  strategicRecommendations: string[]
+  summary: string
+}
+
+interface CompetitorResponse {
+  success: boolean
+  period: string
+  dcrMentionsCount: number
+  rcpaRecords: number
+  analysis: CompetitorAnalysis
+}
+
 // ── Product Signals types ────────────────────────────────────────
 interface RawStat {
   product: string
@@ -78,11 +129,18 @@ function Spinner() {
 // ── Main component ───────────────────────────────────────────────
 function ManagerInsights({ onLogout, onBack, userName, onNavigate }: ManagerInsightsProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [activeTab, setActiveTab] = useState<'query' | 'signals'>('query')
+  const [activeTab, setActiveTab] = useState<'query' | 'signals' | 'competitor'>('query')
+
+  const ALL_MRS: { id: string; name: string; territory: string }[] = [
+    { id: 'mr_rahul_001', name: 'Rahul Sharma', territory: 'Mumbai North' },
+    { id: 'mr_priya_002', name: 'Priya Patel', territory: 'Mumbai South' },
+    { id: 'mr_robert_003', name: 'Robert Johnson', territory: 'Delhi NCR' },
+  ]
 
   // Manager Query state
   const [queryText, setQueryText] = useState('')
-  const [queryUserIds, setQueryUserIds] = useState('')
+  const [querySelectedMRs, setQuerySelectedMRs] = useState<string[]>([])
+  const [queryMRDropdownOpen, setQueryMRDropdownOpen] = useState(false)
   const [queryFromDate, setQueryFromDate] = useState('')
   const [queryToDate, setQueryToDate] = useState('')
   const [queryLoading, setQueryLoading] = useState(false)
@@ -92,10 +150,47 @@ function ManagerInsights({ onLogout, onBack, userName, onNavigate }: ManagerInsi
   // Product Signals state
   const [sigFromDate, setSigFromDate] = useState('')
   const [sigToDate, setSigToDate] = useState('')
-  const [sigUserIds, setSigUserIds] = useState('')
+  const [sigSelectedMRs, setSigSelectedMRs] = useState<string[]>([])
+  const [sigMRDropdownOpen, setSigMRDropdownOpen] = useState(false)
+  const [sigSelectedProducts, setSigSelectedProducts] = useState<string[]>([])
+  const [sigProductDropdownOpen, setSigProductDropdownOpen] = useState(false)
   const [sigLoading, setSigLoading] = useState(false)
   const [sigError, setSigError] = useState<string | null>(null)
   const [sigResult, setSigResult] = useState<SignalsResponse | null>(null)
+
+  // Competitor Intelligence state
+  const [compFromDate, setCompFromDate] = useState('')
+  const [compToDate, setCompToDate] = useState('')
+  const [compSelectedMRs, setCompSelectedMRs] = useState<string[]>([])
+  const [compMRDropdownOpen, setCompMRDropdownOpen] = useState(false)
+  const [compLoading, setCompLoading] = useState(false)
+  const [compError, setCompError] = useState<string | null>(null)
+  const [compResult, setCompResult] = useState<CompetitorResponse | null>(null)
+
+  const ALL_PRODUCTS = [
+    'Derise 10mg', 'Derise 20mg', 'Derise 50mg',
+    'Rilast Tablet', 'Rilast Capsule', 'Rilast Syrup',
+    'Bevaas 5mg', 'Bevaas 10mg', 'Bevaas 20mg',
+  ]
+
+  const toggleProduct = (product: string) => {
+    setSigSelectedProducts(prev =>
+      prev.includes(product) ? prev.filter(p => p !== product) : [...prev, product]
+    )
+  }
+
+  const toggleMR = (list: string[], setList: (v: string[]) => void, id: string) => {
+    setList(list.includes(id) ? list.filter(x => x !== id) : [...list, id])
+  }
+
+  const getMRLabel = (ids: string[]) => {
+    if (ids.length === 0) return 'All MRs'
+    if (ids.length === 1) {
+      const mr = ALL_MRS.find(m => m.id === ids[0])
+      return mr ? mr.name : ids[0]
+    }
+    return `${ids.length} MRs selected`
+  }
 
   // ── Manager Query submit ──────────────────────────────────────
   const handleQuerySubmit = async () => {
@@ -105,8 +200,8 @@ function ManagerInsights({ onLogout, onBack, userName, onNavigate }: ManagerInsi
     setQueryResult(null)
     try {
       const body: Record<string, unknown> = { query: queryText.trim() }
-      if (queryUserIds.trim()) {
-        body.user_ids = queryUserIds.split(',').map(s => s.trim()).filter(Boolean)
+      if (querySelectedMRs.length > 0) {
+        body.user_ids = querySelectedMRs
       }
       if (queryFromDate) body.from_date = queryFromDate
       if (queryToDate) body.to_date = queryToDate
@@ -137,7 +232,8 @@ function ManagerInsights({ onLogout, onBack, userName, onNavigate }: ManagerInsi
       const params = new URLSearchParams()
       if (sigFromDate) params.set('from_date', sigFromDate)
       if (sigToDate) params.set('to_date', sigToDate)
-      if (sigUserIds.trim()) params.set('user_ids', sigUserIds.trim())
+      if (sigSelectedMRs.length > 0) params.set('user_ids', sigSelectedMRs.join(','))
+      if (sigSelectedProducts.length > 0) params.set('products', sigSelectedProducts.join(','))
       const qs = params.toString() ? `?${params.toString()}` : ''
 
       const json = await apiGet(`/ai/product-signals${qs}`) as SignalsResponse
@@ -148,6 +244,34 @@ function ManagerInsights({ onLogout, onBack, userName, onNavigate }: ManagerInsi
     } finally {
       setSigLoading(false)
     }
+  }
+
+  // ── Competitor Intelligence fetch ─────────────────────────────
+  const handleCompetitorFetch = async () => {
+    setCompLoading(true)
+    setCompError(null)
+    setCompResult(null)
+    try {
+      const params = new URLSearchParams()
+      if (compFromDate) params.set('from_date', compFromDate)
+      if (compToDate) params.set('to_date', compToDate)
+      if (compSelectedMRs.length > 0) params.set('user_ids', compSelectedMRs.join(','))
+      const qs = params.toString() ? `?${params.toString()}` : ''
+
+      const json = await apiGet(`/ai/competitor-intel${qs}`) as CompetitorResponse
+      if (!json.success) throw new Error('Competitor intel fetch failed')
+      setCompResult(json)
+    } catch (err) {
+      setCompError(err instanceof Error ? err.message : 'Something went wrong')
+    } finally {
+      setCompLoading(false)
+    }
+  }
+
+  const threatColor: Record<string, string> = {
+    high: '#ef4444',
+    medium: '#f59e0b',
+    low: '#22c55e',
   }
 
   return (
@@ -202,6 +326,18 @@ function ManagerInsights({ onLogout, onBack, userName, onNavigate }: ManagerInsi
             </svg>
             Product Signals
           </button>
+          <button
+            className={`mi-tab ${activeTab === 'competitor' ? 'mi-tab-active competitor-tab' : ''}`}
+            onClick={() => setActiveTab('competitor')}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+              <path d="M17 21V19C17 17.9 16.1 17 15 17H5C3.9 17 3 17.9 3 19V21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <circle cx="10" cy="11" r="4" stroke="currentColor" strokeWidth="2"/>
+              <path d="M23 21V19C22.99 18.13 22.42 17.36 21.6 17.07" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M17.6 3.07C18.42 3.36 18.99 4.13 19 5C19 5.87 18.42 6.64 17.6 6.93" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            Competitor Intel
+          </button>
         </div>
 
         {/* ══════════════════ TAB 1 — Manager Query ══════════════════ */}
@@ -238,14 +374,56 @@ function ManagerInsights({ onLogout, onBack, userName, onNavigate }: ManagerInsi
                   <input type="date" className="mi-filter-input" value={queryToDate} onChange={e => setQueryToDate(e.target.value)} />
                 </div>
                 <div className="mi-filter-group full-width">
-                  <span className="mi-filter-label">MR User IDs (comma-separated)</span>
-                  <input
-                    type="text"
-                    className="mi-filter-input"
-                    placeholder="e.g. mr_rahul_001, mr_priya_002"
-                    value={queryUserIds}
-                    onChange={e => setQueryUserIds(e.target.value)}
-                  />
+                  <span className="mi-filter-label">MR Representatives</span>
+                  <div className="mi-mr-dropdown">
+                    <button
+                      type="button"
+                      className="mi-mr-dropdown-trigger"
+                      onClick={() => setQueryMRDropdownOpen(prev => !prev)}
+                    >
+                      <span className="mi-mr-dropdown-text">{getMRLabel(querySelectedMRs)}</span>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className={`mi-product-chevron ${queryMRDropdownOpen ? 'open' : ''}`}>
+                        <path d="M6 9L12 15L18 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </button>
+                    {queryMRDropdownOpen && (
+                      <div className="mi-product-dropdown-menu">
+                        <button
+                          type="button"
+                          className="mi-product-option mi-mr-clear"
+                          onClick={() => { setQuerySelectedMRs([]); setQueryMRDropdownOpen(false) }}
+                        >
+                          All MRs (clear filter)
+                        </button>
+                        {ALL_MRS.map(mr => (
+                          <label key={mr.id} className="mi-product-option">
+                            <input
+                              type="checkbox"
+                              checked={querySelectedMRs.includes(mr.id)}
+                              onChange={() => toggleMR(querySelectedMRs, setQuerySelectedMRs, mr.id)}
+                            />
+                            <span className="mi-mr-option-info">
+                              <span className="mi-mr-option-name">{mr.name}</span>
+                              <span className="mi-mr-option-territory">{mr.territory}</span>
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  {querySelectedMRs.length > 0 && (
+                    <div className="mi-mr-tags">
+                      {querySelectedMRs.map(id => {
+                        const mr = ALL_MRS.find(m => m.id === id)
+                        return (
+                          <span key={id} className="mi-mr-tag">
+                            {mr?.name || id}
+                            <button type="button" onClick={() => toggleMR(querySelectedMRs, setQuerySelectedMRs, id)} className="mi-product-tag-remove">&times;</button>
+                          </span>
+                        )
+                      })}
+                    </div>
+                  )}
                 </div>
               </div>
               <button
@@ -371,14 +549,108 @@ function ManagerInsights({ onLogout, onBack, userName, onNavigate }: ManagerInsi
                   <input type="date" className="mi-filter-input" value={sigToDate} onChange={e => setSigToDate(e.target.value)} />
                 </div>
                 <div className="mi-filter-group full-width">
-                  <span className="mi-filter-label">MR User IDs (comma-separated)</span>
-                  <input
-                    type="text"
-                    className="mi-filter-input"
-                    placeholder="e.g. mr_rahul_001, mr_priya_002  (leave blank for all)"
-                    value={sigUserIds}
-                    onChange={e => setSigUserIds(e.target.value)}
-                  />
+                  <span className="mi-filter-label">MR Representatives</span>
+                  <div className="mi-mr-dropdown">
+                    <button
+                      type="button"
+                      className="mi-mr-dropdown-trigger"
+                      onClick={() => setSigMRDropdownOpen(prev => !prev)}
+                    >
+                      <span className="mi-mr-dropdown-text">{getMRLabel(sigSelectedMRs)}</span>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className={`mi-product-chevron ${sigMRDropdownOpen ? 'open' : ''}`}>
+                        <path d="M6 9L12 15L18 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </button>
+                    {sigMRDropdownOpen && (
+                      <div className="mi-product-dropdown-menu">
+                        <button
+                          type="button"
+                          className="mi-product-option mi-mr-clear"
+                          onClick={() => { setSigSelectedMRs([]); setSigMRDropdownOpen(false) }}
+                        >
+                          All MRs (clear filter)
+                        </button>
+                        {ALL_MRS.map(mr => (
+                          <label key={mr.id} className="mi-product-option">
+                            <input
+                              type="checkbox"
+                              checked={sigSelectedMRs.includes(mr.id)}
+                              onChange={() => toggleMR(sigSelectedMRs, setSigSelectedMRs, mr.id)}
+                            />
+                            <span className="mi-mr-option-info">
+                              <span className="mi-mr-option-name">{mr.name}</span>
+                              <span className="mi-mr-option-territory">{mr.territory}</span>
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  {sigSelectedMRs.length > 0 && (
+                    <div className="mi-mr-tags">
+                      {sigSelectedMRs.map(id => {
+                        const mr = ALL_MRS.find(m => m.id === id)
+                        return (
+                          <span key={id} className="mi-mr-tag">
+                            {mr?.name || id}
+                            <button type="button" onClick={() => toggleMR(sigSelectedMRs, setSigSelectedMRs, id)} className="mi-product-tag-remove">&times;</button>
+                          </span>
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
+                <div className="mi-filter-group full-width">
+                  <span className="mi-filter-label">Products</span>
+                  <div className="mi-product-dropdown">
+                    <button
+                      type="button"
+                      className="mi-product-dropdown-trigger"
+                      onClick={() => setSigProductDropdownOpen(prev => !prev)}
+                    >
+                      <span className="mi-product-dropdown-text">
+                        {sigSelectedProducts.length === 0
+                          ? 'All products'
+                          : sigSelectedProducts.length === 1
+                            ? sigSelectedProducts[0]
+                            : `${sigSelectedProducts.length} products selected`}
+                      </span>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className={`mi-product-chevron ${sigProductDropdownOpen ? 'open' : ''}`}>
+                        <path d="M6 9L12 15L18 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </button>
+                    {sigProductDropdownOpen && (
+                      <div className="mi-product-dropdown-menu">
+                        <button
+                          type="button"
+                          className="mi-product-option mi-product-clear"
+                          onClick={() => { setSigSelectedProducts([]); setSigProductDropdownOpen(false) }}
+                        >
+                          All products (clear filter)
+                        </button>
+                        {ALL_PRODUCTS.map(product => (
+                          <label key={product} className="mi-product-option">
+                            <input
+                              type="checkbox"
+                              checked={sigSelectedProducts.includes(product)}
+                              onChange={() => toggleProduct(product)}
+                            />
+                            <span>{product}</span>
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  {sigSelectedProducts.length > 0 && (
+                    <div className="mi-product-tags">
+                      {sigSelectedProducts.map(p => (
+                        <span key={p} className="mi-product-tag">
+                          {p}
+                          <button type="button" onClick={() => toggleProduct(p)} className="mi-product-tag-remove">&times;</button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
               <button
@@ -527,6 +799,276 @@ function ManagerInsights({ onLogout, onBack, userName, onNavigate }: ManagerInsi
                 </div>
                 <p className="mi-idle-title">Run a product performance scan</p>
                 <p className="mi-idle-sub">Apply optional filters and click "Run Product Signals" to see which products are thriving or struggling.</p>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* ══════════════════ TAB 3 — Competitor Intelligence ═══════ */}
+        {activeTab === 'competitor' && (
+          <>
+            {/* Filters */}
+            <div className="mi-filter-card">
+              <p className="mi-filter-title">Filters (all optional)</p>
+              <div className="mi-filter-grid">
+                <div className="mi-filter-group">
+                  <span className="mi-filter-label">From Date</span>
+                  <input type="date" className="mi-filter-input" value={compFromDate} onChange={e => setCompFromDate(e.target.value)} />
+                </div>
+                <div className="mi-filter-group">
+                  <span className="mi-filter-label">To Date</span>
+                  <input type="date" className="mi-filter-input" value={compToDate} onChange={e => setCompToDate(e.target.value)} />
+                </div>
+                <div className="mi-filter-group full-width">
+                  <span className="mi-filter-label">MR Representatives</span>
+                  <div className="mi-mr-dropdown">
+                    <button
+                      type="button"
+                      className="mi-mr-dropdown-trigger"
+                      onClick={() => setCompMRDropdownOpen(prev => !prev)}
+                    >
+                      <span className="mi-mr-dropdown-text">{getMRLabel(compSelectedMRs)}</span>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className={`mi-product-chevron ${compMRDropdownOpen ? 'open' : ''}`}>
+                        <path d="M6 9L12 15L18 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </button>
+                    {compMRDropdownOpen && (
+                      <div className="mi-product-dropdown-menu">
+                        <button
+                          type="button"
+                          className="mi-product-option mi-mr-clear"
+                          onClick={() => { setCompSelectedMRs([]); setCompMRDropdownOpen(false) }}
+                        >
+                          All MRs (clear filter)
+                        </button>
+                        {ALL_MRS.map(mr => (
+                          <label key={mr.id} className="mi-product-option">
+                            <input
+                              type="checkbox"
+                              checked={compSelectedMRs.includes(mr.id)}
+                              onChange={() => toggleMR(compSelectedMRs, setCompSelectedMRs, mr.id)}
+                            />
+                            <span className="mi-mr-option-info">
+                              <span className="mi-mr-option-name">{mr.name}</span>
+                              <span className="mi-mr-option-territory">{mr.territory}</span>
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  {compSelectedMRs.length > 0 && (
+                    <div className="mi-mr-tags">
+                      {compSelectedMRs.map(id => {
+                        const mr = ALL_MRS.find(m => m.id === id)
+                        return (
+                          <span key={id} className="mi-mr-tag">
+                            {mr?.name || id}
+                            <button type="button" onClick={() => toggleMR(compSelectedMRs, setCompSelectedMRs, id)} className="mi-product-tag-remove">&times;</button>
+                          </span>
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
+              </div>
+              <button
+                className="mi-submit-btn competitor"
+                onClick={handleCompetitorFetch}
+                disabled={compLoading}
+              >
+                {compLoading ? <Spinner /> : (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                    <path d="M17 21V19C17 17.9 16.1 17 15 17H5C3.9 17 3 17.9 3 19V21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <circle cx="10" cy="11" r="4" stroke="currentColor" strokeWidth="2"/>
+                    <path d="M23 21V19C22.99 18.13 22.42 17.36 21.6 17.07" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                )}
+                {compLoading ? 'Analysing…' : 'Run Competitor Analysis'}
+              </button>
+            </div>
+
+            {/* Error */}
+            {compError && (
+              <div className="mi-error">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                  <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
+                  <path d="M12 8V12M12 16H12.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                </svg>
+                {compError}
+              </div>
+            )}
+
+            {/* Loading */}
+            {compLoading && (
+              <div className="mi-loading">
+                <div className="mi-loading-icon competitor">
+                  <Spinner />
+                </div>
+                <div>
+                  <p className="mi-loading-title">Scanning competitor landscape…</p>
+                  <p className="mi-loading-sub">Analysing DCR mentions and RCPA prescription data</p>
+                </div>
+              </div>
+            )}
+
+            {/* Results */}
+            {!compLoading && compResult && compResult.analysis && (
+              <>
+                {/* Executive Summary */}
+                <div className="ci-summary-card">
+                  <div className="mi-answer-header">
+                    <div className="ci-summary-icon">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                        <path d="M17 21V19C17 17.9 16.1 17 15 17H5C3.9 17 3 17.9 3 19V21" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        <circle cx="10" cy="11" r="4" stroke="white" strokeWidth="2"/>
+                      </svg>
+                    </div>
+                    <span className="ci-summary-label">Competitor Intelligence Summary</span>
+                    <span className="mi-answer-meta">{compResult.dcrMentionsCount} DCR mentions · {compResult.rcpaRecords} RCPA records</span>
+                  </div>
+                  <p className="ci-summary-text">{compResult.analysis.summary}</p>
+                </div>
+
+                {/* Top Competitors */}
+                {compResult.analysis.topCompetitors?.length > 0 && (
+                  <div className="ci-section">
+                    <p className="mi-card-title ci-section-title">Top Competitors</p>
+                    <div className="ci-competitors-grid">
+                      {compResult.analysis.topCompetitors.map((comp, i) => (
+                        <div key={i} className="ci-competitor-card">
+                          <div className="ci-competitor-header">
+                            <span className="ci-competitor-rank">#{i + 1}</span>
+                            <span className="ci-competitor-name">{comp.company}</span>
+                            <span className="ci-threat-badge" style={{ background: threatColor[comp.threat_level] || '#94a3b8' }}>
+                              {comp.threat_level?.toUpperCase()}
+                            </span>
+                          </div>
+                          <div className="ci-competitor-mentions">{comp.mentions} mention{comp.mentions !== 1 ? 's' : ''}</div>
+                          <div className="ci-competitor-brands">
+                            {comp.brands?.map((b, j) => (
+                              <span key={j} className="ci-brand-tag">{b}</span>
+                            ))}
+                          </div>
+                          <p className="ci-competitor-insight">{comp.key_insight}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Market Share Insights */}
+                {compResult.analysis.marketShareInsights?.length > 0 && (
+                  <div className="ci-section">
+                    <p className="mi-card-title ci-section-title">Market Share Gaps</p>
+                    <div className="ci-market-grid">
+                      {compResult.analysis.marketShareInsights.map((ms, i) => (
+                        <div key={i} className="ci-market-card">
+                          <div className="ci-market-header">
+                            <span className="ci-market-our">{ms.our_brand}</span>
+                            <span className="ci-market-vs">vs</span>
+                            <span className="ci-market-comp">{ms.competitor_brand}</span>
+                          </div>
+                          <div className="ci-market-bars">
+                            <div className="ci-bar-row">
+                              <span className="ci-bar-label">Ours</span>
+                              <div className="ci-bar-track">
+                                <div
+                                  className="ci-bar-fill ours"
+                                  style={{ width: `${Math.min(100, (ms.our_value / Math.max(ms.our_value, ms.competitor_value)) * 100)}%` }}
+                                />
+                              </div>
+                              <span className="ci-bar-value">{ms.our_value}</span>
+                            </div>
+                            <div className="ci-bar-row">
+                              <span className="ci-bar-label">Theirs</span>
+                              <div className="ci-bar-track">
+                                <div
+                                  className="ci-bar-fill theirs"
+                                  style={{ width: `${Math.min(100, (ms.competitor_value / Math.max(ms.our_value, ms.competitor_value)) * 100)}%` }}
+                                />
+                              </div>
+                              <span className="ci-bar-value">{ms.competitor_value}</span>
+                            </div>
+                          </div>
+                          {ms.gap_pct > 0 && <div className="ci-gap-badge">{Math.round(ms.gap_pct)}% gap</div>}
+                          <p className="ci-market-rec">{ms.recommendation}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Segment Analysis */}
+                {compResult.analysis.competitorBySegment?.length > 0 && (
+                  <div className="ci-section">
+                    <p className="mi-card-title ci-section-title">Competitor by Segment</p>
+                    <div className="ci-segments-list">
+                      {compResult.analysis.competitorBySegment.map((seg, i) => (
+                        <div key={i} className="ci-segment-card">
+                          <div className="ci-segment-header">
+                            <span className="ci-segment-name">{seg.segment}</span>
+                          </div>
+                          <div className="ci-segment-matchup">
+                            <span className="ci-segment-our">{seg.our_brand}</span>
+                            <span className="ci-segment-vs">vs</span>
+                            <span className="ci-segment-comp">{seg.competitor_brand} ({seg.competitor_company})</span>
+                          </div>
+                          <p className="ci-segment-insight">{seg.insight}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Doctor Feedback Themes */}
+                {compResult.analysis.doctorFeedbackThemes?.length > 0 && (
+                  <div className="ci-section">
+                    <p className="mi-card-title ci-section-title">Doctor Feedback Themes</p>
+                    <div className="ci-themes-list">
+                      {compResult.analysis.doctorFeedbackThemes.map((theme, i) => (
+                        <div key={i} className="ci-theme-card">
+                          <div className="ci-theme-header">
+                            <span className="ci-theme-name">{theme.theme}</span>
+                            <span className="ci-theme-freq">{theme.frequency}</span>
+                          </div>
+                          <p className="ci-theme-example">"{theme.example}"</p>
+                          <p className="ci-theme-action">{theme.action}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Strategic Recommendations */}
+                {compResult.analysis.strategicRecommendations?.length > 0 && (
+                  <div className="ci-section">
+                    <p className="mi-card-title ci-section-title">Strategic Recommendations</p>
+                    <div className="ci-recommendations">
+                      {compResult.analysis.strategicRecommendations.map((rec, i) => (
+                        <div key={i} className="ci-rec-item">
+                          <span className="ci-rec-number">{i + 1}</span>
+                          <p className="ci-rec-text">{rec}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* Idle state */}
+            {!compLoading && !compResult && !compError && (
+              <div className="mi-idle">
+                <div className="mi-idle-icon competitor">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+                    <path d="M17 21V19C17 17.9 16.1 17 15 17H5C3.9 17 3 17.9 3 19V21" stroke="#e11d48" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    <circle cx="10" cy="11" r="4" stroke="#e11d48" strokeWidth="1.5"/>
+                    <path d="M23 21V19C22.99 18.13 22.42 17.36 21.6 17.07" stroke="#e11d48" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+                <p className="mi-idle-title">Run a competitor intelligence scan</p>
+                <p className="mi-idle-sub">Analyses DCR call reports for competitor mentions and RCPA prescription data to surface competitive threats, market share gaps, and strategic recommendations.</p>
               </div>
             )}
           </>
