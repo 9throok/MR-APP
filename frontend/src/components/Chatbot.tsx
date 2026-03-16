@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, type JSX } from 'react'
 import { apiPost, apiGet } from '../services/apiService'
 import './Chatbot.css'
 
