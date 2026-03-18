@@ -29,7 +29,7 @@ function Home({ onLogout, onNavigate, userName, userEmail, userMobile }: HomePro
 
   const handleTodaysPlanClick = () => {
     if (onNavigate) {
-      onNavigate('todays-plan')
+      onNavigate('nba')
     }
   }
 

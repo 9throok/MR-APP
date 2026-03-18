@@ -143,6 +143,12 @@ function Sidebar({ isOpen, onClose, userName, userEmail, userMobile, onNavigate,
                 </svg>
                 <span>{t('sync')}</span>
               </button>
+              <button onClick={() => handleNavClick('doctor-management')} className={`sidebar-item ${currentPage === 'doctor-management' ? 'sidebar-item-active' : ''}`}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2M12 11a3 3 0 100-6 3 3 0 000 6zM8 21v-1a4 4 0 018 0v1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                <span>My Doctors</span>
+              </button>
             </>
           )}
 
@@ -193,7 +199,7 @@ function Sidebar({ isOpen, onClose, userName, userEmail, userMobile, onNavigate,
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
-            <span>Territory Gap</span>
+            <span>Visit Coverage</span>
           </button>
           <button onClick={() => handleNavClick('reports')} className={`sidebar-item ${currentPage === 'reports' ? 'sidebar-item-active' : ''}`}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">

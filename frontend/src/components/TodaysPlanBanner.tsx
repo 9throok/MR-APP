@@ -1,89 +1,74 @@
-import './TodaysPlanBanner.css'
+import { useState, useEffect } from 'react'
+import { apiGet } from '../services/apiService'
 import { useLanguage } from '../contexts/LanguageContext'
+import './TodaysPlanBanner.css'
 
 interface TodaysPlanBannerProps {
   onNavigate?: () => void
 }
 
-// This should match the data structure from TodaysPlan component
-const todaysPlans = [
-  {
-    id: 1,
-    name: 'Dr. Anil Doshi',
-    type: 'doctor',
-    specialization: 'Cardiologist',
-    scheduledTime: '10:00 AM',
-  },
-  {
-    id: 2,
-    name: 'Dr. Navin Chaddha',
-    type: 'doctor',
-    specialization: 'Neurologist',
-    scheduledTime: '11:30 AM',
-  },
-  {
-    id: 3,
-    name: 'MedPlus Pharmacy',
-    type: 'pharmacy',
-    scheduledTime: '2:00 PM',
-  },
-  {
-    id: 4,
-    name: 'Dr. Surbhi Rel',
-    type: 'doctor',
-    specialization: 'Gynecologist',
-    scheduledTime: '3:30 PM',
-  },
-  {
-    id: 5,
-    name: 'Apollo Pharmacy',
-    type: 'pharmacy',
-    scheduledTime: '4:00 PM',
-  },
-  {
-    id: 6,
-    name: 'Dr. Naresh Patil',
-    type: 'doctor',
-    specialization: 'Neurologist',
-    scheduledTime: '5:00 PM',
-  },
-]
+interface BannerRec {
+  doctor: string
+  type?: string
+  best_time?: string
+}
 
 function TodaysPlanBanner({ onNavigate }: TodaysPlanBannerProps) {
   const { t } = useLanguage()
+  const [totalPlans, setTotalPlans] = useState(0)
+  const [doctorCount, setDoctorCount] = useState(0)
+  const [pharmacyCount, setPharmacyCount] = useState(0)
+  const [nextVisitName, setNextVisitName] = useState('')
+  const [nextVisitTime, setNextVisitTime] = useState('')
+  const [loaded, setLoaded] = useState(false)
 
-  const totalPlans = todaysPlans.length
-  const doctorCount = todaysPlans.filter(p => p.type === 'doctor').length
-  const pharmacyCount = todaysPlans.filter(p => p.type === 'pharmacy').length
+  const userId = localStorage.getItem('userId') || 'mr_robert_003'
 
-  // Get the next scheduled visit
-  const now = new Date()
-  const currentTime = now.getHours() * 60 + now.getMinutes() // Convert to minutes for comparison
+  useEffect(() => {
+    const fetchBannerData = async () => {
+      try {
+        const data = await apiGet(`/ai/nba/${userId}`)
+        const recs: BannerRec[] = data.recommendations?.recommendations || data.recommendations || []
+        if (!Array.isArray(recs)) return
 
-  const getTimeInMinutes = (timeString: string): number => {
-    const [time, period] = timeString.split(' ')
-    const [hours, minutes] = time.split(':').map(Number)
-    let totalMinutes = hours * 60 + minutes
-    if (period === 'PM' && hours !== 12) totalMinutes += 12 * 60
-    if (period === 'AM' && hours === 12) totalMinutes -= 12 * 60
-    return totalMinutes
-  }
+        setTotalPlans(recs.length)
+        setDoctorCount(recs.filter(r => (r.type || 'doctor') === 'doctor').length)
+        setPharmacyCount(recs.filter(r => r.type === 'pharmacy').length)
 
-  const upcomingVisits = todaysPlans
-    .filter(plan => {
-      const planTime = getTimeInMinutes(plan.scheduledTime || '')
-      return planTime >= currentTime
-    })
-    .sort((a, b) => {
-      const timeA = getTimeInMinutes(a.scheduledTime || '')
-      const timeB = getTimeInMinutes(b.scheduledTime || '')
-      return timeA - timeB
-    })
+        // Find next upcoming visit by best_time
+        const now = new Date()
+        const currentMinutes = now.getHours() * 60 + now.getMinutes()
 
-  const nextVisit = upcomingVisits[0]
+        const getMinutes = (timeStr: string): number => {
+          const [time, period] = timeStr.split(' ')
+          const [h, m] = time.split(':').map(Number)
+          let mins = h * 60 + m
+          if (period === 'PM' && h !== 12) mins += 720
+          if (period === 'AM' && h === 12) mins -= 720
+          return mins
+        }
+
+        const upcoming = recs
+          .filter(r => r.best_time && getMinutes(r.best_time) >= currentMinutes)
+          .sort((a, b) => getMinutes(a.best_time!) - getMinutes(b.best_time!))
+
+        if (upcoming.length > 0) {
+          setNextVisitName(upcoming[0].doctor)
+          setNextVisitTime(upcoming[0].best_time!)
+        }
+
+        setLoaded(true)
+      } catch {
+        // If API fails, show the banner without stats
+        setLoaded(true)
+      }
+    }
+
+    fetchBannerData()
+  }, [userId])
 
   return (
-    <div 
+    <div
       className="todays-plan-banner"
       onClick={onNavigate}
     >
@@ -95,33 +80,41 @@ function TodaysPlanBanner({ onNavigate }: TodaysPlanBannerProps) {
         </div>
         <div className="banner-text">
           <h2 className="banner-title">{t('todaysPlanTitle') || "Today's Plan"}</h2>
-          <div className="banner-stats">
-            <div className="banner-stat-item">
-              <span className="stat-value">{totalPlans}</span>
-              <span className="stat-label">Total Visits</span>
+          {loaded && totalPlans > 0 ? (
+            <div className="banner-stats">
+              <div className="banner-stat-item">
+                <span className="stat-value">{totalPlans}</span>
+                <span className="stat-label">Total Visits</span>
+              </div>
+              <div className="banner-stat-divider"></div>
+              <div className="banner-stat-item">
+                <span className="stat-value">{doctorCount}</span>
+                <span className="stat-label">Doctors</span>
+              </div>
+              <div className="banner-stat-divider"></div>
+              <div className="banner-stat-item">
+                <span className="stat-value">{pharmacyCount}</span>
+                <span className="stat-label">Pharmacies</span>
+              </div>
+              {nextVisitName && (
+                <>
+                  <div className="banner-stat-divider"></div>
+                  <div className="banner-stat-item next-visit">
+                    <span className="stat-value">{nextVisitTime}</span>
+                    <span className="stat-label">Next: {nextVisitName}</span>
+                  </div>
+                </>
+              )}
             </div>
-            <div className="banner-stat-divider"></div>
-            <div className="banner-stat-item">
-              <span className="stat-value">{doctorCount}</span>
-              <span className="stat-label">Doctors</span>
+          ) : (
+            <div className="banner-stats">
+              <div className="banner-stat-item">
+                <span className="stat-label">{loaded ? 'No visits scheduled' : 'Loading...'}</span>
+              </div>
             </div>
-            <div className="banner-stat-divider"></div>
-            <div className="banner-stat-item">
-              <span className="stat-value">{pharmacyCount}</span>
-              <span className="stat-label">Pharmacies</span>
-            </div>
-            {nextVisit && (
-              <>
-                <div className="banner-stat-divider"></div>
-                <div className="banner-stat-item next-visit">
-                  <span className="stat-value">{nextVisit.scheduledTime}</span>
-                  <span className="stat-label">Next: {nextVisit.name}</span>
-                </div>
-              </>
-            )}
-          </div>
+          )}
         </div>
-        <button 
+        <button
           className="banner-action-button"
           onClick={(e) => {
             e.stopPropagation()

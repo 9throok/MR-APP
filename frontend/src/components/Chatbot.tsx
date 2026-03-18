@@ -197,7 +197,7 @@ function Chatbot() {
               </svg>
             </div>
             <div className="chatbot-header-text">
-              <h3>ZenApp AI</h3>
+              <h3>Zen AI</h3>
               <p>Clinical Assistant</p>
             </div>
           </div>
@@ -285,7 +285,7 @@ function Chatbot() {
             ref={inputRef}
             type="text"
             className="chatbot-input"
-            placeholder="Ask ZenApp AI"
+            placeholder="Ask Zen AI"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyPress={handleKeyPress}

@@ -9,7 +9,7 @@ import Leaves from './components/Leaves'
 import Samples from './components/Samples'
 import Profile from './components/Profile'
 import Reports from './components/Reports'
-import TodaysPlan from './components/TodaysPlan'
+// TodaysPlan removed — replaced by NextBestAction (NBA) page
 import DCR from './components/DCR'
 import Doctor360 from './components/Doctor360'
 import ExpenseClaim from './components/ExpenseClaim'
@@ -159,7 +159,7 @@ function AppContent() {
           ) : currentPage === 'reports' ? (
             <Reports onLogout={handleLogout} onBack={handleBack} userName={userName} onNavigate={handleNavigate} />
           ) : currentPage === 'todays-plan' ? (
-            <TodaysPlan onLogout={handleLogout} onBack={handleBack} userName={userName} onNavigate={handleNavigate} />
+            <NextBestAction onLogout={handleLogout} onBack={handleBack} userName={userName} onNavigate={handleNavigate} />
           ) : currentPage === 'dcr' ? (
             <DCR onLogout={handleLogout} onBack={handleBack} userName={userName} onNavigate={handleNavigate} />
           ) : currentPage === 'doctor360' ? (

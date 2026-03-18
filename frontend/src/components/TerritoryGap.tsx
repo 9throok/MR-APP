@@ -107,7 +107,7 @@ function TerritoryGap({ onLogout, onBack, userName, onNavigate }: TerritoryGapPr
             </svg>
           </button>
           <div>
-            <h1 className="tg-page-title">Territory Gap Analysis</h1>
+            <h1 className="tg-page-title">Visit Coverage</h1>
             <p className="tg-page-subtitle">
               {loading ? 'Analysing your territory…' : data ? `${data.totalDoctors} doctor${data.totalDoctors !== 1 ? 's' : ''} analysed` : 'AI-powered doctor visit intelligence'}
             </p>

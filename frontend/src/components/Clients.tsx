@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Header from './Header'
 import Sidebar from './Sidebar'
 import { useLanguage } from '../contexts/LanguageContext'
+import { apiGet } from '../services/apiService'
 import './Clients.css'
 
 interface Client {
@@ -11,19 +12,15 @@ interface Client {
   mobile: string
   address: string
   type: 'doctor' | 'pharmacy' | 'distributor' | 'hospital' | 'clinic'
+  // Extra fields from doctor_profiles for Doctor360
+  tier?: string
+  territory?: string
+  preferred_visit_day?: string
+  notes?: string
 }
 
-const dummyClients: Client[] = [
-  // Doctors
-  { id: 1, name: 'Dr. Anil Doshi', specialization: 'Cardiologist', mobile: '+91 98765 43210', address: 'New Life Hospital, Mumbai', type: 'doctor' },
-  { id: 2, name: 'Dr. Navin Chaddha', specialization: 'Neurologist', mobile: '+91 98765 43211', address: 'Chaddha Hospital, Mumbai', type: 'doctor' },
-  { id: 3, name: 'Dr. Surbhi Rel', specialization: 'Gynecologist', mobile: '+91 98765 43212', address: 'Love Life Maternity, Mumbai', type: 'doctor' },
-  { id: 4, name: 'Dr. Naresh Patil', specialization: 'Neurologist', mobile: '+91 98765 43213', address: 'Chaddha Hospital, Mumbai', type: 'doctor' },
-  { id: 5, name: 'Dr. Surekha Rane', specialization: 'Gynecologist', mobile: '+91 98765 43214', address: 'Love Life Maternity, Mumbai', type: 'doctor' },
-  { id: 6, name: 'Dr. Rajesh Kumar', specialization: 'Orthopedic', mobile: '+91 98765 43215', address: 'Apollo Hospital, Delhi', type: 'doctor' },
-  { id: 7, name: 'Dr. Priya Sharma', specialization: 'Pediatrician', mobile: '+91 98765 43216', address: 'Fortis Hospital, Bangalore', type: 'doctor' },
-  { id: 8, name: 'Dr. Amit Verma', specialization: 'Dermatologist', mobile: '+91 98765 43217', address: 'Max Hospital, Delhi', type: 'doctor' },
-  
+// Pharmacy & distributor data remains hardcoded (no backend tables yet)
+const staticClients: Client[] = [
   // Pharmacy
   { id: 9, name: 'MedPlus Pharmacy', specialization: 'Retail Pharmacy', mobile: '+91 98765 43220', address: '123 MG Road, Mumbai', type: 'pharmacy' },
   { id: 10, name: 'Apollo Pharmacy', specialization: 'Chain Pharmacy', mobile: '+91 98765 43221', address: '456 Park Street, Mumbai', type: 'pharmacy' },
@@ -31,7 +28,7 @@ const dummyClients: Client[] = [
   { id: 12, name: 'Guardian Pharmacy', specialization: 'Chain Pharmacy', mobile: '+91 98765 43223', address: '321 Bandra West, Mumbai', type: 'pharmacy' },
   { id: 13, name: 'Health Plus Pharmacy', specialization: 'Retail Pharmacy', mobile: '+91 98765 43224', address: '654 Andheri East, Mumbai', type: 'pharmacy' },
   { id: 14, name: 'Care Pharmacy', specialization: 'Retail Pharmacy', mobile: '+91 98765 43225', address: '987 Vashi, Navi Mumbai', type: 'pharmacy' },
-  
+
   // Distributors
   { id: 15, name: 'MediDistributors Pvt Ltd', specialization: 'Medical Distributor', mobile: '+91 98765 43230', address: 'Industrial Area, Mumbai', type: 'distributor' },
   { id: 16, name: 'HealthCare Supplies', specialization: 'Medical Distributor', mobile: '+91 98765 43231', address: 'Sector 18, Navi Mumbai', type: 'distributor' },
@@ -51,6 +48,34 @@ function Clients({ onLogout, onBack, userName, onNavigate }: ClientsProps) {
   const { t } = useLanguage()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [selectedType, setSelectedType] = useState<Client['type']>('doctor')
+  const [doctorsFromDB, setDoctorsFromDB] = useState<Client[]>([])
+  const [doctorsLoading, setDoctorsLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchDoctors = async () => {
+      try {
+        const data = await apiGet('/doctors')
+        const mapped: Client[] = (data.data || []).map((d: any) => ({
+          id: d.id,
+          name: d.name,
+          specialization: d.specialty || 'General',
+          mobile: d.phone || '',
+          address: d.hospital || '',
+          type: 'doctor' as const,
+          tier: d.tier,
+          territory: d.territory,
+          preferred_visit_day: d.preferred_visit_day,
+          notes: d.notes,
+        }))
+        setDoctorsFromDB(mapped)
+      } catch (err) {
+        console.error('Error fetching doctors:', err)
+      } finally {
+        setDoctorsLoading(false)
+      }
+    }
+    fetchDoctors()
+  }, [])
 
   const clientTypes = [
     { id: 'doctor', label: t('doctors'), icon: '👨‍⚕️' },
@@ -58,7 +83,9 @@ function Clients({ onLogout, onBack, userName, onNavigate }: ClientsProps) {
     { id: 'distributor', label: t('distributors'), icon: '🚚' },
   ]
 
-  const filteredClients = dummyClients.filter(client => client.type === selectedType)
+  const filteredClients = selectedType === 'doctor'
+    ? doctorsFromDB
+    : staticClients.filter(client => client.type === selectedType)
 
   const handleMenuClick = () => {
     setSidebarOpen(true)
@@ -96,7 +123,11 @@ function Clients({ onLogout, onBack, userName, onNavigate }: ClientsProps) {
         </div>
 
         <div className="clients-list">
-          {filteredClients.length === 0 ? (
+          {selectedType === 'doctor' && doctorsLoading ? (
+            <div className="no-clients">
+              <p>Loading doctors...</p>
+            </div>
+          ) : filteredClients.length === 0 ? (
             <div className="no-clients">
               <p>{t('noClientsFound')}</p>
             </div>
