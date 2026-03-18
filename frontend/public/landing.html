@@ -1,0 +1,1530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ZenX — AI-Powered Field Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet"/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #030D06;
+    --surface: #071A0B;
+    --card: #0A1E0D;
+    --border: rgba(0,230,118,0.12);
+    --accent: #00E676;
+    --accent2: #1DB954;
+    --accent3: #69FF9C;
+    --text: #EAF0FF;
+    --muted: #7A8BA8;
+    --tag-bg: rgba(0,230,118,0.08);
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    overflow-x: hidden;
+    line-height: 1.6;
+  }
+
+  /* ── DYNAMIC BACKGROUND ── */
+  #bg-canvas {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  .noise-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    opacity: 0.5;
+  }
+
+  /* ── LAYOUT ── */
+  .page-wrapper { position: relative; z-index: 2; }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 5%;
+    height: 68px;
+    background: rgba(5,10,20,0.7);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .nav-logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1.35rem;
+    letter-spacing: -0.5px;
+    color: var(--text);
+  }
+
+  .nav-logo span { color: var(--accent); }
+
+  .nav-links {
+    display: flex;
+    gap: 2rem;
+    list-style: none;
+  }
+
+  .nav-links a {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 0.875rem;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+    transition: color 0.2s;
+  }
+
+  .nav-links a:hover { color: var(--text); }
+
+  .nav-cta {
+    background: var(--accent);
+    color: #031A08;
+    padding: 0.5rem 1.25rem;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: opacity 0.2s, transform 0.2s;
+  }
+
+  .nav-cta:hover { opacity: 0.85; transform: translateY(-1px); }
+
+  /* ── HERO ── */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 120px 5% 80px;
+    position: relative;
+  }
+
+  .hero-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--tag-bg);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    padding: 0.35rem 1rem;
+    font-size: 0.78rem;
+    font-weight: 500;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 1.75rem;
+    animation: fadeUp 0.8s ease both;
+  }
+
+  .dot-live {
+    width: 7px; height: 7px;
+    background: var(--accent3);
+    border-radius: 50%;
+    animation: pulse 1.6s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(1.5); }
+  }
+
+  .hero h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(2.6rem, 6vw, 5.2rem);
+    font-weight: 800;
+    line-height: 1.08;
+    letter-spacing: -2px;
+    margin-bottom: 1.5rem;
+    animation: fadeUp 0.8s 0.1s ease both;
+  }
+
+  .hero h1 em {
+    font-style: normal;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero p {
+    max-width: 580px;
+    font-size: 1.1rem;
+    color: var(--muted);
+    font-weight: 300;
+    line-height: 1.75;
+    margin-bottom: 2.5rem;
+    animation: fadeUp 0.8s 0.2s ease both;
+  }
+
+  .hero-actions {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    animation: fadeUp 0.8s 0.3s ease both;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #031A08;
+    padding: 0.85rem 2rem;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    text-decoration: none;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 0 30px rgba(0,230,118,0.25);
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 45px rgba(0,230,118,0.4);
+  }
+
+  .btn-ghost {
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 0.85rem 2rem;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 0.95rem;
+    text-decoration: none;
+    transition: border-color 0.2s, background 0.2s;
+  }
+
+  .btn-ghost:hover {
+    border-color: var(--accent);
+    background: rgba(0,230,118,0.05);
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── STATS STRIP ── */
+  .stats-strip {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    background: rgba(12,21,36,0.6);
+    backdrop-filter: blur(10px);
+    padding: 0 5%;
+  }
+
+  .stat-item {
+    flex: 1;
+    min-width: 160px;
+    max-width: 220px;
+    padding: 2rem 1.5rem;
+    text-align: center;
+    border-right: 1px solid var(--border);
+  }
+
+  .stat-item:last-child { border-right: none; }
+
+  .stat-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: var(--accent);
+    display: block;
+    line-height: 1;
+    margin-bottom: 0.3rem;
+  }
+
+  .stat-label {
+    font-size: 0.78rem;
+    color: var(--muted);
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* ── SECTION SHARED ── */
+  section { padding: 96px 5%; }
+
+  .section-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.75rem;
+    display: block;
+  }
+
+  .section-title {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+    font-weight: 800;
+    letter-spacing: -1px;
+    line-height: 1.15;
+    margin-bottom: 1rem;
+  }
+
+  .section-sub {
+    color: var(--muted);
+    max-width: 540px;
+    font-size: 1rem;
+    font-weight: 300;
+    line-height: 1.75;
+  }
+
+  .section-head { margin-bottom: 3.5rem; }
+
+  /* ── HERO FEATURE CARDS (top 3) ── */
+  .hero-features {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
+  .hf-card {
+    background: var(--card);
+    padding: 2.25rem 2rem;
+    transition: background 0.3s;
+    cursor: default;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hf-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.4s ease;
+  }
+
+  .hf-card:hover::before { transform: scaleX(1); }
+  .hf-card:hover { background: rgba(0,230,118,0.04); }
+
+  .hf-icon {
+    width: 44px; height: 44px;
+    border-radius: 10px;
+    background: var(--tag-bg);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .hf-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 1.1rem;
+    margin-bottom: 0.6rem;
+    letter-spacing: -0.3px;
+  }
+
+  .hf-desc {
+    font-size: 0.88rem;
+    color: var(--muted);
+    font-weight: 300;
+    line-height: 1.65;
+    margin-bottom: 1rem;
+  }
+
+  .hf-badge {
+    display: inline-block;
+    background: rgba(0,255,163,0.1);
+    color: var(--accent3);
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 0.25rem 0.65rem;
+    border-radius: 4px;
+    letter-spacing: 0.3px;
+  }
+
+  /* ── LIVE TRACKING ── */
+  .live-section {
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .live-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    align-items: center;
+  }
+
+  .live-map {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.75rem;
+    position: relative;
+    overflow: hidden;
+    min-height: 320px;
+    aspect-ratio: 4/3;
+  }
+
+  .map-grid-lines {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,230,118,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,230,118,0.04) 1px, transparent 1px);
+    background-size: 30px 30px;
+  }
+
+  .map-label {
+    position: absolute;
+    top: 1rem; left: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(5,10,20,0.85);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.35rem 0.75rem;
+    font-size: 0.72rem;
+    color: var(--accent);
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  .mr-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    position: absolute;
+    cursor: pointer;
+  }
+
+  .mr-dot::after {
+    content: '';
+    position: absolute;
+    inset: -5px;
+    border-radius: 50%;
+    border: 1px solid currentColor;
+    opacity: 0.4;
+    animation: ripple 2s infinite;
+  }
+
+  @keyframes ripple {
+    0% { transform: scale(0.8); opacity: 0.6; }
+    100% { transform: scale(1.8); opacity: 0; }
+  }
+
+  .mr-dot.active { background: var(--accent3); color: var(--accent3); }
+  .mr-dot.meeting { background: var(--accent); color: var(--accent); }
+  .mr-dot.transit { background: #FFB547; color: #FFB547; }
+
+  .mr-tooltip {
+    position: absolute;
+    background: rgba(5,10,20,0.95);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.6rem 0.85rem;
+    font-size: 0.72rem;
+    pointer-events: none;
+    white-space: nowrap;
+    transform: translate(-50%, -110%);
+    margin-top: -8px;
+  }
+
+  .mr-name { font-weight: 700; color: var(--text); margin-bottom: 2px; }
+  .mr-status { color: var(--muted); }
+
+  .live-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+  }
+
+  .live-stat {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1rem 1.2rem;
+  }
+
+  .live-stat-val {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--accent);
+    display: block;
+  }
+
+  .live-stat-label {
+    font-size: 0.73rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* ── FEATURE GRID (all features) ── */
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1rem;
+  }
+
+  .feat-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.75rem 1.5rem;
+    transition: border-color 0.3s, transform 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .feat-card:hover {
+    border-color: rgba(0,230,118,0.35);
+    transform: translateY(-3px);
+  }
+
+  .feat-card-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--accent);
+    opacity: 0.5;
+    margin-bottom: 0.75rem;
+    display: block;
+  }
+
+  .feat-card-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    margin-bottom: 0.6rem;
+    letter-spacing: -0.2px;
+  }
+
+  .feat-card-desc {
+    font-size: 0.845rem;
+    color: var(--muted);
+    font-weight: 300;
+    line-height: 1.65;
+    margin-bottom: 1.2rem;
+  }
+
+  .feat-card-impact {
+    font-size: 0.78rem;
+    color: var(--accent3);
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .feat-card-impact::before {
+    content: '↑';
+    font-size: 0.9rem;
+  }
+
+  /* ── IMPACT TABLE ── */
+  .impact-section { background: var(--surface); }
+
+  .impact-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+  }
+
+  .impact-table th {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.72rem;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 600;
+    padding: 0.9rem 1.5rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .impact-table td {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid rgba(0,230,118,0.05);
+    color: var(--text);
+    vertical-align: middle;
+  }
+
+  .impact-table tr:last-child td { border-bottom: none; }
+
+  .impact-table tr:hover td { background: rgba(0,230,118,0.02); }
+
+  .improvement-pill {
+    background: rgba(0,255,163,0.1);
+    color: var(--accent3);
+    padding: 0.25rem 0.7rem;
+    border-radius: 100px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .muted-text { color: var(--muted); }
+
+  /* ── CTA ── */
+  .cta-section {
+    text-align: center;
+    padding: 120px 5%;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .cta-glow {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 500px;
+    height: 300px;
+    background: radial-gradient(ellipse, rgba(0,230,118,0.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .cta-section h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(2rem, 4vw, 3.5rem);
+    font-weight: 800;
+    letter-spacing: -1.5px;
+    margin-bottom: 1rem;
+    position: relative;
+  }
+
+  .cta-section p {
+    color: var(--muted);
+    font-size: 1rem;
+    font-weight: 300;
+    margin-bottom: 2.5rem;
+    position: relative;
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 2rem 5%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .footer-logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1rem;
+    color: var(--text);
+  }
+
+  .footer-logo span { color: var(--accent); }
+
+  .footer-copy {
+    font-size: 0.78rem;
+    color: var(--muted);
+  }
+
+  /* ── FLIP CARDS ── */
+  .flip-card { perspective: 1000px; cursor: pointer; background: transparent !important; padding: 0 !important; border: none !important; }
+  .flip-inner { position: relative; width: 100%; min-height: 260px; transition: transform 0.65s cubic-bezier(0.4,0.2,0.2,1); transform-style: preserve-3d; }
+  .flip-card:hover .flip-inner, .flip-card.flipped .flip-inner { transform: rotateY(180deg); }
+  .flip-front, .flip-back { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: 0; padding: 2.25rem 2rem; display: flex; flex-direction: column; }
+  .flip-front { background: var(--card); }
+  .flip-back { background: linear-gradient(135deg, rgba(0,230,118,0.1) 0%, rgba(15,30,15,0.98) 60%); border-top: 2px solid var(--accent); transform: rotateY(180deg); justify-content: space-between; }
+  .flip-hint { margin-top: auto; padding-top: 1rem; font-size: 0.72rem; color: rgba(0,230,118,0.45); font-weight: 500; letter-spacing: 0.5px; }
+  .flip-back-title { font-family: 'Syne', sans-serif; font-size: 0.7rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); margin-bottom: 1rem; }
+  .flip-list { list-style: none; display: flex; flex-direction: column; gap: 0.55rem; flex: 1; }
+  .flip-list li { font-size: 0.835rem; color: var(--muted); font-weight: 300; padding-left: 1rem; position: relative; line-height: 1.55; }
+  .flip-list li::before { content: '→'; position: absolute; left: 0; color: var(--accent); font-size: 0.7rem; top: 2px; }
+  .flip-metric { display: flex; align-items: center; gap: 0.6rem; padding-top: 1rem; border-top: 1px solid rgba(0,230,118,0.15); margin-top: 0.5rem; }
+  .flip-metric-val { font-family: 'Syne', sans-serif; font-size: 0.85rem; font-weight: 700; color: var(--muted); }
+  .flip-metric-val.accent { color: var(--accent); }
+  .flip-metric-arrow { color: var(--accent); font-size: 1rem; }
+
+  /* ── SCROLL REVEAL ── */
+  .reveal {
+    opacity: 0;
+    transform: translateY(28px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+
+  .reveal.visible {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* ── RESPONSIVE — TABLET (≤ 900px) ── */
+  @media (max-width: 900px) {
+    .live-grid { grid-template-columns: 1fr; gap: 2.5rem; }
+    .hero-features { grid-template-columns: 1fr; }
+    .features-grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+    .stats-strip { flex-wrap: wrap; }
+    .stat-item { min-width: 140px; flex: 1 1 140px; border-right: none; border-bottom: 1px solid var(--border); }
+    .stat-item:last-child { border-bottom: none; }
+  }
+
+  /* ── RESPONSIVE — MOBILE (≤ 600px) ── */
+  @media (max-width: 600px) {
+    nav { padding: 0 4%; height: 60px; }
+    nav .nav-links { display: none; }
+    .nav-logo { font-size: 1.15rem; }
+    .nav-cta { padding: 0.45rem 1rem; font-size: 0.8rem; }
+
+    .hero { padding: 90px 5% 60px; }
+    .hero h1 { font-size: 2.2rem; letter-spacing: -1px; }
+    .hero p { font-size: 0.95rem; }
+    .hero-eyebrow { font-size: 0.68rem; }
+    .hero-actions { flex-direction: column; align-items: stretch; }
+    .btn-primary, .btn-ghost { text-align: center; padding: 0.85rem 1.5rem; }
+
+    .stats-strip { padding: 0 4%; }
+    .stat-item { min-width: 45%; flex: 1 1 45%; padding: 1.25rem 1rem; }
+    .stat-num { font-size: 1.75rem; }
+
+    section { padding: 60px 4%; }
+    .section-title { font-size: 1.75rem; letter-spacing: -0.5px; }
+    .section-head { margin-bottom: 2.5rem; }
+
+    .hf-card { padding: 1.5rem; }
+
+    .live-map { min-height: 240px; }
+    .live-stats { grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+    .live-stat { padding: 0.75rem 1rem; }
+    .live-stat-val { font-size: 1.25rem; }
+
+    .features-grid { grid-template-columns: 1fr; }
+    .feat-card { padding: 1.5rem; }
+
+    .impact-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .impact-table { min-width: 540px; }
+    .impact-table th, .impact-table td { padding: 0.85rem 1rem; font-size: 0.8rem; }
+
+    .cta-section { padding: 80px 4%; }
+    .cta-section h2 { font-size: 2rem; letter-spacing: -0.5px; }
+
+    footer { flex-direction: column; align-items: flex-start; padding: 1.5rem 4%; gap: 0.5rem; }
+    .footer-copy { font-size: 0.73rem; }
+  }
+
+  /* ── FEAT CARD INTERACTIVE ── */
+  .feat-card-cta { margin-top: 1rem; font-size: 0.75rem; font-weight: 600; color: rgba(0,230,118,0.4); letter-spacing: 0.3px; transition: color 0.2s; display: flex; align-items: center; gap: 0.3rem; }
+  .feat-card:hover .feat-card-cta { color: var(--accent); }
+  .cta-arrow { display: inline-block; transition: transform 0.2s; }
+  .feat-card:hover .cta-arrow { transform: translate(2px,-2px); }
+  .feat-card { cursor: pointer; }
+
+  /* ── FEATURE MODAL ── */
+  .feat-modal { position: fixed; inset: 0; z-index: 500; display: flex; align-items: flex-end; justify-content: center; pointer-events: none; opacity: 0; transition: opacity 0.3s; }
+  .feat-modal.open { pointer-events: all; opacity: 1; }
+  .feat-modal-backdrop { position: absolute; inset: 0; background: rgba(3,13,6,0.8); backdrop-filter: blur(8px); opacity: 0; transition: opacity 0.3s; }
+  .feat-modal.open .feat-modal-backdrop { opacity: 1; }
+  .feat-modal-panel { position: relative; z-index: 1; background: #0A1E0D; border: 1px solid var(--border); border-bottom: none; border-radius: 20px 20px 0 0; width: 100%; max-width: 680px; padding: 2.5rem 2.5rem 3rem; transform: translateY(100%); transition: transform 0.45s cubic-bezier(0.22,1,0.36,1); max-height: 85vh; overflow-y: auto; }
+  .feat-modal.open .feat-modal-panel { transform: translateY(0); }
+  .feat-modal-close { position: absolute; top: 1.25rem; right: 1.5rem; background: rgba(0,230,118,0.08); border: 1px solid var(--border); color: var(--muted); width: 34px; height: 34px; border-radius: 50%; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; justify-content: center; transition: background 0.2s, color 0.2s; }
+  .feat-modal-close:hover { background: rgba(0,230,118,0.18); color: var(--text); }
+  .feat-modal-num { font-family: 'Syne', sans-serif; font-size: 0.68rem; font-weight: 700; letter-spacing: 2.5px; text-transform: uppercase; color: var(--accent); opacity: 0.6; margin-bottom: 0.5rem; }
+  .feat-modal-title { font-family: 'Syne', sans-serif; font-size: 1.5rem; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 0.75rem; line-height: 1.2; }
+  .feat-modal-lead { color: var(--muted); font-size: 0.92rem; font-weight: 300; line-height: 1.7; margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border); }
+  .feat-modal-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 1.5rem; }
+  @media (max-width: 540px) { .feat-modal-cols { grid-template-columns: 1fr; } .feat-modal-panel { padding: 2rem 1.5rem 2.5rem; } }
+  .feat-modal-section-label { font-size: 0.68rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); margin-bottom: 1rem; }
+  .feat-modal-list { list-style: none; display: flex; flex-direction: column; gap: 0.65rem; }
+  .feat-modal-list li { font-size: 0.855rem; color: var(--muted); font-weight: 300; padding-left: 1.1rem; position: relative; line-height: 1.55; }
+  .feat-modal-list li::before { content: '›'; position: absolute; left: 0; color: var(--accent); font-weight: 700; }
+  .feat-modal-metrics { display: flex; flex-direction: column; gap: 0.75rem; }
+  .modal-metric-row { background: rgba(0,230,118,0.05); border: 1px solid rgba(0,230,118,0.1); border-radius: 8px; padding: 0.75rem 1rem; }
+  .modal-metric-label { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 0.2rem; }
+  .modal-metric-value { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 800; color: var(--accent); }
+  .feat-modal-bar { height: 3px; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 2px; width: 0; transition: width 0.8s ease 0.3s; }
+  .feat-modal.open .feat-modal-bar { width: 100%; }
+</style>
+</head>
+<body>
+
+<!-- Dynamic Background Canvas -->
+<canvas id="bg-canvas"></canvas>
+<div class="noise-overlay"></div>
+
+<div class="page-wrapper">
+
+  <!-- NAV -->
+  <nav>
+    <div class="nav-logo">Zen<span>X</span></div>
+    <ul class="nav-links">
+      <li><a href="#features">Features</a></li>
+      <li><a href="#live-tracking">Live Tracking</a></li>
+      <li><a href="#impact">Impact</a></li>
+    </ul>
+    <a href="/app" class="nav-cta">Open App →</a>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-eyebrow">
+      <span class="dot-live"></span>
+      AI-Powered Field Intelligence · 9 Core Capabilities
+    </div>
+    <h1>The Intelligence Layer<br/>for <em>Medical Reps</em></h1>
+    <p>ZenX transforms how MRs plan, execute, and follow up on doctor visits — cutting admin by 70%, surfacing real-time insights, and keeping every visit compliant and impactful.</p>
+    <div class="hero-actions">
+      <a href="#cta" class="btn-primary">Start a Pilot →</a>
+      <a href="#features" class="btn-ghost">Explore Features</a>
+    </div>
+  </section>
+
+  <!-- STATS STRIP -->
+  <div class="stats-strip">
+    <div class="stat-item">
+      <span class="stat-num">70%</span>
+      <span class="stat-label">Faster DCR Completion</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-num">95%</span>
+      <span class="stat-label">Pre-call Prep Reduction</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-num">10×</span>
+      <span class="stat-label">AE Detection Coverage</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-num">99%</span>
+      <span class="stat-label">Faster Medical Answers</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-num">30%</span>
+      <span class="stat-label">Fewer Missed Follow-ups</span>
+    </div>
+  </div>
+
+  <!-- HERO FEATURES — TOP 3 -->
+  <section style="padding: 80px 5% 40px;">
+    <div class="section-head reveal">
+      <span class="section-label">Core Intelligence</span>
+      <h2 class="section-title">Built for the field.<br/>Driven by AI.</h2>
+      <p class="section-sub">Three flagship capabilities that change what's possible for every MR — from the first minute of the day to the last note submitted.</p>
+    </div>
+    <div class="hero-features reveal">
+
+      <div class="hf-card flip-card" tabindex="0">
+        <div class="flip-inner">
+          <div class="flip-front">
+            <div class="hf-icon">⚡</div>
+            <div class="hf-title">AI Pre-Call Briefing</div>
+            <div class="hf-desc">Before each visit, ZenX surfaces relationship context, recent interactions, pending promises, talking points, and red flags — all in seconds.</div>
+            <span class="hf-badge">+20–30% Visit Effectiveness</span>
+            <div class="flip-hint">Hover to explore →</div>
+          </div>
+          <div class="flip-back">
+            <div class="flip-back-title">How it works</div>
+            <ul class="flip-list">
+              <li>Aggregates visit history, promises, and doctor preferences automatically</li>
+              <li>Flags red flags like overdue follow-ups or recent complaints</li>
+              <li>Suggests tailored talking points based on last interaction</li>
+              <li>Surfaces pending samples or approvals to action</li>
+            </ul>
+            <div class="flip-metric">
+              <span class="flip-metric-val">15 min</span>
+              <span class="flip-metric-arrow">→</span>
+              <span class="flip-metric-val accent">Seconds</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="hf-card flip-card" tabindex="0">
+        <div class="flip-inner">
+          <div class="flip-front">
+            <div class="hf-icon">📝</div>
+            <div class="hf-title">AI Post-Call Extraction</div>
+            <div class="hf-desc">Converts unstructured call notes into complete, structured visit records — products, samples, feedback, objections, and tasks. Automatically.</div>
+            <span class="hf-badge">60–70% Faster DCR Completion</span>
+            <div class="flip-hint">Hover to explore →</div>
+          </div>
+          <div class="flip-back">
+            <div class="flip-back-title">What gets captured</div>
+            <ul class="flip-list">
+              <li>Products discussed and samples handed over</li>
+              <li>Doctor feedback and sentiment signals</li>
+              <li>Competitor mentions and objections raised</li>
+              <li>Auto-generated follow-up task list</li>
+              <li>Adverse event flags sent to medical review</li>
+            </ul>
+            <div class="flip-metric">
+              <span class="flip-metric-val">20 min DCR</span>
+              <span class="flip-metric-arrow">→</span>
+              <span class="flip-metric-val accent">3 min</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="hf-card flip-card" tabindex="0">
+        <div class="flip-inner">
+          <div class="flip-front">
+            <div class="hf-icon">🎯</div>
+            <div class="hf-title">Next Best Action Planner</div>
+            <div class="hf-desc">Every morning, each MR gets a prioritized visit plan — ranked by impact, loaded with talking points, and surfacing overdue follow-ups.</div>
+            <span class="hf-badge">15–20% More High-Value Coverage</span>
+            <div class="flip-hint">Hover to explore →</div>
+          </div>
+          <div class="flip-back">
+            <div class="flip-back-title">Daily plan includes</div>
+            <ul class="flip-list">
+              <li>Ranked doctor list by visit priority score</li>
+              <li>Overdue follow-ups surfaced to the top</li>
+              <li>Suggested time slots and route order</li>
+              <li>Talking points pre-loaded per doctor</li>
+            </ul>
+            <div class="flip-metric">
+              <span class="flip-metric-val">30 min planning</span>
+              <span class="flip-metric-arrow">→</span>
+              <span class="flip-metric-val accent">Instant</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- LIVE MR TRACKING -->
+  <section class="live-section" id="live-tracking">
+    <div class="live-grid">
+      <div class="reveal">
+        <span class="section-label">Real-Time Operations</span>
+        <h2 class="section-title">Live MR<br/>Tracking Dashboard</h2>
+        <p class="section-sub" style="margin-bottom: 1.5rem;">Monitor your entire field force in real time. See who's in a meeting, who's in transit, and which territories need attention — all from a single command center.</p>
+        <ul style="list-style:none; display:flex; flex-direction:column; gap:0.85rem;">
+          <li style="display:flex; gap:0.85rem; align-items:flex-start;">
+            <span style="color:var(--accent3); font-size:0.8rem; margin-top:3px;">●</span>
+            <span style="font-size:0.9rem; color:var(--muted); font-weight:300;"><strong style="color:var(--text);">GPS location updates</strong> with visit check-in/out timestamps and geo-fencing alerts</span>
+          </li>
+          <li style="display:flex; gap:0.85rem; align-items:flex-start;">
+            <span style="color:var(--accent); font-size:0.8rem; margin-top:3px;">●</span>
+            <span style="font-size:0.9rem; color:var(--muted); font-weight:300;"><strong style="color:var(--text);">Live visit status</strong> — In Meeting, In Transit, or Available — visible to managers without interruption</span>
+          </li>
+          <li style="display:flex; gap:0.85rem; align-items:flex-start;">
+            <span style="color:#FFB547; font-size:0.8rem; margin-top:3px;">●</span>
+            <span style="font-size:0.9rem; color:var(--muted); font-weight:300;"><strong style="color:var(--text);">Territory heatmaps</strong> showing visit density, coverage gaps, and visit frequency by zone</span>
+          </li>
+          <li style="display:flex; gap:0.85rem; align-items:flex-start;">
+            <span style="color:var(--accent2); font-size:0.8rem; margin-top:3px;">●</span>
+            <span style="font-size:0.9rem; color:var(--muted); font-weight:300;"><strong style="color:var(--text);">Auto-logged routes</strong> for accurate mileage reporting and compliance documentation</span>
+          </li>
+        </ul>
+        <div class="live-stats">
+          <div class="live-stat">
+            <span class="live-stat-val" id="active-mrs">—</span>
+            <span class="live-stat-label">MRs Active Now</span>
+          </div>
+          <div class="live-stat">
+            <span class="live-stat-val" id="visits-today">—</span>
+            <span class="live-stat-label">Visits Today</span>
+          </div>
+          <div class="live-stat">
+            <span class="live-stat-val" id="coverage-pct">—</span>
+            <span class="live-stat-label">Territory Coverage</span>
+          </div>
+          <div class="live-stat">
+            <span class="live-stat-val" id="alerts-count">—</span>
+            <span class="live-stat-label">Active Alerts</span>
+          </div>
+        </div>
+      </div>
+      <div class="reveal">
+        <div class="live-map" id="live-map">
+          <div class="map-grid-lines"></div>
+          <div class="map-label"><span class="dot-live"></span> LIVE · FIELD VIEW</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ALL FEATURES -->
+  <section id="features">
+    <div class="section-head reveal">
+      <span class="section-label">Full Capability Suite</span>
+      <h2 class="section-title">Nine AI Engines.<br/>One Field Platform.</h2>
+      <p class="section-sub">Every capability designed to remove friction, surface insight, and keep your field team operating at peak performance.</p>
+    </div>
+    <div class="features-grid">
+
+      <div class="feat-card reveal" data-id="1">
+        <span class="feat-card-num">01</span>
+        <div class="feat-card-title">Territory Gap Analysis</div>
+        <div class="feat-card-desc">Surfaces under-served doctors and under-covered areas before silent churn takes hold.</div>
+        <div class="feat-card-impact">Protects revenue, continuous detection</div>
+        <div class="feat-card-cta">Click for details <span class="cta-arrow">↗</span></div>
+      </div>
+
+      <div class="feat-card reveal" data-id="2">
+        <span class="feat-card-num">02</span>
+        <div class="feat-card-title">Manager Insights</div>
+        <div class="feat-card-desc">Ask plain-English questions about team performance and get data-backed answers instantly.</div>
+        <div class="feat-card-impact">Dramatically faster report turnaround</div>
+        <div class="feat-card-cta">Click for details <span class="cta-arrow">↗</span></div>
+      </div>
+
+      <div class="feat-card reveal" data-id="3">
+        <span class="feat-card-num">03</span>
+        <div class="feat-card-title">Product Signals</div>
+        <div class="feat-card-desc">Near-real-time visibility into product-level trends before monthly reports catch up.</div>
+        <div class="feat-card-impact">2–4 weeks earlier market signals</div>
+        <div class="feat-card-cta">Click for details <span class="cta-arrow">↗</span></div>
+      </div>
+
+      <div class="feat-card reveal" data-id="4">
+        <span class="feat-card-num">04</span>
+        <div class="feat-card-title">Clinical Assistant Chatbot</div>
+        <div class="feat-card-desc">Knowledge-grounded answers to drug and product questions — with source citations every time.</div>
+        <div class="feat-card-impact">~90% reduction in medical info queries</div>
+        <div class="feat-card-cta">Click for details <span class="cta-arrow">↗</span></div>
+      </div>
+
+      <div class="feat-card reveal" data-id="5">
+        <span class="feat-card-num">05</span>
+        <div class="feat-card-title">Adverse Event Detection</div>
+        <div class="feat-card-desc">Scans every visit note automatically — moving from 10–20% sampling to 100% coverage.</div>
+        <div class="feat-card-impact">5–10× AE detection coverage</div>
+        <div class="feat-card-cta">Click for details <span class="cta-arrow">↗</span></div>
+      </div>
+
+      <div class="feat-card reveal" data-id="6">
+        <span class="feat-card-num">06</span>
+        <div class="feat-card-title">Competitor Intelligence</div>
+        <div class="feat-card-desc">Dual-source competitive signals from field feedback plus prescription audit data.</div>
+        <div class="feat-card-impact">Territory-level competitive defense</div>
+        <div class="feat-card-cta">Click for details <span class="cta-arrow">↗</span></div>
+      </div>
+
+      <div class="feat-card reveal" data-id="7">
+        <span class="feat-card-num">07</span>
+        <div class="feat-card-title">Live MR Route Optimization</div>
+        <div class="feat-card-desc">AI-suggested daily routes that dynamically re-route around cancellations in real time.</div>
+        <div class="feat-card-impact">Up to 25% more visits per day</div>
+        <div class="feat-card-cta">Click for details <span class="cta-arrow">↗</span></div>
+      </div>
+
+      <div class="feat-card reveal" data-id="8">
+        <span class="feat-card-num">08</span>
+        <div class="feat-card-title">Sample & Resource Allocator</div>
+        <div class="feat-card-desc">Recommends optimal sample distribution by doctor, territory, and product performance.</div>
+        <div class="feat-card-impact">Improved sample ROI across territories</div>
+        <div class="feat-card-cta">Click for details <span class="cta-arrow">↗</span></div>
+      </div>
+
+      <div class="feat-card reveal" data-id="9">
+        <span class="feat-card-num">09</span>
+        <div class="feat-card-title">Compliance & Audit Trail</div>
+        <div class="feat-card-desc">Every AI answer, AE flag, and visit record carries a full, regulatory-ready audit trail.</div>
+        <div class="feat-card-impact">Audit-ready visit records, always</div>
+        <div class="feat-card-cta">Click for details <span class="cta-arrow">↗</span></div>
+      </div>
+
+    </div>
+
+  <!-- FEATURE DETAIL MODAL -->
+  <div id="feat-modal" class="feat-modal" aria-modal="true" role="dialog">
+    <div class="feat-modal-backdrop"></div>
+    <div class="feat-modal-panel">
+      <button class="feat-modal-close" id="feat-modal-close">✕</button>
+      <div class="feat-modal-num" id="modal-num"></div>
+      <h3 class="feat-modal-title" id="modal-title"></h3>
+      <p class="feat-modal-lead" id="modal-lead"></p>
+      <div class="feat-modal-cols">
+        <div>
+          <div class="feat-modal-section-label">Key Capabilities</div>
+          <ul class="feat-modal-list" id="modal-list"></ul>
+        </div>
+        <div>
+          <div class="feat-modal-section-label">Impact</div>
+          <div class="feat-modal-metrics" id="modal-metrics"></div>
+        </div>
+      </div>
+      <div class="feat-modal-bar" id="modal-bar"></div>
+    </div>
+  </div>
+  </section>
+
+  <!-- IMPACT TABLE -->
+  <section class="impact-section" id="impact">
+    <div class="section-head reveal">
+      <span class="section-label">Measurable Outcomes</span>
+      <h2 class="section-title">Before vs After AI</h2>
+      <p class="section-sub">The numbers across every major field workflow — verified, not estimated.</p>
+    </div>
+    <div class="impact-table-wrap reveal" style="border: 1px solid var(--border); border-radius: 14px; overflow: hidden;">
+      <table class="impact-table">
+        <thead>
+          <tr>
+            <th>Workflow</th>
+            <th>Before AI</th>
+            <th>After AI</th>
+            <th>Improvement</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>DCR Completion</td>
+            <td class="muted-text">15–20 min</td>
+            <td>3–5 min</td>
+            <td><span class="improvement-pill">70% faster</span></td>
+          </tr>
+          <tr>
+            <td>Pre-call Preparation</td>
+            <td class="muted-text">10–15 min</td>
+            <td>Instant</td>
+            <td><span class="improvement-pill">95% faster</span></td>
+          </tr>
+          <tr>
+            <td>Morning Planning</td>
+            <td class="muted-text">20–30 min</td>
+            <td>Instant</td>
+            <td><span class="improvement-pill">95% faster</span></td>
+          </tr>
+          <tr>
+            <td>AE Detection Coverage</td>
+            <td class="muted-text">10–20% sampled</td>
+            <td>100% coverage</td>
+            <td><span class="improvement-pill">5–10× coverage</span></td>
+          </tr>
+          <tr>
+            <td>Medical Info Response</td>
+            <td class="muted-text">Hours / days</td>
+            <td>Seconds</td>
+            <td><span class="improvement-pill">99% faster</span></td>
+          </tr>
+          <tr>
+            <td>Manager Reporting</td>
+            <td class="muted-text">Days</td>
+            <td>Seconds</td>
+            <td><span class="improvement-pill">99% faster</span></td>
+          </tr>
+          <tr>
+            <td>Territory Gap Detection</td>
+            <td class="muted-text">Monthly</td>
+            <td>Real-time</td>
+            <td><span class="improvement-pill">Continuous</span></td>
+          </tr>
+          <tr>
+            <td>Competitive Intelligence</td>
+            <td class="muted-text">Quarterly</td>
+            <td>Real-time signals</td>
+            <td><span class="improvement-pill">2–4 weeks earlier</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta-section" id="cta">
+    <div class="cta-glow"></div>
+    <h2 class="reveal">Ready to transform<br/>your field team?</h2>
+    <p class="reveal">Run a 4–6 week pilot with a small team and measure the impact firsthand — no long commitments, no lengthy onboarding.</p>
+    <div class="hero-actions reveal">
+      <a href="/app" class="btn-primary">Open App →</a>
+      <a href="#features" class="btn-ghost">Explore Features</a>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-logo">Zen<span>X</span></div>
+    <div class="footer-copy">© 2025 ZenX Product Team · AI-Powered Field Intelligence</div>
+  </footer>
+
+</div><!-- end page-wrapper -->
+
+<script>
+// ── ANIMATED BACKGROUND ──
+const canvas = document.getElementById('bg-canvas');
+const ctx = canvas.getContext('2d');
+let W, H, particles = [], time = 0;
+
+function resize() {
+  W = canvas.width = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+}
+
+class Particle {
+  constructor() { this.reset(); }
+  reset() {
+    this.x = Math.random() * W;
+    this.y = Math.random() * H;
+    this.r = Math.random() * 1.5 + 0.3;
+    this.vx = (Math.random() - 0.5) * 0.25;
+    this.vy = (Math.random() - 0.5) * 0.25;
+    this.alpha = Math.random() * 0.35 + 0.05;
+    this.hue = Math.random() > 0.5 ? 140 : 120; // green
+  }
+  update() {
+    this.x += this.vx;
+    this.y += this.vy;
+    if (this.x < 0 || this.x > W || this.y < 0 || this.y > H) this.reset();
+  }
+  draw() {
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+    ctx.fillStyle = `hsla(${this.hue}, 90%, 60%, ${this.alpha})`;
+    ctx.fill();
+  }
+}
+
+function initParticles() {
+  particles = [];
+  const count = Math.min(Math.floor(W * H / 6000), 200);
+  for (let i = 0; i < count; i++) particles.push(new Particle());
+}
+
+// Orbital blobs
+const blobs = [
+  { x: 0.15, y: 0.25, r: 0.35, speed: 0.0003, hue: 140 },
+  { x: 0.85, y: 0.7,  r: 0.3,  speed: 0.0004, hue: 120 },
+  { x: 0.5,  y: 0.5,  r: 0.25, speed: 0.0005, hue: 130 },
+];
+
+function drawBlob(blob, t) {
+  const cx = (blob.x + Math.sin(t * blob.speed * 1000) * 0.12) * W;
+  const cy = (blob.y + Math.cos(t * blob.speed * 800) * 0.1) * H;
+  const r = blob.r * Math.min(W, H);
+  const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+  grad.addColorStop(0, `hsla(${blob.hue}, 90%, 50%, 0.07)`);
+  grad.addColorStop(1, `hsla(${blob.hue}, 100%, 60%, 0)`);
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.fillStyle = grad;
+  ctx.fill();
+}
+
+function drawConnections() {
+  const maxDist = 100;
+  for (let i = 0; i < particles.length; i++) {
+    for (let j = i + 1; j < particles.length; j++) {
+      const dx = particles[i].x - particles[j].x;
+      const dy = particles[i].y - particles[j].y;
+      const d = Math.sqrt(dx*dx + dy*dy);
+      if (d < maxDist) {
+        ctx.beginPath();
+        ctx.moveTo(particles[i].x, particles[i].y);
+        ctx.lineTo(particles[j].x, particles[j].y);
+        ctx.strokeStyle = `rgba(0,230,118,${(1 - d/maxDist) * 0.06})`;
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
+      }
+    }
+  }
+}
+
+function animate(ts) {
+  time = ts;
+  ctx.clearRect(0, 0, W, H);
+  blobs.forEach(b => drawBlob(b, ts));
+  drawConnections();
+  particles.forEach(p => { p.update(); p.draw(); });
+  requestAnimationFrame(animate);
+}
+
+resize();
+initParticles();
+window.addEventListener('resize', () => { resize(); initParticles(); });
+requestAnimationFrame(animate);
+
+// ── SCROLL REVEAL ──
+const reveals = document.querySelectorAll('.reveal');
+const io = new IntersectionObserver((entries) => {
+  entries.forEach((e, i) => {
+    if (e.isIntersecting) {
+      e.target.style.transitionDelay = (Array.from(reveals).indexOf(e.target) % 3) * 80 + 'ms';
+      e.target.classList.add('visible');
+      io.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.12 });
+reveals.forEach(r => io.observe(r));
+
+// ── LIVE MR DOTS ──
+const mrData = [
+  { name: 'Priya S.', status: 'In Meeting', type: 'meeting', x: 30, y: 40 },
+  { name: 'Rajan K.', status: 'In Transit', type: 'transit', x: 55, y: 30 },
+  { name: 'Meera T.', status: 'Available',  type: 'active',  x: 75, y: 55 },
+  { name: 'Arun B.',  status: 'In Meeting', type: 'meeting', x: 20, y: 65 },
+  { name: 'Divya M.', status: 'In Transit', type: 'transit', x: 65, y: 72 },
+  { name: 'Sanjay R.',status: 'In Meeting', type: 'meeting', x: 45, y: 58 },
+  { name: 'Kavya L.', status: 'Available',  type: 'active',  x: 85, y: 30 },
+];
+
+const map = document.getElementById('live-map');
+if (map) {
+  mrData.forEach(mr => {
+    const dot = document.createElement('div');
+    dot.className = `mr-dot ${mr.type}`;
+    dot.style.cssText = `left:${mr.x}%;top:${mr.y}%;`;
+    const tip = document.createElement('div');
+    tip.className = 'mr-tooltip';
+    tip.innerHTML = `<div class="mr-name">${mr.name}</div><div class="mr-status">${mr.status}</div>`;
+    tip.style.display = 'none';
+    dot.appendChild(tip);
+    dot.addEventListener('mouseenter', () => tip.style.display = 'block');
+    dot.addEventListener('mouseleave', () => tip.style.display = 'none');
+    map.appendChild(dot);
+  });
+}
+
+// ── LIVE COUNTER ANIMATION ──
+function animateCount(el, target, suffix) {
+  let start = 0;
+  const dur = 1800;
+  const step = (ts) => {
+    if (!start) start = ts;
+    const prog = Math.min((ts - start) / dur, 1);
+    const val = Math.floor(prog * target);
+    el.textContent = val + suffix;
+    if (prog < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+
+const countersObserver = new IntersectionObserver((entries) => {
+  if (entries[0].isIntersecting) {
+    setTimeout(() => animateCount(document.getElementById('active-mrs'), 23, ''), 0);
+    setTimeout(() => animateCount(document.getElementById('visits-today'), 148, ''), 200);
+    setTimeout(() => animateCount(document.getElementById('coverage-pct'), 87, '%'), 400);
+    setTimeout(() => animateCount(document.getElementById('alerts-count'), 3, ''), 600);
+    countersObserver.disconnect();
+  }
+}, { threshold: 0.3 });
+
+const liveSection = document.getElementById('live-tracking');
+if (liveSection) countersObserver.observe(liveSection);
+
+// ── FEATURE MODAL DATA ──
+const featData = {
+  1: {
+    title: 'Territory Gap Analysis',
+    lead: 'Prevents silent churn by making doctor neglect visible before it costs you prescriptions. ZenX continuously analyzes visit patterns and flags under-served doctors and territory gaps — giving managers an objective, real-time view of field coverage.',
+    bullets: [
+      'Highlights doctors not visited within their recommended frequency window',
+      'Scores each doctor by gap severity and revenue risk',
+      'Suggests high-value targets to re-engage with prioritized actions',
+      'Gives managers a live territory heatmap without manual reporting',
+      'Enables fair workload distribution across team members'
+    ],
+    metrics: [
+      { label: 'Detection Speed', value: 'Real-time vs. Monthly' },
+      { label: 'Churn Prevention', value: 'Early gap alerts' },
+      { label: 'Coverage Visibility', value: '100% of territory' }
+    ]
+  },
+  2: {
+    title: 'Manager Insights — Natural Language Analytics',
+    lead: 'Ask any performance question in plain English and receive a clear, data-backed answer with suggested actions — in seconds. No SQL, no BI tickets, no waiting days for a report.',
+    bullets: [
+      'Natural language query interface — type your question, get the answer',
+      'Surfaces team performance trends, outliers, and ranking automatically',
+      'Suggests next best coaching actions based on data patterns',
+      'Replaces ad-hoc report requests to BI and analytics teams',
+      'Exportable summaries for leadership reviews and QBRs'
+    ],
+    metrics: [
+      { label: 'Report Turnaround', value: 'Days → Seconds' },
+      { label: 'BI Dependency', value: 'Eliminated for ad-hoc' },
+      { label: 'Decision Speed', value: 'Proactive, not reactive' }
+    ]
+  },
+  3: {
+    title: 'Product Signals',
+    lead: 'An early-warning system for product performance — ZenX surfaces product-level trends from field activity weeks before monthly reports catch up, letting you act while there\'s still time.',
+    bullets: [
+      'Tracks which products are gaining traction, stalling, or slipping per territory',
+      'Monitors sample effectiveness and links to adoption outcomes',
+      'Flags lagging products before they show up in sales reports',
+      'Supports launch monitoring and promotional campaign tracking',
+      'Integrates field observation data with prescription signal inputs'
+    ],
+    metrics: [
+      { label: 'Signal Lead Time', value: '2–4 weeks earlier' },
+      { label: 'Sample Waste', value: 'Reduced by reallocation' },
+      { label: 'Launch Monitoring', value: 'Near real-time' }
+    ]
+  },
+  4: {
+    title: 'Clinical Assistant Chatbot',
+    lead: 'A knowledge-grounded AI assistant that gives MRs instant, accurate answers to clinical and product questions — sourced directly from uploaded documents, with a citation for every response.',
+    bullets: [
+      'Answers drug interactions, dosing, contraindications, and product specs',
+      'Grounded in uploaded product monographs and reference materials — not the open internet',
+      'Every answer includes source citation for auditability',
+      'Supports multi-turn follow-up questions in context',
+      'Available 24/7 — no more waiting for Medical Affairs callbacks'
+    ],
+    metrics: [
+      { label: 'Medical Info Queries', value: '~90% reduction' },
+      { label: 'Response Time', value: 'Hours → Seconds' },
+      { label: 'Accuracy', value: 'Source-grounded & cited' }
+    ]
+  },
+  5: {
+    title: 'Adverse Event Detection',
+    lead: 'ZenX automatically scans every visit note for potential adverse event signals — replacing sampled reviews with full coverage and providing a structured workflow for medical teams to review, confirm, and report.',
+    bullets: [
+      'NLP-based scanning of all visit notes for AE language patterns',
+      'Moves from 10–20% sampled review to 100% automated coverage',
+      'Flags events with severity scoring for prioritized medical review',
+      'Provides a structured review and confirmation workflow',
+      'Maintains a complete audit trail from detection to submission'
+    ],
+    metrics: [
+      { label: 'Detection Coverage', value: '10% → 100%' },
+      { label: 'Time to Flag', value: 'Real-time on submission' },
+      { label: 'Regulatory Risk', value: 'Significantly reduced' }
+    ]
+  },
+  6: {
+    title: 'Competitor Intelligence',
+    lead: 'Dual-validated competitive signals from both field feedback and prescription audit data — giving you earlier, more accurate insight into where competitors are winning and why.',
+    bullets: [
+      'Combines qualitative field notes with quantitative prescription data',
+      'Identifies territory-level competitor encroachment patterns',
+      'Surfaces winning arguments and objections used by competitors',
+      'Feeds directly into targeted training and counter-strategy planning',
+      'Enables pricing, sampling, and promotional responses weeks faster'
+    ],
+    metrics: [
+      { label: 'Signal Detection', value: '2–4 weeks faster' },
+      { label: 'Validation Sources', value: 'Field + Prescription (dual)' },
+      { label: 'Strategy Response', value: 'Territory-level precision' }
+    ]
+  },
+  7: {
+    title: 'Live MR Route Optimization',
+    lead: 'AI-powered daily route planning that minimizes travel time, maximizes high-priority visit count, and dynamically re-routes around cancellations — all before the MR leaves the office.',
+    bullets: [
+      'Ranks daily visits by priority score and geographic proximity',
+      'Optimizes driving sequences to cut transit time between calls',
+      'Dynamically adjusts when doctors cancel or reschedule',
+      'Integrates with Next Best Action to align route with visit priority',
+      'Logs routes automatically for mileage and compliance reporting'
+    ],
+    metrics: [
+      { label: 'More Visits/Day', value: 'Up to 25%' },
+      { label: 'Route Planning Time', value: 'Instant' },
+      { label: 'Mileage Reporting', value: 'Auto-logged' }
+    ]
+  },
+  8: {
+    title: 'Sample & Resource Allocator',
+    lead: 'Recommends optimal sample quantities by doctor, product, and territory — ensuring samples go where they\'ll drive the most prescriptions, not just where they\'re most comfortable to leave.',
+    bullets: [
+      'Analyzes sample-to-prescription conversion rates by doctor and product',
+      'Recommends per-visit sample quantities based on historical impact',
+      'Flags over-sampled doctors with low conversion likelihood',
+      'Surfaces under-sampled high-potential doctors for reallocation',
+      'Tracks sample inventory and alerts on low stock before field visits'
+    ],
+    metrics: [
+      { label: 'Sample ROI', value: 'Improved per territory' },
+      { label: 'Waste Reduction', value: 'Targeted reallocation' },
+      { label: 'Coverage', value: 'Doctor-level granularity' }
+    ]
+  },
+  9: {
+    title: 'Compliance & Audit Trail',
+    lead: 'Every AI-generated answer, adverse event flag, visit record, and manager insight carries a complete, tamper-evident audit trail — ensuring your field operations are regulatory-ready at all times.',
+    bullets: [
+      'Logs every AI interaction with source reference, timestamp, and user',
+      'Maintains an immutable record of AE flags from detection to submission',
+      'Tracks all changes to visit records with version history',
+      'Supports regulatory audits with exportable compliance reports',
+      'Role-based access controls ensure data governance standards are met'
+    ],
+    metrics: [
+      { label: 'Audit Readiness', value: 'Always on, real-time' },
+      { label: 'Compliance Coverage', value: '100% of AI interactions' },
+      { label: 'Audit Export', value: 'One-click reports' }
+    ]
+  }
+};
+
+// ── MODAL LOGIC ──
+const modal = document.getElementById('feat-modal');
+const modalClose = document.getElementById('feat-modal-close');
+const modalBackdrop = modal.querySelector('.feat-modal-backdrop');
+
+function openModal(id) {
+  const d = featData[id];
+  if (!d) return;
+  document.getElementById('modal-num').textContent = `FEATURE ${String(id).padStart(2,'0')}`;
+  document.getElementById('modal-title').textContent = d.title;
+  document.getElementById('modal-lead').textContent = d.lead;
+  const list = document.getElementById('modal-list');
+  list.innerHTML = d.bullets.map(b => `<li>${b}</li>`).join('');
+  const metrics = document.getElementById('modal-metrics');
+  metrics.innerHTML = d.metrics.map(m => `
+    <div class="modal-metric-row">
+      <div class="modal-metric-label">${m.label}</div>
+      <div class="modal-metric-value">${m.value}</div>
+    </div>`).join('');
+  // reset bar
+  const bar = document.getElementById('modal-bar');
+  bar.style.width = '0';
+  modal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  requestAnimationFrame(() => { bar.style.width = '100%'; });
+}
+
+function closeModal() {
+  modal.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+document.querySelectorAll('.feat-card[data-id]').forEach(card => {
+  card.addEventListener('click', () => openModal(+card.dataset.id));
+});
+
+modalClose.addEventListener('click', closeModal);
+modalBackdrop.addEventListener('click', closeModal);
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+// ── FLIP CARD — touch support ──
+document.querySelectorAll('.flip-card').forEach(card => {
+  card.addEventListener('click', () => card.classList.toggle('flipped'));
+});
+</script>
+</body>
+</html>

@@ -11,6 +11,7 @@ export default defineConfig({
       'Expires': '0',
     },
   },
+  appType: 'spa',
   build: {
     outDir: 'dist',
     rollupOptions: {

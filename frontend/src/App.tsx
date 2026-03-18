@@ -42,7 +42,10 @@ function AppContent() {
   const [splashComplete, setSplashComplete] = useState(false)
 
   const getPageFromURL = (): Page => {
-    const path = window.location.pathname.replace(/^\//, '').replace(/\/$/, '')
+    let path = window.location.pathname.replace(/^\//, '').replace(/\/$/, '')
+    // Support /app prefix: /app/clients → clients, /app → home
+    if (path.startsWith('app/')) path = path.slice(4)
+    else if (path === 'app') path = ''
     if (path && ALL_PAGES.includes(path)) return path as Page
     return 'home'
   }
@@ -67,9 +70,9 @@ function AppContent() {
     } catch { return '+91 98765 43210' }
   })()
 
-  // Sync URL with current page
+  // Sync URL with current page — app lives under /app
   useEffect(() => {
-    const urlPath = currentPage === 'home' ? '/' : `/${currentPage}`
+    const urlPath = currentPage === 'home' ? '/app' : `/app/${currentPage}`
     if (window.location.pathname !== urlPath) {
       window.history.pushState({ page: currentPage }, '', urlPath)
     }
@@ -209,6 +212,12 @@ function AppContent() {
 }
 
 function App() {
+  // Redirect bare "/" to landing page (served as static HTML)
+  if (window.location.pathname === '/' || window.location.pathname === '') {
+    window.location.replace('/landing.html')
+    return null
+  }
+
   return (
     <AuthProvider>
       <AppContent />
