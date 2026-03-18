@@ -6,140 +6,215 @@
   box-sizing: border-box;
 }
 
-.reports-row {
+.dashboard-reports-container .reports-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 24px;
-  margin-bottom: 24px;
+  grid-template-columns: repeat(2, 1fr) !important;
+  grid-template-rows: auto auto;
+  gap: 20px;
   width: 100%;
-  max-width: 100%;
   box-sizing: border-box;
 }
 
 .report-card {
   background: #ffffff;
   border-radius: 12px;
-  padding: 24px;
+  padding: 20px;
   box-shadow: var(--shadow-md);
   border: 1px solid var(--border-color);
-  width: 100%;
-  max-width: 100%;
   box-sizing: border-box;
   overflow: hidden;
 }
 
-.chart-wrapper {
-  position: relative;
-  width: 100%;
-  max-width: 100%;
-  height: 300px;
-  overflow: hidden;
-  box-sizing: border-box;
-}
-
-.chart-wrapper canvas {
-  max-width: 100% !important;
-  height: auto !important;
-}
-
-
-.table-card {
-  width: 100%;
-}
-
-.table-title {
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin: 0 0 16px 0;
-}
-
-.table-wrapper {
-  overflow-x: auto;
-  max-height: 400px;
-  overflow-y: auto;
-}
-
-.cpc-table {
-  width: 100%;
-  border-collapse: collapse;
+.widget-title {
   font-size: 14px;
-}
-
-.cpc-table thead {
-  background: #E8F5E9;
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
-
-.cpc-table th {
-  padding: 12px;
-  text-align: left;
   font-weight: 600;
-  color: #66BB6A;
-  border-bottom: 2px solid var(--border-color);
-  white-space: nowrap;
+  color: var(--text-secondary);
+  margin: 0 0 16px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
-.cpc-table td {
-  padding: 12px;
-  border-bottom: 1px solid var(--border-color);
+/* ── KPI Card (This Month's Calls) ── */
+.kpi-card .kpi-row {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.kpi-number {
+  font-size: 48px;
+  font-weight: 700;
+  color: #1B5E20;
+  line-height: 1;
+}
+
+.kpi-trend {
+  display: flex;
+  flex-direction: column;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.kpi-trend.trend-up {
+  color: #2E7D32;
+}
+
+.kpi-trend.trend-down {
+  color: #E53935;
+}
+
+.trend-label {
+  font-size: 11px;
+  font-weight: 400;
   color: var(--text-secondary);
 }
 
-.cpc-table tbody tr:hover {
+.mini-chart-wrapper {
+  height: 80px;
+  width: 100%;
+}
+
+/* ── Chart Wrapper ── */
+.chart-wrapper {
+  position: relative;
+  width: 100%;
+  height: 260px;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+/* ── Actions Card ── */
+.actions-stats {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 16px;
+}
+
+.action-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  padding: 16px 12px;
+  border-radius: 10px;
   background: var(--bg-tertiary);
 }
 
-/* Responsive adjustments */
-@media (max-width: 1200px) {
-  .reports-row {
-    gap: 20px;
-  }
-  .report-card {
-    padding: 20px;
-  }
-  .chart-wrapper {
-    height: 280px;
-  }
+.action-count {
+  font-size: 36px;
+  font-weight: 700;
+  line-height: 1;
 }
 
-@media (max-width: 1024px) {
-  .reports-row {
-    gap: 16px;
-  }
-  .report-card {
-    padding: 18px;
-  }
-  .chart-wrapper {
-    height: 250px;
-  }
+.action-count.pending {
+  color: #1B5E20;
 }
 
+.action-count.overdue {
+  color: #E53935;
+}
+
+.action-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+  font-weight: 500;
+}
+
+.next-due {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px;
+  border-radius: 8px;
+  background: #FFF8E1;
+  border-left: 3px solid #FF9800;
+}
+
+.next-due-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #E65100;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.next-due-task {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.next-due-meta {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+/* ── Empty State ── */
+.empty-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 120px;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+/* ── Loading Skeleton ── */
+.skeleton-card {
+  min-height: 200px;
+}
+
+.skeleton-bar {
+  height: 16px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 4px;
+  margin-bottom: 12px;
+  width: 60%;
+}
+
+.skeleton-bar.short {
+  width: 40%;
+}
+
+.skeleton-block {
+  height: 140px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 8px;
+  margin-top: 8px;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ── Responsive ── */
 @media (max-width: 768px) {
   .dashboard-reports-container {
     margin-top: 24px;
     padding: 0 8px;
   }
-  .reports-row {
-    grid-template-columns: 1fr;
+  .dashboard-reports-container .reports-grid {
+    grid-template-columns: 1fr !important;
     gap: 16px;
   }
   .report-card {
     padding: 16px;
-    min-width: 0;
+  }
+  .kpi-number {
+    font-size: 40px;
   }
   .chart-wrapper {
-    height: 250px;
-    min-width: 0;
+    height: 220px;
   }
-  .cpc-table {
-    font-size: 12px;
-  }
-  .cpc-table th,
-  .cpc-table td {
-    padding: 8px;
+  .action-count {
+    font-size: 28px;
   }
 }
 
@@ -148,39 +223,16 @@
     margin-top: 20px;
     padding: 0 4px;
   }
-  .reports-row {
+  .reports-grid {
     gap: 12px;
   }
   .report-card {
-    padding: 12px;
+    padding: 14px;
   }
-  .chart-wrapper {
-    height: 220px;
-  }
-  .cpc-table {
-    font-size: 11px;
-  }
-  .cpc-table th,
-  .cpc-table td {
-    padding: 6px 4px;
-  }
-}
-
-@media (max-width: 360px) {
-  .dashboard-reports-container {
-    padding: 0 2px;
-  }
-  .report-card {
-    padding: 10px;
+  .kpi-number {
+    font-size: 36px;
   }
   .chart-wrapper {
     height: 200px;
-  }
-  .cpc-table {
-    font-size: 10px;
-  }
-  .cpc-table th,
-  .cpc-table td {
-    padding: 4px 2px;
   }
 }
