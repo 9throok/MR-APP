@@ -37,16 +37,17 @@
 - Auto-scans every DCR submission via hook in `backend/routes/dcr.js`
 - `frontend/src/components/AdverseEvents.tsx` — Pharmacovigilance dashboard
 
-### Phase 4: NBA Engine
+### Phase 4: NBA Engine & Doctor Management
 - `backend/prompts/nextBestAction.js` — Daily plan generation prompt
 - `GET /api/ai/nba/:user_id` endpoint with daily caching
-- `backend/routes/doctors.js` — Doctor profiles CRUD
+- `backend/routes/doctors.js` — Doctor profiles CRUD (MRs auto-filtered by territory)
+- `backend/routes/doctor-requests.js` — MR doctor request/approval workflow
 - `frontend/src/components/NextBestAction.tsx` — AI plan page with ranked cards
-- `frontend/src/components/DoctorManagement.tsx` — Doctor CRUD page
+- `frontend/src/components/DoctorManagement.tsx` — Role-based doctor management (MR: view + request, Manager: CRUD + approve/reject)
 
 ---
 
-## Database: 6 new tables
+## Database: 7 new tables
 
 All defined in `backend/db/migration_v2.sql`:
 
@@ -58,6 +59,7 @@ All defined in `backend/db/migration_v2.sql`:
 | `adverse_events` | Pharmacovigilance AE records |
 | `doctor_profiles` | Doctor CRM with tier/specialty |
 | `nba_recommendations` | Cached daily AI visit plans |
+| `doctor_requests` | MR doctor request/approval workflow |
 
 ---
 
@@ -105,7 +107,7 @@ cd frontend && npm install && npm run dev
 
 ---
 
-## New API Endpoints (14 total)
+## New API Endpoints (18 total)
 
 ### Auth
 | Method | Endpoint | Description |
@@ -145,10 +147,18 @@ cd frontend && npm install && npm run dev
 ### Doctor Profiles
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/api/doctors?tier=A&territory=X` | List doctors |
+| GET | `/api/doctors?tier=A&territory=X` | List doctors (MRs auto-filtered by territory) |
 | POST | `/api/doctors` | Create doctor (manager/admin) |
 | PATCH | `/api/doctors/:id` | Update doctor (manager/admin) |
 | DELETE | `/api/doctors/:id` | Delete doctor (admin) |
+
+### Doctor Requests (MR → Manager Approval)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/doctor-requests` | List requests (MRs see own, managers see all) |
+| GET | `/api/doctor-requests/stats` | Pending request count (manager/admin) |
+| POST | `/api/doctor-requests` | Submit new doctor request (MR) |
+| PATCH | `/api/doctor-requests/:id/review` | Approve/reject request (manager/admin) |
 
 ---
 

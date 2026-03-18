@@ -8,7 +8,7 @@
 | 2 | Home Dashboard | Home.tsx | — |
 | 3 | Daily Call Report (DCR) | DCR.tsx | `POST /api/dcr` |
 | 4 | My DCRs | MyDCRs.tsx | `GET /api/dcr` |
-| 5 | Clients | Clients.tsx | — |
+| 5 | Clients | Clients.tsx | `GET /api/doctors` (fetches territory-filtered doctors from DB) |
 | 6 | Doctor 360 | Doctor360.tsx | — |
 | 7 | Today's Plan | TodaysPlan.tsx | — |
 | 8 | Tour Plans | TourPlans.tsx | — |
@@ -25,14 +25,14 @@
 | 19 | MR List (Manager) | MRList.tsx | — |
 | 20 | MR Detail (Manager) | MRDetail.tsx | — |
 | 21 | Offline Requests | OfflineRequests.tsx | — |
-| 22 | Doctor Management | DoctorManagement.tsx | `CRUD /api/doctors` |
+| 22 | Doctor Management | DoctorManagement.tsx | `CRUD /api/doctors`, `CRUD /api/doctor-requests` |
 | 23 | Follow-up Tasks | FollowUpTasks.tsx | `GET/PATCH /api/tasks` |
 | 24 | Knowledge Base Upload | KnowledgeUpload.tsx | `POST/GET/DELETE /api/knowledge` |
 | 25 | Speech Recording | SpeechRecorder.tsx | — (browser API) |
 
 ---
 
-## AI Features (8 total)
+## AI Features (9 total)
 
 ### V1 AI Features (Original)
 
@@ -106,7 +106,7 @@ Generates a prioritized daily visit plan for each MR. Considers doctor profiles,
 
 ---
 
-## Database Tables (12 total)
+## Database Tables (14 total)
 
 | Table | Purpose |
 |-------|---------|
@@ -122,3 +122,5 @@ Generates a prioritized daily visit plan for each MR. Considers doctor profiles,
 | `rcpa` | Retail chemist prescription audit data |
 | `chat_sessions` | Conversation sessions per user |
 | `chat_messages` | Chat message history (user + assistant turns) |
+| `pharmacy_profiles` | Pharmacy details with tier and territory |
+| `doctor_requests` | MR doctor request/approval workflow |

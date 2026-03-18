@@ -85,12 +85,22 @@ docker exec -i zenapp-postgres psql -U postgres -d zenapp < db/migration_v3_rag.
 # computes Gemini embeddings, and populates the knowledge_chunks table.
 # Requires GEMINI_API_KEY to be set in .env for embeddings.
 docker exec zenapp-backend-local node scripts/rechunk.js
+
+# Step 11: V4 migration — pharmacy_profiles table (for NBA visit recommendations)
+docker exec -i zenapp-postgres psql -U postgres -d zenapp < db/migration_v4_pharmacies.sql
+
+# Step 12: Seed pharmacy profiles
+docker exec -i zenapp-postgres psql -U postgres -d zenapp < db/seed_pharmacies.sql
+
+# Step 13: V6 migration — doctor_requests table (MR doctor request/approval workflow)
+docker exec -i zenapp-postgres psql -U postgres -d zenapp < db/migration_v5_doctor_requests.sql
 ```
 
 This creates:
 - **9 products** (Derise 10/20/50mg, Rilast Tablet/Capsule/Syrup, Bevaas 5/10/20mg)
 - **5 users** — 3 MRs (`mr_rahul_001`, `mr_priya_002`, `mr_robert_003`), 1 manager (`mgr_vikram_001`), 1 admin (`admin_001`)
-- **13 doctor profiles** across Mumbai North, Mumbai South, and Delhi NCR territories
+- **14 doctor profiles** across Mumbai North, Mumbai South, and Delhi NCR territories
+- **10 pharmacy profiles** across Mumbai North, Mumbai South, and Delhi NCR territories
 - **43 DCR records** spanning ~48 days with competitor mentions in call summaries
 - **Follow-up tasks** (pending + overdue) for post-call automation
 - **Adverse event records** for pharmacovigilance demo
@@ -155,10 +165,18 @@ To run a single test:
 ### Doctors
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/api/doctors` | List doctor profiles (optional `?territory=` filter) |
+| GET | `/api/doctors` | List doctor profiles (MRs auto-filtered by territory; optional `?territory=`, `?tier=` filters) |
 | POST | `/api/doctors` | Create doctor profile (manager/admin only) |
 | PATCH | `/api/doctors/:id` | Update doctor profile (manager/admin only) |
 | DELETE | `/api/doctors/:id` | Delete doctor profile (admin only) |
+
+### Doctor Requests (MR → Manager Approval)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/doctor-requests` | List requests (MRs see own, managers see all) |
+| GET | `/api/doctor-requests/stats` | Pending request count (manager/admin) |
+| POST | `/api/doctor-requests` | Submit new doctor request (MR) |
+| PATCH | `/api/doctor-requests/:id/review` | Approve/reject request (manager/admin) |
 
 ### Tasks (Follow-up)
 | Method | Endpoint | Description |
@@ -240,7 +258,8 @@ backend/
 │   ├── tasks.js                # Follow-up task management
 │   ├── knowledge.js            # Knowledge base upload, chat (RAG)
 │   ├── adverse-events.js       # Pharmacovigilance dashboard
-│   └── rcpa.js                 # RCPA prescription audit
+│   ├── rcpa.js                 # RCPA prescription audit
+│   └── doctor-requests.js      # MR doctor request/approval workflow
 ├── prompts/
 │   ├── preCallBriefing.js      # Pre-call briefing prompt
 │   ├── territoryGap.js         # Territory gap analysis prompt
@@ -271,12 +290,15 @@ backend/
 │   ├── dummy_data.sql          # Products + 43 DCR records
 │   ├── migration_v2.sql        # V2 — users, tasks, knowledge, adverse_events, doctors, nba
 │   ├── seed_users.sql          # 5 users (3 MRs, 1 manager, 1 admin)
-│   ├── seed_doctors.sql        # 13 doctor profiles
+│   ├── seed_doctors.sql        # 14 doctor profiles (TRUNCATEs first)
 │   ├── seed_knowledge.sql      # Drug knowledge base (prescribing info, trials, FAQs, safety)
 │   ├── seed_demo_data.sql      # Follow-up tasks + adverse events demo data
 │   ├── migration_v3.sql        # V3 — RCPA table
 │   ├── rcpa_dummy_data.sql     # 30 RCPA competitor prescription entries
 │   ├── migration_v3_rag.sql    # V4 — knowledge_chunks (pgvector), chat_sessions, chat_messages
+│   ├── migration_v4_pharmacies.sql # V5 — pharmacy_profiles table
+│   ├── migration_v5_doctor_requests.sql # V6 — doctor_requests table
+│   ├── seed_pharmacies.sql     # 10 pharmacy profiles across 3 territories
 │   └── seed.sql                # Legacy seed (products + DCRs, same as dummy_data.sql)
 ├── scripts/
 │   └── rechunk.js              # One-time script: chunk + embed existing knowledge base
@@ -303,6 +325,8 @@ backend/
 | `knowledge_chunks` | migration_v3_rag.sql | Chunked knowledge with embeddings (pgvector) and medicine tags |
 | `chat_sessions` | migration_v3_rag.sql | Conversation sessions per user |
 | `chat_messages` | migration_v3_rag.sql | Chat message history (user + assistant turns) |
+| `pharmacy_profiles` | migration_v4_pharmacies.sql | Pharmacy details, tier, territory (for NBA visit plans) |
+| `doctor_requests` | migration_v5_doctor_requests.sql | MR doctor request/approval workflow |
 
 ## Exposing for Frontend (ngrok)
 

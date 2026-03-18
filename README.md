@@ -38,7 +38,7 @@ zenapp-backend/
 │   ├── middleware/                # JWT auth & role-based access control
 │   ├── db/                       # Schema, migrations (v2, v3), seed data
 │   ├── prompts/                  # 9 LLM prompt templates
-│   ├── routes/                   # API routes (auth, DCR, AI, products, doctors, tasks, knowledge, adverse-events, RCPA)
+│   ├── routes/                   # API routes (auth, DCR, AI, products, doctors, doctor-requests, tasks, knowledge, adverse-events, RCPA)
 │   ├── services/                 # AE detection, knowledge search (hybrid FTS+vector), chunker, embeddings, chat memory, query rewriter, query preprocessor, multi-LLM provider factory
 │   ├── scripts/                  # One-time migration scripts (rechunk.js)
 │   ├── server.js                 # Entry point
@@ -82,6 +82,13 @@ docker exec -i zenapp-postgres psql -U postgres -d zenapp < db/migration_v3_rag.
 
 # Chunk + embed existing knowledge base documents
 docker exec zenapp-backend-local node scripts/rechunk.js
+
+# V5 — pharmacy_profiles table (for NBA visit recommendations)
+docker exec -i zenapp-postgres psql -U postgres -d zenapp < db/migration_v4_pharmacies.sql
+docker exec -i zenapp-postgres psql -U postgres -d zenapp < db/seed_pharmacies.sql
+
+# V6 — doctor_requests table (MR doctor request/approval workflow)
+docker exec -i zenapp-postgres psql -U postgres -d zenapp < db/migration_v5_doctor_requests.sql
 ```
 
 > **Note:** The RAG migration (`migration_v3_rag.sql`) requires the pgvector PostgreSQL extension. The default `postgres:16` Docker image does not include it. If pgvector is not available, the system will fall back to FTS-only search (no semantic/vector search). To enable pgvector, use `pgvector/pgvector:pg16` as your Docker image instead.
