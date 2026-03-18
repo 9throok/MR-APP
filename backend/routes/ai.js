@@ -26,7 +26,12 @@ router.post('/precall-briefing', async (req, res) => {
       return res.status(400).json({ error: 'user_id and doctor_name are required' });
     }
 
-    const { rows: dcrHistory } = await db.query(
+    // Extract last name for fuzzy matching — DCR stores short names like "Dr. Kapoor"
+    // but NBA may generate full names like "Dr. Rajesh Kapoor"
+    const nameParts = doctor_name.trim().split(/\s+/);
+    const lastName = nameParts[nameParts.length - 1];
+    // Try exact match first, then fall back to last-name match
+    let { rows: dcrHistory } = await db.query(
       `SELECT date, visit_time, product, samples, call_summary, doctor_feedback, edetailing
        FROM dcr
        WHERE user_id = $1
@@ -35,6 +40,17 @@ router.post('/precall-briefing', async (req, res) => {
        LIMIT 10`,
       [user_id, doctor_name]
     );
+    if (dcrHistory.length === 0 && nameParts.length > 1) {
+      ({ rows: dcrHistory } = await db.query(
+        `SELECT date, visit_time, product, samples, call_summary, doctor_feedback, edetailing
+         FROM dcr
+         WHERE user_id = $1
+           AND name ILIKE $2
+         ORDER BY date DESC
+         LIMIT 10`,
+        [user_id, `%${lastName}%`]
+      ));
+    }
 
     const llm = getLLMService();
     const messages = buildPreCallBriefingMessages(doctor_name, dcrHistory);
@@ -49,6 +65,103 @@ router.post('/precall-briefing', async (req, res) => {
 
   } catch (err) {
     console.error('[AI] precall-briefing error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// POST /api/ai/pharmacy-briefing
+//
+// Body: { user_id, pharmacy_name }
+//
+// Fetches RCPA data for this pharmacy and generates a pre-visit briefing.
+// ─────────────────────────────────────────────────────────────────────────────
+router.post('/pharmacy-briefing', async (req, res) => {
+  try {
+    const { user_id, pharmacy_name } = req.body;
+    if (!user_id || !pharmacy_name) {
+      return res.status(400).json({ error: 'user_id and pharmacy_name are required' });
+    }
+
+    // Fuzzy match pharmacy name
+    const nameParts = pharmacy_name.trim().split(/\s+/);
+    const keyword = nameParts[0]; // e.g. "CVS", "Walgreens", "Rite"
+
+    const { rows: rcpaHistory } = await db.query(
+      `SELECT pharmacy, doctor_name, our_brand, our_value, competitor_brand, competitor_company, competitor_value, date
+       FROM rcpa
+       WHERE user_id = $1
+         AND pharmacy ILIKE $2
+       ORDER BY date DESC
+       LIMIT 20`,
+      [user_id, `%${keyword}%`]
+    );
+
+    // Get pharmacy profile if available
+    let pharmacyProfile = null;
+    try {
+      const { rows } = await db.query(
+        'SELECT * FROM pharmacy_profiles WHERE name ILIKE $1 LIMIT 1',
+        [`%${keyword}%`]
+      );
+      if (rows.length > 0) pharmacyProfile = rows[0];
+    } catch { /* table may not exist */ }
+
+    const profileText = pharmacyProfile
+      ? `Pharmacy Profile: ${pharmacyProfile.name} | Type: ${pharmacyProfile.type} | Tier: ${pharmacyProfile.tier} | Territory: ${pharmacyProfile.territory} | Contact: ${pharmacyProfile.contact_person || 'N/A'} | Preferred visit day: ${pharmacyProfile.preferred_visit_day || 'Any'}`
+      : 'No pharmacy profile available.';
+
+    const rcpaText = rcpaHistory.length === 0
+      ? 'No RCPA audit history for this pharmacy.'
+      : rcpaHistory.map((r, i) => {
+          return `Audit ${i + 1} — Date: ${r.date}\n  Doctor: ${r.doctor_name || 'N/A'}\n  Our Brand: ${r.our_brand} (₹${r.our_value})\n  Competitor: ${r.competitor_brand} by ${r.competitor_company || 'N/A'} (₹${r.competitor_value})`;
+        }).join('\n\n');
+
+    const llm = getLLMService();
+    const messages = [
+      {
+        role: 'system',
+        content: `You are an expert pharmaceutical sales coach. Your job is to prepare Medical Representatives (MRs) for pharmacy visits.
+Analyse the RCPA audit history and pharmacy profile to generate a concise pre-visit briefing.
+Always respond with valid JSON only — no markdown, no explanation outside JSON.`
+      },
+      {
+        role: 'user',
+        content: `Prepare a pre-visit briefing for an upcoming visit to ${pharmacy_name}.
+
+${profileText}
+
+RCPA AUDIT HISTORY (most recent first):
+${rcpaText}
+
+Return a JSON object with this exact structure:
+{
+  "summary": "2-3 sentence overview of relationship and prescription trends at this pharmacy",
+  "lastVisit": "One sentence on what the last audit revealed",
+  "pendingItems": ["item1", "item2"],
+  "talkingPoints": ["point1", "point2", "point3"],
+  "watchOut": ["concern1", "concern2"]
+}
+
+Rules:
+- summary: highlight our brand performance vs competitors at this pharmacy
+- lastVisit: mention date, key findings from the most recent RCPA audit
+- pendingItems: stock issues, order follow-ups, or prescription gaps to address
+- talkingPoints: 2-4 specific discussion items (RCPA trends, competitor shelf presence, order placement, new product introduction)
+- watchOut: competitor dominance areas, pricing concerns, or stock-out risks
+- Keep each item to 1-2 sentences max`
+      }
+    ];
+    const briefing = await llm.chat(messages, { requireJson: true });
+
+    res.status(200).json({
+      success: true,
+      pharmacy: pharmacy_name,
+      auditsAnalysed: rcpaHistory.length,
+      briefing,
+    });
+  } catch (err) {
+    console.error('[AI] pharmacy-briefing error:', err.message);
     res.status(500).json({ error: err.message });
   }
 });
@@ -303,6 +416,7 @@ function normalizeNBAResult(result) {
       recommendations: planArray.map((item, i) => ({
         rank: item.rank || i + 1,
         doctor: item.doctor || item.doctor_name || item.name || 'Unknown',
+        type: item.type || 'doctor',
         specialty: item.specialty || '',
         tier: item.tier || '',
         priority: (item.priority || 'medium').toLowerCase(),
@@ -327,57 +441,77 @@ function getStaticNBA(userId) {
   const plans = {
     mr_robert_003: {
       recommendations: [
-        { rank: 1, doctor: 'Dr. Rao', specialty: 'Dermatologist', tier: 'A', priority: 'high',
+        { rank: 1, doctor: 'Dr. Pooja Singh', type: 'doctor', specialty: 'Endocrinology', tier: 'A', priority: 'high',
           reason: `Pending task due tomorrow: Follow up on Bevaas 20mg combination therapy results. Last visited 7 days ago — needs urgent attention.`,
           talking_points: ['Bevaas 20mg combination therapy outcomes', 'Review syncope case from previous visit', 'Discuss step-down protocol for stabilized patients'],
           products_to_detail: ['Bevaas 20mg', 'Bevaas 10mg'],
           pending_tasks: ['Follow up on Bevaas 20mg combination therapy results'],
           best_time: '9:30 AM' },
-        { rank: 2, doctor: 'Dr. Reddy', specialty: 'General Medicine', tier: 'A', priority: 'high',
+        { rank: 2, doctor: 'Dr. Neha Sharma', type: 'doctor', specialty: 'Neurology', tier: 'B', priority: 'high',
           reason: 'Doctor showed strong interest in Derise 10mg non-sedating profile. Pending task: Share clinical trial brochure. Potential to convert 5 patients from cetirizine.',
           talking_points: ['Derise 10mg ARIA trial data — 38% TSS reduction', 'Drowsiness rate: 0.7% vs cetirizine 3.1%', 'Once-daily dosing compliance advantage'],
           products_to_detail: ['Derise 10mg', 'Derise 20mg'],
           pending_tasks: ['Share Derise 10mg clinical trial brochure'],
           best_time: '11:00 AM' },
-        { rank: 3, doctor: 'Dr. Kumar', specialty: 'Pulmonologist', tier: 'B', priority: 'medium',
+        { rank: 3, doctor: 'MedPlus Pharmacy', type: 'pharmacy', specialty: 'Chain Pharmacy', tier: 'A', priority: 'medium',
+          reason: 'RCPA audit due — last visit 4 days ago. Strong Derise prescription volume from Dr. Neha Sharma. Check competitor shelf presence.',
+          talking_points: ['RCPA audit for Derise and Bevaas range', 'Check Zyrtec and Allegra stock levels', 'Order status and stock availability'],
+          products_to_detail: ['Derise 10mg', 'Derise 20mg', 'Bevaas 5mg'],
+          pending_tasks: [],
+          best_time: '12:30 PM' },
+        { rank: 4, doctor: 'Dr. Suresh Kumar', type: 'doctor', specialty: 'Cardiology', tier: 'A', priority: 'medium',
           reason: 'Requested Rilast Tablet vs Capsule comparison data. Good opportunity to position sustained-release capsule for overnight asthma control.',
           talking_points: ['Rilast Tablet (immediate-release) vs Capsule (sustained-release) comparison', 'Capsule advantage for early morning wheeze', 'Rescue inhaler reduction data'],
           products_to_detail: ['Rilast Tablet', 'Rilast Capsule'],
           pending_tasks: ['Send Rilast Tablet vs Capsule comparison chart'],
           best_time: '2:00 PM' },
-        { rank: 4, doctor: 'Dr. Mehta', specialty: 'Cardiologist', tier: 'A', priority: 'medium',
-          reason: 'Key cardiologist with 15+ patients on Bevaas. Pending MSL meeting arrangement. AE report for peripheral edema case needs discussion.',
+        { rank: 5, doctor: 'Dr. Amit Gupta', type: 'doctor', specialty: 'General Medicine', tier: 'B', priority: 'medium',
+          reason: 'Key doctor with 15+ patients on Bevaas. Pending MSL meeting arrangement. AE report for peripheral edema case needs discussion.',
           talking_points: ['Bevaas 10mg BP reduction: mean 22 mmHg systolic', 'ASCOT trial: 24% CV mortality reduction', 'Edema management with ACE-I combination'],
           products_to_detail: ['Bevaas 10mg', 'Bevaas 5mg'],
           pending_tasks: ['Arrange meeting with MSL for Bevaas 20mg data'],
           best_time: '4:00 PM' },
-        { rank: 5, doctor: 'Dr. Thomas', specialty: 'Paediatrician', tier: 'B', priority: 'low',
+        { rank: 6, doctor: 'Apollo Pharmacy', type: 'pharmacy', specialty: 'Chain Pharmacy', tier: 'A', priority: 'medium',
+          reason: 'Key account for Rilast range. RCPA audit shows high Montair competitor prescriptions — opportunity to push Rilast positioning.',
+          talking_points: ['RCPA audit: Rilast vs Montair prescription volumes', 'New order placement for Rilast Capsule', 'Check Deslor competitor stock'],
+          products_to_detail: ['Rilast Tablet', 'Rilast Capsule', 'Derise 20mg'],
+          pending_tasks: [],
+          best_time: '5:00 PM' },
+        { rank: 7, doctor: 'Dr. Rakesh Mishra', type: 'doctor', specialty: 'Internal Medicine', tier: 'C', priority: 'low',
           reason: `${dayName} visit to maintain regular cadence. Parents reporting improved breathing with Rilast Syrup. Deliver pending samples.`,
           talking_points: ['Rilast Syrup paediatric dosing for 2-5 age group', 'Parent feedback on nighttime breathing improvement', 'Syrup compliance vs nebulizer advantage'],
           products_to_detail: ['Rilast Syrup'],
           pending_tasks: ['Deliver Rilast Syrup samples for paediatric ward trial'],
           best_time: '5:30 PM' },
       ],
-      territory_insight: 'Territory coverage is strong with all 5 doctors visited within the last 10 days. Priority today: close pending follow-ups with Dr. Rao (Bevaas combination results) and Dr. Reddy (Derise trial brochure). Leverage positive momentum with Dr. Kumar on Rilast capsule positioning.',
-      total_recommended: 5,
+      territory_insight: 'Territory coverage is strong with all 5 doctors visited within the last 10 days. Priority today: close pending follow-ups with Dr. Pooja Singh (Bevaas combination results) and Dr. Neha Sharma (Derise trial brochure). Include RCPA audits at MedPlus Pharmacy and Apollo Pharmacy to track competitor shelf presence.',
+      total_recommended: 7,
     },
     mr_rahul_001: {
       recommendations: [
-        { rank: 1, doctor: 'Dr. Kapoor', specialty: 'Neurologist', tier: 'A', priority: 'high',
+        { rank: 1, doctor: 'Dr. Anil Mehta', type: 'doctor', specialty: 'Cardiology', tier: 'A', priority: 'high',
           reason: 'Pending task: Share ARIA trial data. Doctor willing to trial Derise 10mg in 10 patients — high conversion opportunity.',
           talking_points: ['Derise 10mg non-sedating profile', 'ARIA trial: 38% TSS reduction', '0.7% drowsiness rate vs cetirizine 3.1%'],
           products_to_detail: ['Derise 10mg'], pending_tasks: ['Share ARIA trial data for Derise 10mg'], best_time: '10:00 AM' },
-        { rank: 2, doctor: 'Dr. Nair', specialty: 'Pulmonologist', tier: 'B', priority: 'medium',
+        { rank: 2, doctor: 'Dr. Sunita Verma', type: 'doctor', specialty: 'General Medicine', tier: 'B', priority: 'medium',
           reason: 'Pending Rilast Capsule sample delivery for chronic asthma ward. Good time to discuss sustained-release benefits.',
           talking_points: ['Rilast Capsule sustained-release formulation', 'Overnight bronchodilation advantage', 'Chronic asthma add-on therapy data'],
           products_to_detail: ['Rilast Capsule', 'Rilast Tablet'], pending_tasks: ['Deliver Rilast Capsule samples'], best_time: '12:00 PM' },
-        { rank: 3, doctor: 'Dr. Patil', specialty: 'Cardiologist', tier: 'B', priority: 'medium',
+        { rank: 3, doctor: 'CVS Pharmacy', type: 'pharmacy', specialty: 'Chain Pharmacy', tier: 'A', priority: 'medium',
+          reason: 'High footfall location. RCPA shows strong competitor presence (Zyrtec, Allegra). Audit and check Derise stock levels.',
+          talking_points: ['RCPA audit for Dr. Anil Mehta prescriptions', 'Check Derise vs Zyrtec shelf availability', 'New order placement'],
+          products_to_detail: ['Derise 10mg', 'Derise 20mg'], pending_tasks: [], best_time: '1:00 PM' },
+        { rank: 4, doctor: 'Dr. Ramesh Patil', type: 'doctor', specialty: 'Dermatology', tier: 'B', priority: 'medium',
           reason: 'Pending CME session arrangement. Doctor open to switching to Bevaas if pricing competitive.',
           talking_points: ['Bevaas 5mg for newly diagnosed hypertensives', 'ALLHAT trial equivalence data', 'Competitive pricing discussion'],
           products_to_detail: ['Bevaas 5mg', 'Bevaas 10mg'], pending_tasks: ['Arrange CME session on resistant hypertension'], best_time: '3:00 PM' },
+        { rank: 5, doctor: 'Rite Aid', type: 'pharmacy', specialty: 'Retail Pharmacy', tier: 'B', priority: 'low',
+          reason: 'Strong Bevaas sales territory. Check stock and competitor presence for Dr. Pradeep Joshi prescriptions.',
+          talking_points: ['RCPA audit for Bevaas range', 'Check Amlokind and Stamlo competitor stock', 'Order status'],
+          products_to_detail: ['Bevaas 5mg', 'Bevaas 10mg'], pending_tasks: [], best_time: '4:30 PM' },
       ],
-      territory_insight: 'Focus on converting Dr. Kapoor — highest ROI opportunity with 10 potential patient switches. Dr. Sinha has an overdue task that needs immediate attention.',
-      total_recommended: 3,
+      territory_insight: 'Focus on converting Dr. Anil Mehta — highest ROI opportunity with 10 potential patient switches. Include RCPA audits at CVS Pharmacy and Rite Aid to track competitor shelf presence.',
+      total_recommended: 5,
     },
   };
   // Default fallback for any user
@@ -413,8 +547,17 @@ router.get('/nba/:user_id', async (req, res) => {
     // Try LLM generation
     let result = null;
     try {
+      // Get the MR's territory so we only recommend their doctors/pharmacies
+      const { rows: userRows } = await db.query(
+        'SELECT territory FROM users WHERE user_id = $1', [user_id]
+      );
+      const territory = userRows[0]?.territory;
+
       const { rows: doctorProfiles } = await db.query(
-        'SELECT * FROM doctor_profiles ORDER BY tier ASC, name ASC'
+        territory
+          ? 'SELECT * FROM doctor_profiles WHERE territory = $1 ORDER BY tier ASC, name ASC'
+          : 'SELECT * FROM doctor_profiles ORDER BY tier ASC, name ASC',
+        territory ? [territory] : []
       );
       const { rows: visitHistory } = await db.query(
         `SELECT
@@ -434,9 +577,38 @@ router.get('/nba/:user_id', async (req, res) => {
         [user_id]
       );
 
+      // Fetch pharmacy profiles and visit history
+      let pharmacyProfiles = [];
+      let pharmacyVisitHistory = [];
+      try {
+        const { rows: pharmacies } = await db.query(
+          territory
+            ? 'SELECT * FROM pharmacy_profiles WHERE territory = $1 ORDER BY tier ASC, name ASC'
+            : 'SELECT * FROM pharmacy_profiles ORDER BY tier ASC, name ASC',
+          territory ? [territory] : []
+        );
+        pharmacyProfiles = pharmacies;
+
+        const { rows: pharmacyVisits } = await db.query(
+          `SELECT
+             pharmacy,
+             MAX(date)::text AS "lastVisitDate",
+             COUNT(*)::int AS "totalVisits",
+             (CURRENT_DATE - MAX(date))::int AS "daysSinceLastVisit"
+           FROM rcpa
+           WHERE user_id = $1
+           GROUP BY pharmacy
+           ORDER BY "daysSinceLastVisit" DESC NULLS LAST`,
+          [user_id]
+        );
+        pharmacyVisitHistory = pharmacyVisits;
+      } catch (pharmErr) {
+        console.log('[AI] nba: pharmacy_profiles table may not exist yet, skipping:', pharmErr.message);
+      }
+
       const dayOfWeek = new Date().toLocaleDateString('en-US', { weekday: 'long' });
       const llm = getLLMService();
-      const messages = buildNextBestActionMessages(user_id, doctorProfiles, visitHistory, pendingTasks, dayOfWeek);
+      const messages = buildNextBestActionMessages(user_id, doctorProfiles, visitHistory, pendingTasks, dayOfWeek, pharmacyProfiles, pharmacyVisitHistory);
       const llmResult = await llm.chat(messages, { requireJson: true });
       result = normalizeNBAResult(llmResult);
     } catch (llmErr) {

@@ -57,7 +57,7 @@ run_test "health" \
 run_test "dcr-create" \
   POST \
   "$BASE_URL/api/dcr" \
-  '{"user_id":"mr_rahul_001","name":"Dr. Kapoor","date":"'"$(date +%Y-%m-%d)"'","product":"Derise 10mg","samples":[{"id":1,"name":"Derise 10mg","quantity":2}],"callSummary":"Follow-up visit. Discussed allergy management progress. Dr. Kapoor reporting good patient tolerance.","doctor_feedback":"Patients showing improved compliance with once-daily dosing."}'
+  '{"user_id":"mr_rahul_001","name":"Dr. Anil Mehta","date":"'"$(date +%Y-%m-%d)"'","product":"Derise 10mg","samples":[{"id":1,"name":"Derise 10mg","quantity":2}],"callSummary":"Follow-up visit. Discussed allergy management progress. Dr. Anil Mehta reporting good patient tolerance.","doctor_feedback":"Patients showing improved compliance with once-daily dosing."}'
 
 # ── DCR: Fetch all reports ────────────────────────────────────────────────────
 run_test "dcr-list" \
@@ -65,27 +65,27 @@ run_test "dcr-list" \
   "$BASE_URL/api/dcr"
 
 # ── AI 1: Pre-call briefing ───────────────────────────────────────────────────
-# Rahul preparing to visit Dr. Kapoor (4 past visits, pending side-effect question)
+# Rahul preparing to visit Dr. Anil Mehta (4 past visits, pending side-effect question)
 run_test "precall" \
   POST \
   "$BASE_URL/api/ai/precall-briefing" \
-  '{"user_id":"mr_rahul_001","doctor_name":"Dr. Kapoor"}'
+  '{"user_id":"mr_rahul_001","doctor_name":"Dr. Anil Mehta"}'
 
 # ── AI 1b: Pre-call briefing for a cold doctor ───────────────────────────────
-# Rahul preparing to visit Dr. Nair (going cold, low engagement)
+# Rahul preparing to visit Dr. Sunita Verma (going cold, low engagement)
 run_test "precall-cold" \
   POST \
   "$BASE_URL/api/ai/precall-briefing" \
-  '{"user_id":"mr_rahul_001","doctor_name":"Dr. Nair"}'
+  '{"user_id":"mr_rahul_001","doctor_name":"Dr. Sunita Verma"}'
 
 # ── AI 2: Territory gap — Rahul ───────────────────────────────────────────────
-# Dr. Nair not visited 40 days, Dr. Sinha is new but promising
+# Dr. Sunita Verma not visited 40 days, Dr. Pradeep Joshi is new but promising
 run_test "territory-rahul" \
   GET \
   "$BASE_URL/api/ai/territory-gap/mr_rahul_001?threshold_days=30"
 
 # ── AI 2b: Territory gap — Priya ─────────────────────────────────────────────
-# Dr. Joshi cold for 50 days despite previously being high potential
+# Dr. Rajesh Kapoor cold for 50 days despite previously being high potential
 run_test "territory-priya" \
   GET \
   "$BASE_URL/api/ai/territory-gap/mr_priya_002?threshold_days=30"

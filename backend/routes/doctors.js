@@ -3,12 +3,17 @@ const router = express.Router();
 const db = require('../config/db');
 const { requireRole } = require('../middleware/auth');
 
-// GET /api/doctors — list all doctor profiles
+// GET /api/doctors — list doctor profiles (MRs see only their territory)
 router.get('/', async (req, res) => {
   try {
-    const { territory, tier } = req.query;
+    let { territory, tier } = req.query;
     const conditions = [];
     const params = [];
+
+    // MRs can only see doctors in their own territory
+    if (req.user.role === 'mr' && req.user.territory) {
+      territory = req.user.territory;
+    }
 
     if (territory) {
       params.push(territory);
