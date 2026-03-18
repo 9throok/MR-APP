@@ -40,7 +40,8 @@ function buildPreCallBriefingMessages(doctorName, dcrHistory, mrName = '') {
 
   const system = `You are an expert pharmaceutical sales coach. Your job is to prepare Medical Representatives (MRs) for their upcoming doctor visits.
 Analyse the visit history provided and return a concise, actionable pre-call briefing.
-Always respond with valid JSON only — no markdown, no explanation outside JSON.`;
+Always respond with valid JSON only — no markdown, no explanation outside JSON.
+Write in simple, everyday English — short sentences, no jargon. The reader is a field sales rep checking this 5 minutes before a visit.`;
 
   const user = `Prepare a pre-call briefing${mrLabel} for an upcoming visit to Dr. ${doctorName}.
 

@@ -49,14 +49,14 @@ class GeminiProvider extends BaseLLMProvider {
   }
 
   async chat(messages, options = {}) {
-    const { requireJson = true, temperature } = options;
+    const { requireJson = true, temperature, _maxTokensOverride } = options;
     const start = Date.now();
 
     const { systemInstruction, contents } = this._convertMessages(messages);
 
     const generationConfig = {
       temperature: temperature ?? this.config.temperature ?? 0.3,
-      maxOutputTokens: this.config.maxTokens || 1024,
+      maxOutputTokens: _maxTokensOverride || this.config.maxTokens || 1024,
     };
 
     if (requireJson) {
@@ -82,6 +82,14 @@ class GeminiProvider extends BaseLLMProvider {
       outputTokens: usageMeta?.candidatesTokenCount ?? 0,
       durationMs,
     });
+
+    // Detect truncation before attempting JSON parse
+    if (requireJson && result.response.candidates?.[0]?.finishReason === 'MAX_TOKENS') {
+      throw Object.assign(
+        new Error('Could not extract JSON from LLM response: output truncated (max_tokens reached)'),
+        { truncated: true }
+      );
+    }
 
     const content = result.response.text();
 

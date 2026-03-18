@@ -25,7 +25,8 @@ function buildTerritoryGapMessages(mrName, doctorStats, thresholdDays = 30) {
       ].join('\n')).join('\n\n');
 
   const system = `You are a pharmaceutical sales territory analyst. You identify gaps in an MR's coverage — doctors who are being neglected or are at risk of disengagement.
-Always respond with valid JSON only.`;
+Always respond with valid JSON only.
+Write in simple, everyday English — short sentences, no jargon. The reader is a field sales rep, not an analyst.`;
 
   const user = `Analyse the territory coverage for MR: ${mrName}
 
@@ -41,14 +42,14 @@ Return a JSON object with this structure:
       "name": "doctor name",
       "daysSince": 45,
       "urgency": "high|medium|low",
-      "reason": "why this matters — e.g. was a high-frequency contact, now gone cold"
+      "reason": "why this matters — e.g. you used to visit often but haven't been in a while"
     }
   ],
   "atRiskDoctors": [
     {
       "name": "doctor name",
       "daysSince": 22,
-      "concern": "approaching threshold, declining visit frequency suggests friction"
+      "concern": "getting close to overdue — visits have been dropping off"
     }
   ],
   "insight": "1-2 sentence pattern observation across the territory",

@@ -37,14 +37,14 @@ class AnthropicProvider extends BaseLLMProvider {
   }
 
   async chat(messages, options = {}) {
-    const { requireJson = true, temperature } = options;
+    const { requireJson = true, temperature, _maxTokensOverride } = options;
     const start = Date.now();
 
     const { system, messages: filteredMessages } = this._splitMessages(messages);
 
     const params = {
       model: this.config.model,
-      max_tokens: this.config.maxTokens || 1024,
+      max_tokens: _maxTokensOverride || this.config.maxTokens || 1024,
       temperature: temperature ?? this.config.temperature ?? 0.3,
       messages: filteredMessages,
     };
@@ -59,6 +59,14 @@ class AnthropicProvider extends BaseLLMProvider {
       outputTokens: response.usage?.output_tokens ?? 0,
       durationMs,
     });
+
+    // Detect truncation before attempting JSON parse
+    if (requireJson && response.stop_reason === 'max_tokens') {
+      throw Object.assign(
+        new Error('Could not extract JSON from LLM response: output truncated (max_tokens reached)'),
+        { truncated: true }
+      );
+    }
 
     const content = response.content[0].text;
 

@@ -35,6 +35,7 @@ Rules:
 3. For samples, try to match product names to the known portfolio.
 4. For follow-up tasks, estimate reasonable due dates (due_days from today).
 5. Sentiment should reflect the doctor's overall receptiveness.
+6. Use simple, everyday English in all extracted text — short sentences, no medical jargon unless quoting the MR directly.
 ${productContext}`
     },
     {

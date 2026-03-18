@@ -46,7 +46,8 @@ Analyze the following call notes and return JSON:
   "reasoning": "Brief explanation of why this was/wasn't flagged"
 }
 
-If no adverse event is detected, return: {"ae_detected": false, "events": [], "reasoning": "explanation"}`
+If no adverse event is detected, return: {"ae_detected": false, "events": [], "reasoning": "explanation"}
+Use simple, everyday English in all output text — the reader is a field rep, not a pharmacovigilance specialist.`
     },
     {
       role: 'user',

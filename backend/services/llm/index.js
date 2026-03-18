@@ -83,6 +83,8 @@ class LLMService {
 
   /**
    * Core chat method — used by all AI features.
+   * Includes automatic retry with token bump on JSON parse failures
+   * and transient API errors (429, 500, 502, 503).
    *
    * @param {Array<{role: 'system'|'user'|'assistant', content: string}>} messages
    * @param {Object} options
@@ -91,7 +93,36 @@ class LLMService {
    * @returns {Promise<Object|{text: string}>}
    */
   async chat(messages, options = {}) {
-    return this.provider.chat(messages, options);
+    const maxRetries = 2;
+    let lastError = null;
+    let tokenBump = 0;
+
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        const effectiveOptions = { ...options };
+        if (tokenBump > 0) {
+          effectiveOptions._maxTokensOverride =
+            Math.round((this.provider.config.maxTokens || 2048) * (1 + tokenBump));
+        }
+        return await this.provider.chat(messages, effectiveOptions);
+      } catch (err) {
+        lastError = err;
+        const isJsonError = err.message?.includes('Could not extract JSON') || err.truncated;
+        const status = err.status || err.statusCode || 0;
+        const isTransient = [429, 500, 502, 503].includes(status);
+
+        if (!isJsonError && !isTransient) throw err;
+        if (attempt === maxRetries) throw err;
+
+        if (isJsonError) tokenBump += 0.5;
+
+        const delay = (attempt + 1) * 1000;
+        console.log(`[LLM] Retry ${attempt + 1}/${maxRetries} after ${delay}ms ` +
+          `(${isJsonError ? `JSON parse fail, bumping tokens to ${Math.round((this.provider.config.maxTokens || 2048) * (1 + tokenBump))}` : `transient ${status}`})`);
+        await new Promise(r => setTimeout(r, delay));
+      }
+    }
+    throw lastError;
   }
 }
 
