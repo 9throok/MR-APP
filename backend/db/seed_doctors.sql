@@ -3,6 +3,8 @@
 -- Extracted from existing DCR data + additional profiles
 -- ─────────────────────────────────────────────────────────────────────────────
 
+TRUNCATE doctor_profiles RESTART IDENTITY CASCADE;
+
 INSERT INTO doctor_profiles (name, specialty, tier, territory, preferred_visit_day, hospital, notes)
 VALUES
   -- Mumbai North territory (Rahul's doctors)
@@ -10,6 +12,7 @@ VALUES
   ('Dr. Sunita Verma', 'General Medicine', 'B', 'Mumbai North', 'Wednesday', 'Nanavati Hospital', 'Interested in new formulations'),
   ('Dr. Pradeep Joshi', 'Nephrology', 'A', 'Mumbai North', 'Tuesday', 'Kokilaben Hospital', 'Key opinion leader'),
   ('Dr. Kavita Rao', 'Endocrinology', 'B', 'Mumbai North', 'Thursday', 'Hinduja Hospital', NULL),
+  ('Dr. Ramesh Patil', 'Dermatology', 'B', 'Mumbai North', 'Friday', 'Hiranandani Hospital', 'Allergy and dermatology specialist'),
 
   -- Mumbai South territory (Priya's doctors)
   ('Dr. Rajesh Kapoor', 'Neurology', 'A', 'Mumbai South', 'Tuesday', 'Breach Candy Hospital', 'Prefers clinical data'),
