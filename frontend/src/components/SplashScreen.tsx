@@ -30,10 +30,10 @@ function SplashScreen({ onComplete }: SplashScreenProps) {
     <div className={`splash-screen ${fadeOut ? 'fade-out' : ''}`}>
       <div className="splash-content">
         <div className="logo-wrapper">
-          <img src={zenracLogo} alt="ZenApp Logo" className="splash-logo" />
+          <img src={zenracLogo} alt="ZenX Global Logo" className="splash-logo" />
         </div>
         <div className="splash-text">
-          {/* <h1 className="splash-title">ZenApp</h1> */}
+          {/* <h1 className="splash-title">ZenX Global</h1> */}
           <p className="splash-subtitle">Medical Representative App</p>
         </div>
         <div className="loading-indicator">

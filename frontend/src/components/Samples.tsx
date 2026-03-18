@@ -16,7 +16,7 @@ interface InventoryItem {
 const inventoryData: InventoryItem[] = [
   {
     id: 1,
-    brand: 'ZenApp',
+    brand: 'ZenX Global',
     product: 'CardioMax 500mg',
     quantity: 150,
     batchNumber: 'ZA-2025-001',
@@ -25,7 +25,7 @@ const inventoryData: InventoryItem[] = [
   },
   {
     id: 2,
-    brand: 'ZenApp',
+    brand: 'ZenX Global',
     product: 'AntibioPro 250mg',
     quantity: 200,
     batchNumber: 'ZA-2025-002',
@@ -52,7 +52,7 @@ const inventoryData: InventoryItem[] = [
   },
   {
     id: 5,
-    brand: 'ZenApp',
+    brand: 'ZenX Global',
     product: 'PainRelief 200mg',
     quantity: 95,
     batchNumber: 'ZA-2025-003',
@@ -70,7 +70,7 @@ const inventoryData: InventoryItem[] = [
   },
   {
     id: 7,
-    brand: 'ZenApp',
+    brand: 'ZenX Global',
     product: 'PediatriCare 100mg',
     quantity: 175,
     batchNumber: 'ZA-2025-004',
@@ -88,7 +88,7 @@ const inventoryData: InventoryItem[] = [
   },
   {
     id: 9,
-    brand: 'ZenApp',
+    brand: 'ZenX Global',
     product: 'DermatoCare 250mg',
     quantity: 85,
     batchNumber: 'ZA-2025-005',

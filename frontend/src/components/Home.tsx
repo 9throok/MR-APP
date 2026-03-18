@@ -52,7 +52,7 @@ function Home({ onLogout, onNavigate, userName, userEmail, userMobile }: HomePro
         <h2 className="dashboards-heading">Dashboards</h2>
         <DashboardReports />
         {/* <div className="welcome-section">
-          <h1>Welcome to ZenApp</h1>
+          <h1>Welcome to ZenX Global</h1>
           <p>Your medical application dashboard</p>
         </div> */}
         {/* Add more content here as needed */}

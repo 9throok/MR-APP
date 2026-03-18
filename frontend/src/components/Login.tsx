@@ -37,7 +37,7 @@ function Login({ onLogin }: LoginProps) {
     <div className="login-container">
       <div className="login-card">
         <div className="logo-container">
-          <img src={zenracLogo} alt="ZenApp Logo" className="logo"/>
+          <img src={zenracLogo} alt="ZenX Global Logo" className="logo"/>
         </div>
         
         

@@ -29,7 +29,7 @@ function Header({ onLogout, onMenuClick, onNavigateHome, onNavigateOfflineReques
             </svg>
           </button>
           <button className="logo-wrapper logo-button" onClick={handleLogoClick} aria-label="Go to home">
-            <img src={zenracLogo} alt="ZenApp Logo" className="header-logo" />
+            <img src={zenracLogo} alt="ZenX Global Logo" className="header-logo" />
           </button>
         </div>
         <div className="header-right">

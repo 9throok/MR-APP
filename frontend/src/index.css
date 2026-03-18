@@ -33,10 +33,10 @@ html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 
-  /* Medical App Color Palette */
-  --primary-green: #00C853;
-  --primary-green-dark: #00B248;
-  --primary-green-light: #4CAF50;
+  /* ZenX Global Color Palette */
+  --primary-green: #1B5E20;
+  --primary-green-dark: #0D3B12;
+  --primary-green-light: #2E7D32;
   --accent-blue: #2196F3;
   --accent-purple: #9C27B0;
   --accent-orange: #FF9800;
