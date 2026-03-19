@@ -137,12 +137,6 @@ function Sidebar({ isOpen, onClose, userName, userEmail, userMobile, onNavigate,
                 </svg>
                 <span>{t('expenseClaim') || 'Expense Claim'}</span>
               </button>
-              <button onClick={() => handleNavClick('offline-requests')} className={`sidebar-item ${currentPage === 'offline-requests' ? 'sidebar-item-active' : ''}`}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M21.5 2V6M21.5 10V14M10.5 6.5C10.5 8.433 8.933 10 7 10C5.067 10 3.5 8.433 3.5 6.5C3.5 4.567 5.067 3 7 3C8.933 3 10.5 4.567 10.5 6.5ZM20.5 17.5C20.5 19.433 18.933 21 17 21C15.067 21 13.5 19.433 13.5 17.5C13.5 15.567 15.067 14 17 14C18.933 14 20.5 15.567 20.5 17.5ZM4 14L16 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-                <span>{t('sync')}</span>
-              </button>
               <button onClick={() => handleNavClick('doctor-management')} className={`sidebar-item ${currentPage === 'doctor-management' ? 'sidebar-item-active' : ''}`}>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2M12 11a3 3 0 100-6 3 3 0 000 6zM8 21v-1a4 4 0 018 0v1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -222,7 +216,7 @@ function Sidebar({ isOpen, onClose, userName, userEmail, userMobile, onNavigate,
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
-                <span>Visit Recommendations</span>
+                <span>Today's Plan</span>
               </button>
               <button onClick={() => handleNavClick('follow-up-tasks')} className={`sidebar-item ${currentPage === 'follow-up-tasks' ? 'sidebar-item-active' : ''}`}>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
