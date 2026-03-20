@@ -22,6 +22,8 @@ Run these files **in order** after a fresh database (schema.sql is auto-run by D
 | 12 | `rcpa_dummy_data.sql` | 30 RCPA audit records |
 | 13 | `seed_demo_data.sql` | Follow-up tasks + adverse events |
 | 14 | `seed_knowledge.sql` | Drug knowledge base |
+| 15 | `migration_v6_sales.sql` | Sales module (distributors, secondary_sales, mr_targets) |
+| 16 | `seed_sales_data.sql` | 6 distributors + ~180 sales records + 108 MR targets |
 
 **Note:** `seed.sql` and `dummy_data.sql` both insert into the same `dcr` table. `seed.sql` TRUNCATEs first, so if run after `dummy_data.sql` it replaces the data. For demos, run only one of them (seed.sql is recommended as it's lighter).
 
