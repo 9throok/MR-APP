@@ -139,8 +139,8 @@ function ManagerInsights({ onLogout, onBack, userName, onNavigate }: ManagerInsi
 
   // Manager Query state
   const [queryText, setQueryText] = useState('')
-  const [querySelectedMRs, setQuerySelectedMRs] = useState<string[]>([])
-  const [queryMRDropdownOpen, setQueryMRDropdownOpen] = useState(false)
+  const [querySelectedMRs, _setQuerySelectedMRs] = useState<string[]>([])
+  const [_queryMRDropdownOpen, _setQueryMRDropdownOpen] = useState(false)
   const [queryFromDate, setQueryFromDate] = useState('')
   const [queryToDate, setQueryToDate] = useState('')
   const [queryLoading, setQueryLoading] = useState(false)
@@ -150,8 +150,8 @@ function ManagerInsights({ onLogout, onBack, userName, onNavigate }: ManagerInsi
   // Product Signals state
   const [sigFromDate, setSigFromDate] = useState('')
   const [sigToDate, setSigToDate] = useState('')
-  const [sigSelectedMRs, setSigSelectedMRs] = useState<string[]>([])
-  const [sigMRDropdownOpen, setSigMRDropdownOpen] = useState(false)
+  const [sigSelectedMRs, _setSigSelectedMRs] = useState<string[]>([])
+  const [_sigMRDropdownOpen, _setSigMRDropdownOpen] = useState(false)
   const [sigSelectedProducts, setSigSelectedProducts] = useState<string[]>([])
   const [sigProductDropdownOpen, setSigProductDropdownOpen] = useState(false)
   const [sigLoading, setSigLoading] = useState(false)
@@ -161,8 +161,8 @@ function ManagerInsights({ onLogout, onBack, userName, onNavigate }: ManagerInsi
   // Competitor Intelligence state
   const [compFromDate, setCompFromDate] = useState('')
   const [compToDate, setCompToDate] = useState('')
-  const [compSelectedMRs, setCompSelectedMRs] = useState<string[]>([])
-  const [compMRDropdownOpen, setCompMRDropdownOpen] = useState(false)
+  const [compSelectedMRs, _setCompSelectedMRs] = useState<string[]>([])
+  const [_compMRDropdownOpen, _setCompMRDropdownOpen] = useState(false)
   const [compLoading, setCompLoading] = useState(false)
   const [compError, setCompError] = useState<string | null>(null)
   const [compResult, setCompResult] = useState<CompetitorResponse | null>(null)
@@ -179,11 +179,11 @@ function ManagerInsights({ onLogout, onBack, userName, onNavigate }: ManagerInsi
     )
   }
 
-  const toggleMR = (list: string[], setList: (v: string[]) => void, id: string) => {
+  const _toggleMR = (list: string[], setList: (v: string[]) => void, id: string) => {
     setList(list.includes(id) ? list.filter(x => x !== id) : [...list, id])
   }
 
-  const getMRLabel = (ids: string[]) => {
+  const _getMRLabel = (ids: string[]) => {
     if (ids.length === 0) return 'All MRs'
     if (ids.length === 1) {
       const mr = ALL_MRS.find(m => m.id === ids[0])

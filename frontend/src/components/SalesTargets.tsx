@@ -43,7 +43,7 @@ const MR_USERS = [
   { user_id: 'mr_robert_003', name: 'Robert Johnson', territory: 'Delhi NCR' },
 ]
 
-function SalesTargets({ onLogout, onBack, userName, userEmail, userMobile, onNavigate }: SalesTargetsProps) {
+function SalesTargets({ onLogout, onBack: _onBack, userName, userEmail, userMobile, onNavigate }: SalesTargetsProps) {
   const { user } = useAuth()
   const isManager = user?.role === 'manager' || user?.role === 'admin'
   const [sidebarOpen, setSidebarOpen] = useState(false)

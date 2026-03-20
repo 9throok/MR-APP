@@ -68,7 +68,7 @@ const MR_NAMES: Record<string, string> = {
   'mr_robert_003': 'Robert Johnson',
 }
 
-function SalesDashboard({ onLogout, onBack, userName, userEmail, userMobile, onNavigate }: SalesDashboardProps) {
+function SalesDashboard({ onLogout, onBack: _onBack, userName, userEmail, userMobile, onNavigate }: SalesDashboardProps) {
   const { user } = useAuth()
   const isManager = user?.role === 'manager' || user?.role === 'admin'
   const [sidebarOpen, setSidebarOpen] = useState(false)

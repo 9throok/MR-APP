@@ -49,8 +49,8 @@ interface MRUser {
   territory: string
 }
 
-function SalesEntry({ onLogout, onBack, userName, userEmail, userMobile, onNavigate }: SalesEntryProps) {
-  const { user } = useAuth()
+function SalesEntry({ onLogout, onBack: _onBack, userName, userEmail, userMobile, onNavigate }: SalesEntryProps) {
+  const { user: _user } = useAuth()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [showUpload, setShowUpload] = useState(false)
   const [showForm, setShowForm] = useState(false)
