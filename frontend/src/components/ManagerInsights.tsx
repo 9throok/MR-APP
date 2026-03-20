@@ -179,19 +179,6 @@ function ManagerInsights({ onLogout, onBack, userName, onNavigate }: ManagerInsi
     )
   }
 
-  const _toggleMR = (list: string[], setList: (v: string[]) => void, id: string) => {
-    setList(list.includes(id) ? list.filter(x => x !== id) : [...list, id])
-  }
-
-  const _getMRLabel = (ids: string[]) => {
-    if (ids.length === 0) return 'All MRs'
-    if (ids.length === 1) {
-      const mr = ALL_MRS.find(m => m.id === ids[0])
-      return mr ? mr.name : ids[0]
-    }
-    return `${ids.length} MRs selected`
-  }
-
   // ── Manager Query submit ──────────────────────────────────────
   const handleQuerySubmit = async () => {
     if (!queryText.trim()) return
