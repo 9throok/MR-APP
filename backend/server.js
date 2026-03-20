@@ -12,6 +12,8 @@ const adverseEventRoutes = require('./routes/adverse-events');
 const doctorRoutes = require('./routes/doctors');
 const doctorRequestRoutes = require('./routes/doctor-requests');
 const rcpaRoutes = require('./routes/rcpa');
+const salesRoutes = require('./routes/sales');
+const targetRoutes = require('./routes/targets');
 const { authenticateToken } = require('./middleware/auth');
 
 const app = express();
@@ -36,6 +38,8 @@ app.use('/api/adverse-events', authenticateToken, adverseEventRoutes);
 app.use('/api/doctors', authenticateToken, doctorRoutes);
 app.use('/api/doctor-requests', authenticateToken, doctorRequestRoutes);
 app.use('/api/rcpa', authenticateToken, rcpaRoutes);
+app.use('/api/sales', authenticateToken, salesRoutes);
+app.use('/api/targets', authenticateToken, targetRoutes);
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', message: 'Server is running' });
