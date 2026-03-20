@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import Header from './Header'
 import Sidebar from './Sidebar'
-import DashboardReports from './DashboardReports'
 import './Reports.css'
 
 interface ReportsProps {
@@ -14,12 +13,11 @@ interface ReportsProps {
 function Reports({ onLogout, onBack, userName, onNavigate }: ReportsProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [expandedReports, setExpandedReports] = useState<Set<string>>(new Set())
-  const [selectedReportType, setSelectedReportType] = useState('Dashboard')
+  const [selectedReportType, setSelectedReportType] = useState('Tour Plan Report')
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
   const reportTypes = [
-    'Dashboard',
     'Tour Plan Report',
     'Daily Call Report',
     'Joint Working Coverage',
@@ -693,15 +691,13 @@ function Reports({ onLogout, onBack, userName, onNavigate }: ReportsProps) {
           </div>
         </div>
 
-        {selectedReportType === 'Dashboard' ? (
-          <DashboardReports />
-        ) : selectedReportType === 'Tour Plan Report' ? (
+        {selectedReportType === 'Tour Plan Report' ? (
           <div className="tour-plan-report-container">
             <div className="report-card">
               <div className="table-card">
                 <h3 className="table-title">Tour Plan Report</h3>
                 <div className="table-wrapper">
-                  <table className="cpc-table">
+                  <table className="report-table">
                     <thead>
                       <tr>
                         <th>Month</th>
@@ -733,7 +729,7 @@ function Reports({ onLogout, onBack, userName, onNavigate }: ReportsProps) {
               <div className="table-card">
                 <h3 className="table-title">Daily Call Report</h3>
                 <div className="table-wrapper">
-                  <table className="cpc-table">
+                  <table className="report-table">
                     <thead>
                       <tr>
                         <th>Customer Name</th>
@@ -773,7 +769,7 @@ function Reports({ onLogout, onBack, userName, onNavigate }: ReportsProps) {
               <div className="table-card">
                 <h3 className="table-title">Joint Working Coverage</h3>
                 <div className="table-wrapper">
-                  <table className="cpc-table">
+                  <table className="report-table">
                     <thead>
                       <tr>
                         <th>Doctor Name</th>
@@ -805,7 +801,7 @@ function Reports({ onLogout, onBack, userName, onNavigate }: ReportsProps) {
               <div className="table-card">
                 <h3 className="table-title">Call Average</h3>
                 <div className="table-wrapper">
-                  <table className="cpc-table">
+                  <table className="report-table">
                     <thead>
                       <tr>
                         <th>Employee Name</th>

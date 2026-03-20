@@ -13,7 +13,7 @@
 
 .shortcuts-grid {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
+  grid-template-columns: repeat(8, 1fr);
   gap: 16px;
   width: 100%;
   padding-bottom: 8px;
@@ -86,10 +86,10 @@
   word-wrap: break-word;
 }
 
-/* Desktop - full width grid (7 columns) */
+/* Desktop - full width grid (8 columns) */
 @media (min-width: 1201px) {
   .shortcuts-grid {
-    grid-template-columns: repeat(7, 1fr);
+    grid-template-columns: repeat(8, 1fr);
     gap: 20px;
   }
 

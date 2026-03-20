@@ -373,58 +373,6 @@ function ManagerInsights({ onLogout, onBack, userName, onNavigate }: ManagerInsi
                   <span className="mi-filter-label">To Date</span>
                   <input type="date" className="mi-filter-input" value={queryToDate} onChange={e => setQueryToDate(e.target.value)} />
                 </div>
-                <div className="mi-filter-group full-width">
-                  <span className="mi-filter-label">MR Representatives</span>
-                  <div className="mi-mr-dropdown">
-                    <button
-                      type="button"
-                      className="mi-mr-dropdown-trigger"
-                      onClick={() => setQueryMRDropdownOpen(prev => !prev)}
-                    >
-                      <span className="mi-mr-dropdown-text">{getMRLabel(querySelectedMRs)}</span>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className={`mi-product-chevron ${queryMRDropdownOpen ? 'open' : ''}`}>
-                        <path d="M6 9L12 15L18 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                    </button>
-                    {queryMRDropdownOpen && (
-                      <div className="mi-product-dropdown-menu">
-                        <button
-                          type="button"
-                          className="mi-product-option mi-mr-clear"
-                          onClick={() => { setQuerySelectedMRs([]); setQueryMRDropdownOpen(false) }}
-                        >
-                          All MRs (clear filter)
-                        </button>
-                        {ALL_MRS.map(mr => (
-                          <label key={mr.id} className="mi-product-option">
-                            <input
-                              type="checkbox"
-                              checked={querySelectedMRs.includes(mr.id)}
-                              onChange={() => toggleMR(querySelectedMRs, setQuerySelectedMRs, mr.id)}
-                            />
-                            <span className="mi-mr-option-info">
-                              <span className="mi-mr-option-name">{mr.name}</span>
-                              <span className="mi-mr-option-territory">{mr.territory}</span>
-                            </span>
-                          </label>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  {querySelectedMRs.length > 0 && (
-                    <div className="mi-mr-tags">
-                      {querySelectedMRs.map(id => {
-                        const mr = ALL_MRS.find(m => m.id === id)
-                        return (
-                          <span key={id} className="mi-mr-tag">
-                            {mr?.name || id}
-                            <button type="button" onClick={() => toggleMR(querySelectedMRs, setQuerySelectedMRs, id)} className="mi-product-tag-remove">&times;</button>
-                          </span>
-                        )
-                      })}
-                    </div>
-                  )}
-                </div>
               </div>
               <button
                 className="mi-submit-btn"
@@ -547,58 +495,6 @@ function ManagerInsights({ onLogout, onBack, userName, onNavigate }: ManagerInsi
                 <div className="mi-filter-group">
                   <span className="mi-filter-label">To Date</span>
                   <input type="date" className="mi-filter-input" value={sigToDate} onChange={e => setSigToDate(e.target.value)} />
-                </div>
-                <div className="mi-filter-group full-width">
-                  <span className="mi-filter-label">MR Representatives</span>
-                  <div className="mi-mr-dropdown">
-                    <button
-                      type="button"
-                      className="mi-mr-dropdown-trigger"
-                      onClick={() => setSigMRDropdownOpen(prev => !prev)}
-                    >
-                      <span className="mi-mr-dropdown-text">{getMRLabel(sigSelectedMRs)}</span>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className={`mi-product-chevron ${sigMRDropdownOpen ? 'open' : ''}`}>
-                        <path d="M6 9L12 15L18 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                    </button>
-                    {sigMRDropdownOpen && (
-                      <div className="mi-product-dropdown-menu">
-                        <button
-                          type="button"
-                          className="mi-product-option mi-mr-clear"
-                          onClick={() => { setSigSelectedMRs([]); setSigMRDropdownOpen(false) }}
-                        >
-                          All MRs (clear filter)
-                        </button>
-                        {ALL_MRS.map(mr => (
-                          <label key={mr.id} className="mi-product-option">
-                            <input
-                              type="checkbox"
-                              checked={sigSelectedMRs.includes(mr.id)}
-                              onChange={() => toggleMR(sigSelectedMRs, setSigSelectedMRs, mr.id)}
-                            />
-                            <span className="mi-mr-option-info">
-                              <span className="mi-mr-option-name">{mr.name}</span>
-                              <span className="mi-mr-option-territory">{mr.territory}</span>
-                            </span>
-                          </label>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  {sigSelectedMRs.length > 0 && (
-                    <div className="mi-mr-tags">
-                      {sigSelectedMRs.map(id => {
-                        const mr = ALL_MRS.find(m => m.id === id)
-                        return (
-                          <span key={id} className="mi-mr-tag">
-                            {mr?.name || id}
-                            <button type="button" onClick={() => toggleMR(sigSelectedMRs, setSigSelectedMRs, id)} className="mi-product-tag-remove">&times;</button>
-                          </span>
-                        )
-                      })}
-                    </div>
-                  )}
                 </div>
                 <div className="mi-filter-group full-width">
                   <span className="mi-filter-label">Products</span>
@@ -818,58 +714,6 @@ function ManagerInsights({ onLogout, onBack, userName, onNavigate }: ManagerInsi
                 <div className="mi-filter-group">
                   <span className="mi-filter-label">To Date</span>
                   <input type="date" className="mi-filter-input" value={compToDate} onChange={e => setCompToDate(e.target.value)} />
-                </div>
-                <div className="mi-filter-group full-width">
-                  <span className="mi-filter-label">MR Representatives</span>
-                  <div className="mi-mr-dropdown">
-                    <button
-                      type="button"
-                      className="mi-mr-dropdown-trigger"
-                      onClick={() => setCompMRDropdownOpen(prev => !prev)}
-                    >
-                      <span className="mi-mr-dropdown-text">{getMRLabel(compSelectedMRs)}</span>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className={`mi-product-chevron ${compMRDropdownOpen ? 'open' : ''}`}>
-                        <path d="M6 9L12 15L18 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                    </button>
-                    {compMRDropdownOpen && (
-                      <div className="mi-product-dropdown-menu">
-                        <button
-                          type="button"
-                          className="mi-product-option mi-mr-clear"
-                          onClick={() => { setCompSelectedMRs([]); setCompMRDropdownOpen(false) }}
-                        >
-                          All MRs (clear filter)
-                        </button>
-                        {ALL_MRS.map(mr => (
-                          <label key={mr.id} className="mi-product-option">
-                            <input
-                              type="checkbox"
-                              checked={compSelectedMRs.includes(mr.id)}
-                              onChange={() => toggleMR(compSelectedMRs, setCompSelectedMRs, mr.id)}
-                            />
-                            <span className="mi-mr-option-info">
-                              <span className="mi-mr-option-name">{mr.name}</span>
-                              <span className="mi-mr-option-territory">{mr.territory}</span>
-                            </span>
-                          </label>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  {compSelectedMRs.length > 0 && (
-                    <div className="mi-mr-tags">
-                      {compSelectedMRs.map(id => {
-                        const mr = ALL_MRS.find(m => m.id === id)
-                        return (
-                          <span key={id} className="mi-mr-tag">
-                            {mr?.name || id}
-                            <button type="button" onClick={() => toggleMR(compSelectedMRs, setCompSelectedMRs, id)} className="mi-product-tag-remove">&times;</button>
-                          </span>
-                        )
-                      })}
-                    </div>
-                  )}
                 </div>
               </div>
               <button

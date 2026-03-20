@@ -66,8 +66,10 @@ function TerritoryGap({ onLogout, onBack, userName, onNavigate }: TerritoryGapPr
   useEffect(() => { fetchData(thresholdDays) }, [])
 
   const handleApplyThreshold = () => {
-    setThresholdDays(pendingThreshold)
-    fetchData(pendingThreshold)
+    const clamped = Math.max(1, Math.min(180, pendingThreshold))
+    setPendingThreshold(clamped)
+    setThresholdDays(clamped)
+    fetchData(clamped)
   }
 
   const urgencyClass: Record<string, string> = {
@@ -128,7 +130,7 @@ function TerritoryGap({ onLogout, onBack, userName, onNavigate }: TerritoryGapPr
               max={180}
               className="tg-threshold-input"
               value={pendingThreshold}
-              onChange={e => setPendingThreshold(Math.max(7, Math.min(180, Number(e.target.value))))}
+              onChange={e => setPendingThreshold(Number(e.target.value) || 0)}
             />
             <span className="tg-threshold-unit">days</span>
             <button

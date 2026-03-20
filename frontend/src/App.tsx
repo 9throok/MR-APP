@@ -29,12 +29,15 @@ import KnowledgeUpload from './components/KnowledgeUpload'
 import AdverseEvents from './components/AdverseEvents'
 import NextBestAction from './components/NextBestAction'
 import DoctorManagement from './components/DoctorManagement'
+import SalesEntry from './components/SalesEntry'
+import SalesTargets from './components/SalesTargets'
+import SalesDashboard from './components/SalesDashboard'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import './App.css'
 
-type Page = 'home' | 'clients' | 'tour-plans' | 'edetailing' | 'leaves' | 'inventory' | 'profile' | 'reports' | 'todays-plan' | 'dcr' | 'doctor360' | 'expense-claim' | 'create-expense-claim' | 'offline-requests' | 'enter-rcpa' | 'order-booking' | 'tour-plan-requests' | 'mr-list' | 'mr-detail' | 'my-dcrs' | 'territory-gap' | 'manager-insights' | 'follow-up-tasks' | 'knowledge-upload' | 'adverse-events' | 'nba' | 'doctor-management'
+type Page = 'home' | 'clients' | 'tour-plans' | 'edetailing' | 'leaves' | 'inventory' | 'profile' | 'reports' | 'todays-plan' | 'dcr' | 'doctor360' | 'expense-claim' | 'create-expense-claim' | 'offline-requests' | 'enter-rcpa' | 'order-booking' | 'tour-plan-requests' | 'mr-list' | 'mr-detail' | 'my-dcrs' | 'territory-gap' | 'manager-insights' | 'follow-up-tasks' | 'knowledge-upload' | 'adverse-events' | 'nba' | 'doctor-management' | 'sales-entry' | 'sales-targets' | 'sales-dashboard'
 
-const ALL_PAGES: string[] = ['home', 'clients', 'tour-plans', 'edetailing', 'leaves', 'inventory', 'profile', 'reports', 'todays-plan', 'dcr', 'doctor360', 'expense-claim', 'create-expense-claim', 'offline-requests', 'enter-rcpa', 'order-booking', 'tour-plan-requests', 'mr-list', 'mr-detail', 'my-dcrs', 'territory-gap', 'manager-insights', 'follow-up-tasks', 'knowledge-upload', 'adverse-events', 'nba', 'doctor-management']
+const ALL_PAGES: string[] = ['home', 'clients', 'tour-plans', 'edetailing', 'leaves', 'inventory', 'profile', 'reports', 'todays-plan', 'dcr', 'doctor360', 'expense-claim', 'create-expense-claim', 'offline-requests', 'enter-rcpa', 'order-booking', 'tour-plan-requests', 'mr-list', 'mr-detail', 'my-dcrs', 'territory-gap', 'manager-insights', 'follow-up-tasks', 'knowledge-upload', 'adverse-events', 'nba', 'doctor-management', 'sales-entry', 'sales-targets', 'sales-dashboard']
 
 function AppContent() {
   const { isAuthenticated, user, logout: authLogout, isLoading } = useAuth()
@@ -199,6 +202,12 @@ function AppContent() {
             <NextBestAction onLogout={handleLogout} onBack={handleBack} userName={userName} onNavigate={handleNavigate} />
           ) : currentPage === 'doctor-management' ? (
             <DoctorManagement onLogout={handleLogout} onBack={handleBack} userName={userName} onNavigate={handleNavigate} />
+          ) : currentPage === 'sales-entry' ? (
+            <SalesEntry onLogout={handleLogout} onBack={handleBack} userName={userName} userEmail={userEmail} userMobile={userMobile} onNavigate={handleNavigate} />
+          ) : currentPage === 'sales-targets' ? (
+            <SalesTargets onLogout={handleLogout} onBack={handleBack} userName={userName} userEmail={userEmail} userMobile={userMobile} onNavigate={handleNavigate} />
+          ) : currentPage === 'sales-dashboard' ? (
+            <SalesDashboard onLogout={handleLogout} onBack={handleBack} userName={userName} userEmail={userEmail} userMobile={userMobile} onNavigate={handleNavigate} />
           ) : (
             <Home onLogout={handleLogout} onNavigate={handleNavigate} userName={userName} userEmail={userEmail} userMobile={userMobile} />
           )}

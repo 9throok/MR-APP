@@ -159,6 +159,22 @@
 .tour-plan-report-container .report-card {
   width: 100%;
   max-width: 100%;
+  cursor: default;
+}
+
+.tour-plan-report-container .report-card:hover {
+  transform: none;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+}
+
+.table-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 16px 0;
 }
 
 .status-badge {

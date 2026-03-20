@@ -182,7 +182,7 @@ function NextBestAction({ onLogout, onBack, userName, onNavigate }: NextBestActi
           </button>
           <div className="nba-header-content">
             <h1 className="nba-page-title">
-              Today's Recommended Visits
+              Today's Plan
               {cached && <span className="nba-cached-badge">Cached</span>}
             </h1>
             <p className="nba-page-subtitle">AI-powered visit recommendations for your territory</p>

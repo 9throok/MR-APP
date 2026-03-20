@@ -2,9 +2,12 @@ import { useState } from 'react'
 import Header from './Header'
 import Sidebar from './Sidebar'
 import TodaysPlanBanner from './TodaysPlanBanner'
+import ManagerPulseBanner from './ManagerPulseBanner'
 import Shortcuts from './Shortcuts'
 import DashboardReports from './DashboardReports'
+import ManagerDashboardReports from './ManagerDashboardReports'
 import { useLanguage } from '../contexts/LanguageContext'
+import { useAuth } from '../contexts/AuthContext'
 import './Home.css'
 
 interface HomeProps {
@@ -17,6 +20,8 @@ interface HomeProps {
 
 function Home({ onLogout, onNavigate, userName, userEmail, userMobile }: HomeProps) {
   const { t } = useLanguage()
+  const { user } = useAuth()
+  const isManager = user?.role === 'manager' || user?.role === 'admin'
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   const handleMenuClick = () => {
@@ -47,10 +52,18 @@ function Home({ onLogout, onNavigate, userName, userEmail, userMobile }: HomePro
         <div className="welcome-greeting">
           <h1>{t('hello')} {userName},</h1>
         </div>
-        <TodaysPlanBanner onNavigate={handleTodaysPlanClick} />
+        {isManager ? (
+          <ManagerPulseBanner onNavigate={onNavigate} />
+        ) : (
+          <TodaysPlanBanner onNavigate={handleTodaysPlanClick} />
+        )}
         <Shortcuts onNavigate={onNavigate} />
         <h2 className="dashboards-heading">Dashboards</h2>
-        <DashboardReports />
+        {isManager ? (
+          <ManagerDashboardReports onNavigate={onNavigate} />
+        ) : (
+          <DashboardReports />
+        )}
         {/* <div className="welcome-section">
           <h1>Welcome to ZenX Global</h1>
           <p>Your medical application dashboard</p>

@@ -46,8 +46,8 @@ const mrData: MR[] = [
   {
     id: '3',
     empId: 'EMP003',
-    name: 'Amit Patel',
-    email: 'amit.patel@zenrac.com',
+    name: 'Robert Wilson',
+    email: 'robert.wilson@zenrac.com',
     mobile: '+91 98765 43212',
     designation: 'Medical Representative',
     region: 'Bangalore',
