@@ -131,12 +131,6 @@ function ManagerInsights({ onLogout, onBack, userName, onNavigate }: ManagerInsi
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [activeTab, setActiveTab] = useState<'query' | 'signals' | 'competitor'>('query')
 
-  const ALL_MRS: { id: string; name: string; territory: string }[] = [
-    { id: 'mr_rahul_001', name: 'Rahul Sharma', territory: 'Mumbai North' },
-    { id: 'mr_priya_002', name: 'Priya Patel', territory: 'Mumbai South' },
-    { id: 'mr_robert_003', name: 'Robert Johnson', territory: 'Delhi NCR' },
-  ]
-
   // Manager Query state
   const [queryText, setQueryText] = useState('')
   const [querySelectedMRs, _setQuerySelectedMRs] = useState<string[]>([])
