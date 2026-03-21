@@ -3,7 +3,7 @@ const router = express.Router();
 const db = require('../config/db');
 const { getLLMService } = require('../services/llm');
 const { buildPreCallBriefingMessages } = require('../prompts/preCallBriefing');
-const { buildTerritoryGapMessages } = require('../prompts/territoryGap');
+const { buildTerritoryGapMessages, buildTeamTerritoryGapMessages } = require('../prompts/territoryGap');
 const { buildManagerQueryMessages } = require('../prompts/managerQuery');
 const { buildProductSignalsMessages } = require('../prompts/productSignals');
 const { buildPostCallExtractionMessages } = require('../prompts/postCallExtraction');
@@ -162,6 +162,79 @@ Rules:
     });
   } catch (err) {
     console.error('[AI] pharmacy-briefing error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GET /api/ai/territory-gap-team
+//
+// Query params: threshold_days (optional, default 30), mr_user_id (optional, filter to one MR)
+//
+// Manager/admin endpoint: aggregates DCR data across all MRs,
+// then asks the LLM to identify team-wide coverage gaps.
+// NOTE: Must be defined BEFORE /territory-gap/:user_id to avoid param capture.
+// ─────────────────────────────────────────────────────────────────────────────
+router.get('/territory-gap-team', async (req, res) => {
+  try {
+    const thresholdDays = parseInt(req.query.threshold_days || '30', 10);
+    const mrFilter = req.query.mr_user_id || null;
+
+    // Get all MRs (or a specific one)
+    let mrQuery = `SELECT user_id, name FROM users WHERE role = 'mr'`;
+    const mrParams = [];
+    if (mrFilter) {
+      mrQuery += ` AND user_id = $1`;
+      mrParams.push(mrFilter);
+    }
+    const { rows: mrs } = await db.query(mrQuery, mrParams);
+
+    if (mrs.length === 0) {
+      return res.status(200).json({ success: true, message: 'No MRs found', analysis: null, mrs: [] });
+    }
+
+    const mrUserIds = mrs.map(m => m.user_id);
+
+    // Aggregate DCR data across all MRs
+    const { rows: doctorStats } = await db.query(
+      `SELECT
+         d.name                                AS "doctorName",
+         u.name                                AS "mrName",
+         d.user_id                             AS "mrUserId",
+         MAX(d.date)::text                     AS "lastVisitDate",
+         COUNT(*)::int                         AS "totalVisits",
+         (CURRENT_DATE - MAX(d.date))::int     AS "daysSinceLastVisit"
+       FROM dcr d
+       JOIN users u ON u.user_id = d.user_id
+       WHERE d.user_id = ANY($1)
+       GROUP BY d.name, u.name, d.user_id
+       ORDER BY "daysSinceLastVisit" DESC`,
+      [mrUserIds]
+    );
+
+    if (doctorStats.length === 0) {
+      return res.status(200).json({
+        success: true,
+        message: 'No DCR data found for any MR',
+        analysis: null,
+        mrs: mrs.map(m => ({ user_id: m.user_id, name: m.name })),
+      });
+    }
+
+    const llm = getLLMService();
+    const messages = buildTeamTerritoryGapMessages(doctorStats, thresholdDays);
+    const analysis = await llm.chat(messages, { requireJson: true });
+
+    res.status(200).json({
+      success: true,
+      thresholdDays,
+      totalDoctors: doctorStats.length,
+      mrs: mrs.map(m => ({ user_id: m.user_id, name: m.name })),
+      analysis,
+    });
+
+  } catch (err) {
+    console.error('[AI] territory-gap-team error:', err.message);
     res.status(500).json({ error: err.message });
   }
 });

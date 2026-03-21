@@ -359,6 +359,98 @@ router.get('/template/sales', requireRole('manager', 'admin'), (req, res) => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
+// GET /api/sales/execution-scorecard
+// Overdue tasks, doctor coverage health, market share — for dashboard
+// ─────────────────────────────────────────────────────────────────────────────
+router.get('/execution-scorecard', async (req, res) => {
+  try {
+    const isManager = req.user.role === 'manager' || req.user.role === 'admin';
+    const userFilter = isManager ? null : req.user.user_id;
+
+    const [overdueResult, coverageResult, marketShareResult] = await Promise.all([
+      // 1. Overdue follow-up tasks per MR
+      db.query(
+        `SELECT ft.user_id, u.name, COUNT(*) AS count
+         FROM follow_up_tasks ft
+         JOIN users u ON u.user_id = ft.user_id
+         WHERE ft.status = 'overdue'
+         ${userFilter ? `AND ft.user_id = $1` : ''}
+         GROUP BY ft.user_id, u.name
+         ORDER BY count DESC`,
+        userFilter ? [userFilter] : []
+      ),
+
+      // 2. Doctor coverage: cold (30+ days), at-risk (15-29), healthy (<15)
+      db.query(
+        `SELECT sub.user_id, u.name,
+           COUNT(*) FILTER (WHERE sub.days_since >= 30) AS cold,
+           COUNT(*) FILTER (WHERE sub.days_since >= 15 AND sub.days_since < 30) AS at_risk,
+           COUNT(*) FILTER (WHERE sub.days_since < 15) AS healthy
+         FROM (
+           SELECT user_id, name AS doctor_name, (CURRENT_DATE - MAX(date)) AS days_since
+           FROM dcr
+           ${userFilter ? `WHERE user_id = $1` : ''}
+           GROUP BY user_id, name
+         ) sub
+         JOIN users u ON u.user_id = sub.user_id
+         GROUP BY sub.user_id, u.name
+         ORDER BY cold DESC`,
+        userFilter ? [userFilter] : []
+      ),
+
+      // 3. RCPA market share
+      db.query(
+        `SELECT
+           COALESCE(SUM(our_value), 0) AS our_total,
+           COALESCE(SUM(competitor_value), 0) AS competitor_total,
+           CASE WHEN COALESCE(SUM(our_value), 0) + COALESCE(SUM(competitor_value), 0) > 0
+             THEN ROUND(SUM(our_value) * 100.0 / (SUM(our_value) + SUM(competitor_value)), 1)
+             ELSE 0 END AS share_pct
+         FROM rcpa
+         ${userFilter ? `WHERE user_id = $1` : ''}`,
+        userFilter ? [userFilter] : []
+      )
+    ]);
+
+    const overdueByMr = overdueResult.rows.map(r => ({
+      user_id: r.user_id, name: r.name, count: parseInt(r.count)
+    }));
+    const overdueTotal = overdueByMr.reduce((s, r) => s + r.count, 0);
+
+    const coverageByMr = coverageResult.rows.map(r => ({
+      user_id: r.user_id, name: r.name,
+      cold: parseInt(r.cold), atRisk: parseInt(r.at_risk), healthy: parseInt(r.healthy)
+    }));
+    const coverageTotals = coverageByMr.reduce(
+      (acc, r) => ({ cold: acc.cold + r.cold, atRisk: acc.atRisk + r.atRisk, healthy: acc.healthy + r.healthy }),
+      { cold: 0, atRisk: 0, healthy: 0 }
+    );
+
+    const ms = marketShareResult.rows[0];
+
+    res.json({
+      success: true,
+      data: {
+        overdueTasks: { total: overdueTotal, byMr: overdueByMr },
+        coverage: {
+          ...coverageTotals,
+          total: coverageTotals.cold + coverageTotals.atRisk + coverageTotals.healthy,
+          byMr: coverageByMr
+        },
+        marketShare: {
+          ourValue: parseFloat(ms.our_total),
+          competitorValue: parseFloat(ms.competitor_total),
+          sharePct: parseFloat(ms.share_pct)
+        }
+      }
+    });
+  } catch (err) {
+    console.error('[Sales] execution-scorecard error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
 // GET /api/sales
 // List sales records with filters
 // ─────────────────────────────────────────────────────────────────────────────

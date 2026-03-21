@@ -68,4 +68,85 @@ Rules:
   ];
 }
 
-module.exports = { buildTerritoryGapMessages };
+/**
+ * Prompt: Team Territory Gap (Manager view)
+ *
+ * Input context:
+ *   - doctorStats: Array of { doctorName, mrName, mrUserId, lastVisitDate, totalVisits, daysSinceLastVisit }
+ *   - thresholdDays: number
+ *
+ * Output (JSON):
+ *   {
+ *     mrSummaries: [{ mrName, totalDoctors, coldCount, atRiskCount }],
+ *     coldDoctors: [{ name, mrName, daysSince, urgency, reason }],
+ *     atRiskDoctors: [{ name, mrName, daysSince, concern }],
+ *     insight: string,
+ *     recommendation: string
+ *   }
+ */
+function buildTeamTerritoryGapMessages(doctorStats, thresholdDays = 30) {
+  const statsText = doctorStats.length === 0
+    ? 'No visit data available.'
+    : doctorStats.map(d => [
+        `Doctor: ${d.doctorName}`,
+        `  MR: ${d.mrName}`,
+        `  Last visit: ${d.lastVisitDate} (${d.daysSinceLastVisit} days ago)`,
+        `  Total visits: ${d.totalVisits}`,
+      ].join('\n')).join('\n\n');
+
+  const system = `You are a pharmaceutical sales territory analyst helping a manager review their team's coverage gaps.
+Always respond with valid JSON only.
+Write in simple, everyday English — short sentences, no jargon. The reader is a sales manager overseeing multiple MRs.`;
+
+  const user = `Analyse territory coverage across the entire team.
+
+Threshold: Doctors not visited in ${thresholdDays}+ days should be flagged.
+
+DOCTOR VISIT STATS (across all MRs):
+${statsText}
+
+Return a JSON object with this structure:
+{
+  "mrSummaries": [
+    {
+      "mrName": "MR name",
+      "totalDoctors": 10,
+      "coldCount": 3,
+      "atRiskCount": 2
+    }
+  ],
+  "coldDoctors": [
+    {
+      "name": "doctor name",
+      "mrName": "MR who covers this doctor",
+      "daysSince": 45,
+      "urgency": "high|medium|low",
+      "reason": "why this matters"
+    }
+  ],
+  "atRiskDoctors": [
+    {
+      "name": "doctor name",
+      "mrName": "MR who covers this doctor",
+      "daysSince": 22,
+      "concern": "getting close to overdue"
+    }
+  ],
+  "insight": "1-2 sentence pattern observation across the team",
+  "recommendation": "1-2 sentence prioritised action for the manager this week"
+}
+
+Rules:
+- mrSummaries: one entry per MR — count their total doctors, cold (${thresholdDays}+ days), and at-risk (15-${thresholdDays - 1} days)
+- coldDoctors: visited ${thresholdDays}+ days ago — rank by urgency, include MR name
+- atRiskDoctors: 15-${thresholdDays - 1} days ago with warning signs
+- urgency: "high" if previously frequent and now cold, "medium" otherwise, "low" if low-value
+- Keep all text concise — this is a management briefing, not a report`;
+
+  return [
+    { role: 'system', content: system },
+    { role: 'user', content: user },
+  ];
+}
+
+module.exports = { buildTerritoryGapMessages, buildTeamTerritoryGapMessages };
