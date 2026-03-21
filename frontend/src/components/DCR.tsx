@@ -76,6 +76,7 @@ function DCR({ onLogout, onBack, userName, onNavigate, selectedItem: propSelecte
     product?: boolean
     samples?: boolean
     callSummary?: boolean
+    doctorFeedback?: boolean
   }>({})
   
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -239,6 +240,17 @@ function DCR({ onLogout, onBack, userName, onNavigate, selectedItem: propSelecte
     setExtractionError(error)
   }
 
+  // Handle clear — reset all auto-filled fields
+  const handleRecorderClear = () => {
+    setTranscription('')
+    setExtractionError(null)
+    setSelectedProduct('')
+    setSelectedSamples([])
+    setCallSummary('')
+    setDoctorFeedback('')
+    setAutoFilledFields({})
+  }
+
   // Extract and auto-populate form fields
   // Function kept for future use - reference added to avoid TypeScript warning
   const handleExtractAndFill = async () => {
@@ -265,8 +277,8 @@ function DCR({ onLogout, onBack, userName, onNavigate, selectedItem: propSelecte
     setExtractionError(null)
 
     try {
-      // Call Gemini API to extract structured data
-      const extractedData = await extractDCRData(textToExtract, products, availableSamples)
+      // Call backend LLM service to extract structured data
+      const extractedData = await extractDCRData(textToExtract, products, availableSamples, selectedItem?.name)
 
       // Track which fields were auto-filled
       const filledFields: typeof autoFilledFields = {}
@@ -338,6 +350,12 @@ function DCR({ onLogout, onBack, userName, onNavigate, selectedItem: propSelecte
         if (errors.callSummary) {
           setErrors(prev => ({ ...prev, callSummary: undefined }))
         }
+      }
+
+      // Auto-fill doctor feedback
+      if (extractedData.doctorFeedback) {
+        setDoctorFeedback(extractedData.doctorFeedback)
+        filledFields.doctorFeedback = true
       }
 
       setAutoFilledFields(filledFields)
@@ -668,6 +686,7 @@ function DCR({ onLogout, onBack, userName, onNavigate, selectedItem: propSelecte
           <SpeechRecorder
             onTranscriptionComplete={handleTranscriptionComplete}
             onError={handleSpeechError}
+            onClear={handleRecorderClear}
           />
         </div>
 
@@ -691,12 +710,18 @@ function DCR({ onLogout, onBack, userName, onNavigate, selectedItem: propSelecte
             <span>{extractionError}</span>
           </div>
         )}
-        {!extractionError && Object.keys(autoFilledFields).length > 0 && (
+        {!extractionError && Object.values(autoFilledFields).some(v => v) && (
           <div className="extraction-success" role="status">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M20 6L9 17L4 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
             <span>Form fields have been auto-filled! Please review and edit if needed.</span>
+            <button type="button" className="clear-autofill-btn" onClick={handleRecorderClear}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              Clear
+            </button>
           </div>
         )}
 
@@ -934,12 +959,20 @@ function DCR({ onLogout, onBack, userName, onNavigate, selectedItem: propSelecte
 
           {/* Doctor's Feedback */}
           <div className="form-group">
-            <label className="form-label">Doctor's Feedback</label>
+            <label className="form-label">
+              Doctor's Feedback
+              {autoFilledFields.doctorFeedback && <span className="auto-filled-badge" title="Auto-filled from voice input">Auto-filled</span>}
+            </label>
             <textarea
-              className="form-textarea"
+              className={`form-textarea ${autoFilledFields.doctorFeedback ? 'auto-filled' : ''}`}
               rows={4}
               value={doctorFeedback}
-              onChange={(e) => setDoctorFeedback(e.target.value)}
+              onChange={(e) => {
+                setDoctorFeedback(e.target.value)
+                if (autoFilledFields.doctorFeedback) {
+                  setAutoFilledFields(prev => ({ ...prev, doctorFeedback: false }))
+                }
+              }}
               placeholder="Enter doctor's feedback or response..."
             />
           </div>

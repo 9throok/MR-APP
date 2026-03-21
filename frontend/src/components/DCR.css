@@ -633,6 +633,33 @@
   flex-shrink: 0;
 }
 
+.clear-autofill-btn {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px;
+  background: transparent;
+  border: 1px solid #059669;
+  border-radius: 6px;
+  color: #059669;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.clear-autofill-btn:hover {
+  background: #059669;
+  color: #ffffff;
+}
+
+.clear-autofill-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
 /* Auto-filled Field Indicators */
 .auto-filled-badge {
   display: inline-block;

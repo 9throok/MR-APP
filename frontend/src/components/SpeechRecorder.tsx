@@ -4,6 +4,7 @@ import './SpeechRecorder.css'
 interface SpeechRecorderProps {
   onTranscriptionComplete: (transcription: string) => void
   onError?: (error: string) => void
+  onClear?: () => void
 }
 
 interface SpeechRecognition extends EventTarget {
@@ -54,7 +55,7 @@ declare global {
   }
 }
 
-function SpeechRecorder({ onTranscriptionComplete, onError }: SpeechRecorderProps) {
+function SpeechRecorder({ onTranscriptionComplete, onError, onClear }: SpeechRecorderProps) {
   const [isRecording, setIsRecording] = useState(false)
   const [transcription, setTranscription] = useState('')
   const [isSupported, setIsSupported] = useState(false)
@@ -185,6 +186,7 @@ function SpeechRecorder({ onTranscriptionComplete, onError }: SpeechRecorderProp
     setTranscription('')
     finalTranscriptRef.current = ''
     setError(null)
+    onClear?.()
   }
 
   if (!isSupported) {
