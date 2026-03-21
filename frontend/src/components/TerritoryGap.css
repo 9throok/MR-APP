@@ -480,6 +480,91 @@
   margin: 0;
 }
 
+/* ── Manager: MR filter ───────────────────────────────────────── */
+.tg-mr-filter {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.tg-mr-filter-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #475569;
+}
+
+.tg-mr-filter-select {
+  padding: 7px 12px;
+  border-radius: 8px;
+  border: 1.5px solid #c7d2fe;
+  font-size: 13px;
+  font-weight: 600;
+  color: #4338ca;
+  background: #fff;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.tg-mr-filter-select:focus {
+  border-color: #6366f1;
+}
+
+/* ── Manager: MR Summary cards ────────────────────────────────── */
+.tg-mr-summaries {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.tg-mr-summary-card {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 14px 16px;
+  box-shadow: var(--shadow-sm);
+}
+
+.tg-mr-summary-name {
+  font-weight: 700;
+  font-size: 14px;
+  color: #1e293b;
+  margin-bottom: 8px;
+}
+
+.tg-mr-summary-stats {
+  display: flex;
+  gap: 12px;
+}
+
+.tg-mr-stat {
+  font-size: 16px;
+  font-weight: 800;
+  color: #1e293b;
+}
+
+.tg-mr-stat small {
+  font-size: 10px;
+  font-weight: 500;
+  color: #64748b;
+  display: block;
+  margin-top: 1px;
+}
+
+.tg-mr-stat.cold { color: #dc2626; }
+.tg-mr-stat.cold small { color: #dc2626; }
+.tg-mr-stat.at-risk { color: #d97706; }
+.tg-mr-stat.at-risk small { color: #d97706; }
+
+/* ── MR name badge on doctor cards ────────────────────────────── */
+.tg-mr-badge {
+  background: #e0e7ff;
+  color: #3730a3;
+  border: 1px solid #c7d2fe;
+}
+
 /* ── Responsive ── */
 @media (max-width: 1200px) and (min-width: 769px) {
   .tg-doctor-list {

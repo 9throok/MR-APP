@@ -220,9 +220,9 @@ function Sidebar({ isOpen, onClose, userName, userEmail, userMobile, onNavigate,
             <span>{t('reports')}</span>
           </button>
 
-          {/* ── AI Features ── */}
+          {/* ── Smart Actions ── */}
           <div className="sidebar-divider"></div>
-          <div className="sidebar-section-label">AI Features</div>
+          <div className="sidebar-section-label">Smart Actions</div>
 
           {isMR && (
             <>
