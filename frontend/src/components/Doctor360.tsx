@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import Header from './Header'
 import Sidebar from './Sidebar'
 import './Doctor360.css'

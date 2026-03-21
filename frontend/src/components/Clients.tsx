@@ -189,6 +189,7 @@ function Clients({ onLogout, onBack, userName, onNavigate }: ClientsProps) {
       hospital: client.hospital || client.address || '',
       phone: client.phone || client.mobile || '',
       notes: client.notes || '',
+      customer_type: (client as any).customer_type || 'doctor',
     })
     setEditingId(client.id)
     setShowForm(true)
