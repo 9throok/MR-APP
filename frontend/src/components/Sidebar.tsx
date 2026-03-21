@@ -137,12 +137,6 @@ function Sidebar({ isOpen, onClose, userName, userEmail, userMobile, onNavigate,
                 </svg>
                 <span>{t('expenseClaim') || 'Expense Claim'}</span>
               </button>
-              <button onClick={() => handleNavClick('doctor-management')} className={`sidebar-item ${currentPage === 'doctor-management' ? 'sidebar-item-active' : ''}`}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2M12 11a3 3 0 100-6 3 3 0 000 6zM8 21v-1a4 4 0 018 0v1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-                <span>My Doctors</span>
-              </button>
             </>
           )}
 
@@ -201,7 +195,7 @@ function Sidebar({ isOpen, onClose, userName, userEmail, userMobile, onNavigate,
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M17 21V19C17 17.9391 16.5786 16.9217 15.8284 16.1716C15.0783 15.4214 14.0609 15 13 15H5C3.93913 15 2.92172 15.4214 2.17157 16.1716C1.42143 16.9217 1 17.9391 1 19V21M23 21V19C22.9993 18.1137 22.7044 17.2528 22.1614 16.5523C21.6184 15.8519 20.8581 15.3516 20 15.13M16 3.13C16.8604 3.35031 17.623 3.85071 18.1676 4.55232C18.7122 5.25392 19.0078 6.11683 19.0078 7.005C19.0078 7.89318 18.7122 8.75608 18.1676 9.45769C17.623 10.1593 16.8604 10.6597 16 10.88M13 7C13 9.20914 11.2091 11 9 11C6.79086 11 5 9.20914 5 7C5 4.79086 6.79086 3 9 3C11.2091 3 13 4.79086 13 7Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
-            <span>{t('customer360')}</span>
+            <span>My Customers</span>
           </button>
           <button onClick={() => handleNavClick('sales-dashboard')} className={`sidebar-item ${currentPage === 'sales-dashboard' ? 'sidebar-item-active' : ''}`}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -254,12 +248,6 @@ function Sidebar({ isOpen, onClose, userName, userEmail, userMobile, onNavigate,
                   <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0zM12 9v4M12 17h.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
                 <span>Drug Safety</span>
-              </button>
-              <button onClick={() => handleNavClick('doctor-management')} className={`sidebar-item ${currentPage === 'doctor-management' ? 'sidebar-item-active' : ''}`}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2M12 11a3 3 0 100-6 3 3 0 000 6zM8 21v-1a4 4 0 018 0v1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-                <span>Doctors</span>
               </button>
               <button onClick={() => handleNavClick('knowledge-upload')} className={`sidebar-item ${currentPage === 'knowledge-upload' ? 'sidebar-item-active' : ''}`}>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">

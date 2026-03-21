@@ -153,31 +153,6 @@ function DCR({ onLogout, onBack, userName, onNavigate, selectedItem: propSelecte
     return () => clearTimeout(timer)
   }, [toast])
 
-  // ── AI Pre-call briefing ──────────────────────────────────────────────────
-  interface PreCallBriefing {
-    summary: string
-    lastVisit: string
-    pendingItems: string[]
-    talkingPoints: string[]
-    watchOut: string[]
-  }
-  const [briefing, setBriefing] = useState<PreCallBriefing | null>(null)
-  const [briefingLoading, setBriefingLoading] = useState(false)
-  const [briefingExpanded, setBriefingExpanded] = useState(true)
-
-  useEffect(() => {
-    if (!selectedItem?.name) return
-    const userId = (() => {
-      try { return localStorage.getItem('userId') || localStorage.getItem('user_id') || 'mr_rahul_001' } catch { return 'mr_rahul_001' }
-    })()
-    setBriefingLoading(true)
-    setBriefing(null)
-    apiPost('/ai/precall-briefing', { user_id: userId, doctor_name: selectedItem.name })
-      .then(data => { if (data.success) setBriefing(data.briefing) })
-      .catch(() => {})
-      .finally(() => setBriefingLoading(false))
-  }, [selectedItem?.name])
-  // ─────────────────────────────────────────────────────────────────────────
 
   const handleSampleToggle = (sample: typeof availableSamples[0]) => {
     setSelectedSamples(prev => {
@@ -724,93 +699,6 @@ function DCR({ onLogout, onBack, userName, onNavigate, selectedItem: propSelecte
             </button>
           </div>
         )}
-
-        {/* ── AI Pre-call Briefing Card ───────────────────────────────── */}
-        {(briefingLoading || briefing) && (
-          <div style={{ margin: '0 0 18px', borderRadius: '16px', border: '1.5px solid #bbf7d0', background: 'linear-gradient(135deg,#f0fdf4,#ecfdf5)', overflow: 'hidden', boxShadow: '0 2px 12px rgba(34,197,94,.1)' }}>
-
-            {/* Header row — always visible, click to collapse */}
-            <button
-              type="button"
-              onClick={() => setBriefingExpanded(p => !p)}
-              style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '10px', padding: '14px 16px', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}
-            >
-              <div style={{ width: 34, height: 34, borderRadius: 10, background: 'linear-gradient(135deg,#22c55e,#16a34a)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 2px 8px rgba(34,197,94,.3)' }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                  <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="white" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: '.88rem', fontWeight: 700, color: '#14532d', lineHeight: 1.2 }}>AI Pre-call Briefing</div>
-                <div style={{ fontSize: '.74rem', color: '#4ade80', marginTop: 1 }}>
-                  {briefingLoading ? 'Analysing past visits…' : `Based on visits with ${selectedItem?.name}`}
-                </div>
-              </div>
-              {briefingLoading ? (
-                <svg width="22" height="22" viewBox="0 0 48 48" fill="none" style={{ flexShrink: 0 }}>
-                  <circle cx="24" cy="24" r="18" stroke="#bbf7d0" strokeWidth="4"/>
-                  <circle cx="24" cy="24" r="18" stroke="#22c55e" strokeWidth="4" strokeLinecap="round" strokeDasharray="28 56">
-                    <animateTransform attributeName="transform" type="rotate" from="0 24 24" to="360 24 24" dur=".8s" repeatCount="indefinite"/>
-                  </circle>
-                </svg>
-              ) : (
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, transition: 'transform .2s', transform: briefingExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}>
-                  <path d="M19 9L12 15L5 9" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              )}
-            </button>
-
-            {/* Collapsible body */}
-            {!briefingLoading && briefing && briefingExpanded && (
-              <div style={{ padding: '0 16px 16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-
-                {/* Summary */}
-                <div style={{ background: 'white', borderRadius: 10, padding: '12px 14px', border: '1px solid #d1fae5' }}>
-                  <div style={{ fontSize: '.72rem', fontWeight: 700, color: '#059669', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 6 }}>Summary</div>
-                  <p style={{ margin: 0, fontSize: '.875rem', color: '#1e293b', lineHeight: 1.6 }}>{briefing.summary}</p>
-                </div>
-
-                {/* Last Visit */}
-                <div style={{ background: 'white', borderRadius: 10, padding: '12px 14px', border: '1px solid #d1fae5' }}>
-                  <div style={{ fontSize: '.72rem', fontWeight: 700, color: '#3b82f6', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 6 }}>Last Visit</div>
-                  <p style={{ margin: 0, fontSize: '.875rem', color: '#1e293b', lineHeight: 1.6 }}>{briefing.lastVisit}</p>
-                </div>
-
-                {/* Pending Items */}
-                {briefing.pendingItems.length > 0 && (
-                  <div style={{ background: '#fffbeb', borderRadius: 10, padding: '12px 14px', border: '1px solid #fde68a' }}>
-                    <div style={{ fontSize: '.72rem', fontWeight: 700, color: '#d97706', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 6 }}>⚠ Pending Items</div>
-                    <ul style={{ margin: 0, paddingLeft: 18, display: 'flex', flexDirection: 'column', gap: 5 }}>
-                      {briefing.pendingItems.map((item, i) => <li key={i} style={{ fontSize: '.855rem', color: '#78350f', lineHeight: 1.5 }}>{item}</li>)}
-                    </ul>
-                  </div>
-                )}
-
-                {/* Talking Points */}
-                {briefing.talkingPoints.length > 0 && (
-                  <div style={{ background: '#f0fdf4', borderRadius: 10, padding: '12px 14px', border: '1px solid #bbf7d0' }}>
-                    <div style={{ fontSize: '.72rem', fontWeight: 700, color: '#16a34a', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 6 }}>✓ Talking Points</div>
-                    <ul style={{ margin: 0, paddingLeft: 18, display: 'flex', flexDirection: 'column', gap: 5 }}>
-                      {briefing.talkingPoints.map((item, i) => <li key={i} style={{ fontSize: '.855rem', color: '#14532d', lineHeight: 1.5 }}>{item}</li>)}
-                    </ul>
-                  </div>
-                )}
-
-                {/* Watch Out */}
-                {briefing.watchOut.length > 0 && (
-                  <div style={{ background: '#fef2f2', borderRadius: 10, padding: '12px 14px', border: '1px solid #fecaca' }}>
-                    <div style={{ fontSize: '.72rem', fontWeight: 700, color: '#dc2626', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 6 }}>✕ Watch Out</div>
-                    <ul style={{ margin: 0, paddingLeft: 18, display: 'flex', flexDirection: 'column', gap: 5 }}>
-                      {briefing.watchOut.map((item, i) => <li key={i} style={{ fontSize: '.855rem', color: '#7f1d1d', lineHeight: 1.5 }}>{item}</li>)}
-                    </ul>
-                  </div>
-                )}
-
-              </div>
-            )}
-          </div>
-        )}
-        {/* ─────────────────────────────────────────────────────────────── */}
 
         <form className="dcr-form" onSubmit={handleSubmit}>
 

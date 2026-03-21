@@ -28,7 +28,7 @@ import FollowUpTasks from './components/FollowUpTasks'
 import KnowledgeUpload from './components/KnowledgeUpload'
 import AdverseEvents from './components/AdverseEvents'
 import NextBestAction from './components/NextBestAction'
-import DoctorManagement from './components/DoctorManagement'
+// DoctorManagement merged into Clients (My Customers)
 import SalesEntry from './components/SalesEntry'
 import SalesTargets from './components/SalesTargets'
 import SalesDashboard from './components/SalesDashboard'
@@ -201,7 +201,7 @@ function AppContent() {
           ) : currentPage === 'nba' ? (
             <NextBestAction onLogout={handleLogout} onBack={handleBack} userName={userName} onNavigate={handleNavigate} />
           ) : currentPage === 'doctor-management' ? (
-            <DoctorManagement onLogout={handleLogout} onBack={handleBack} userName={userName} onNavigate={handleNavigate} />
+            <Clients onLogout={handleLogout} onBack={handleBack} userName={userName} onNavigate={handleNavigate} />
           ) : currentPage === 'sales-entry' ? (
             <SalesEntry onLogout={handleLogout} onBack={handleBack} userName={userName} userEmail={userEmail} userMobile={userMobile} onNavigate={handleNavigate} />
           ) : currentPage === 'sales-targets' ? (

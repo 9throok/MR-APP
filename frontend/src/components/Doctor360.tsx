@@ -23,15 +23,12 @@ interface HistoryItem {
 
 function Doctor360({ onLogout, onBack, userName, onNavigate }: Doctor360Props) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [client, setClient] = useState<any>(null)
-
-  useEffect(() => {
-    // Get client data from sessionStorage
-    const stored = sessionStorage.getItem('doctor360Client')
-    if (stored) {
-      setClient(JSON.parse(stored))
-    }
-  }, [])
+  const [client] = useState<any>(() => {
+    try {
+      const stored = sessionStorage.getItem('doctor360Client')
+      return stored ? JSON.parse(stored) : null
+    } catch { return null }
+  })
 
   const handleMenuClick = () => {
     setSidebarOpen(true)
@@ -52,24 +49,23 @@ function Doctor360({ onLogout, onBack, userName, onNavigate }: Doctor360Props) {
     }
   }
 
-  // Dummy data - in real app, this would come from API based on client ID
-  const clientInfo = client || {
-    id: 1,
-    name: 'Dr. Anil Doshi',
-    specialization: 'Cardiologist',
-    mobile: '+91 98765 43210',
-    email: 'anil.doshi@hospital.com',
-    homeAddress: '789 Residential Complex, Juhu, Mumbai - 400049',
-    type: 'doctor',
-    qualification: 'MBBS, MD (Cardiology)',
-    experience: '15 years',
-    hospital: 'New Life Hospital',
-    hospitalAddress: '123 Medical Complex, Bandra West, Mumbai - 400050',
-    clinicAddress: '456 Health Care Center, Andheri East, Mumbai - 400069',
-    consultationFee: '₹800',
-    timings: 'Mon-Fri: 10:00 AM - 2:00 PM',
-    languages: ['English', 'Hindi', 'Marathi'],
+  // If no client data, show message and back button
+  if (!client) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+        <Header onLogout={onLogout} onMenuClick={() => setSidebarOpen(true)} onNavigateHome={() => onNavigate?.('home')} />
+        <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} userName={userName} onNavigate={onNavigate} onLogout={onLogout} />
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 16 }}>
+          <p style={{ color: '#64748b', fontSize: 16 }}>No customer selected.</p>
+          <button onClick={handleBackClick} style={{ padding: '10px 24px', background: 'var(--primary-green)', color: 'white', border: 'none', borderRadius: 10, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+            Back to Customers
+          </button>
+        </div>
+      </div>
+    )
   }
+
+  const clientInfo = client
 
   const handleDCR = () => {
     // Store client info for DCR page
