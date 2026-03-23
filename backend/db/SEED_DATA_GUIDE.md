@@ -27,6 +27,20 @@ Run these files **in order** after a fresh database (schema.sql is auto-run by D
 
 **Note:** `seed.sql` and `dummy_data.sql` both insert into the same `dcr` table. `seed.sql` TRUNCATEs first, so if run after `dummy_data.sql` it replaces the data. For demos, run only one of them (seed.sql is recommended as it's lighter).
 
+### Step 17 — Knowledge Chunks (rechunk.js)
+
+After all SQL seeds are loaded, run the rechunk script to populate `knowledge_chunks` with chunked text and vector embeddings from `drug_knowledge`:
+
+```bash
+GEMINI_API_KEY=<your_key> DATABASE_URL=<your_db_url> node backend/scripts/rechunk.js
+```
+
+- **Source table:** `drug_knowledge` (populated by `seed_knowledge.sql`)
+- **Target table:** `knowledge_chunks` (created by `migration_v3_rag.sql`)
+- **Requires:** `GEMINI_API_KEY` env var for computing embeddings
+- **Safe to re-run:** clears existing chunks before re-inserting
+- **Without this step**, the chatbot/RAG features will not work — semantic search depends on the embeddings in `knowledge_chunks`
+
 ## MR → Territory → Doctor/Pharmacy Mapping
 
 ### Rahul Sharma (`mr_rahul_001`) — Mumbai North
@@ -110,6 +124,8 @@ When modifying seed data, verify all of these:
 7. **Static NBA fallback** — `backend/routes/ai.js` → `getStaticNBA()` has hardcoded doctor/pharmacy names. Update if names change.
 
 8. **seed_doctors.sql TRUNCATEs** — Re-running `seed_doctors.sql` wipes all doctor_profiles, including doctors created via the approval workflow. Only re-run during a full re-seed, not for incremental updates.
+
+9. **knowledge_chunks (rechunk.js)** — After seeding, run `node backend/scripts/rechunk.js` with `GEMINI_API_KEY` set. This is NOT a SQL file — it's a Node script that chunks `drug_knowledge` rows and computes embeddings. Without it, the chatbot/RAG features return empty results.
 
 ## Quick Verification Queries
 
