@@ -4,6 +4,7 @@ import './index.css'
 import App from './App.tsx'
 import './responsive-headings.css'
 import { LanguageProvider } from './contexts/LanguageContext.tsx'
+import { registerServiceWorker } from './utils/registerSW'
 
 const rootElement = document.getElementById('root')
 
@@ -18,3 +19,7 @@ createRoot(rootElement).render(
     </LanguageProvider>
   </StrictMode>,
 )
+
+// Register the Workbox-generated service worker (production builds only —
+// dev mode skips so HMR isn't fighting the SW).
+registerServiceWorker()

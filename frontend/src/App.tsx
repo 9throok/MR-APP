@@ -32,6 +32,7 @@ import NextBestAction from './components/NextBestAction'
 import SalesEntry from './components/SalesEntry'
 import SalesTargets from './components/SalesTargets'
 import SalesDashboard from './components/SalesDashboard'
+import OfflineIndicator from './components/OfflineIndicator'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import './App.css'
 
@@ -230,6 +231,7 @@ function App() {
   return (
     <AuthProvider>
       <AppContent />
+      <OfflineIndicator />
     </AuthProvider>
   )
 }
