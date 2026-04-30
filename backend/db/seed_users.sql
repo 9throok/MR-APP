@@ -11,4 +11,4 @@ VALUES
   ('robert', 'robert.johnson@zenrac.com', '$2b$10$iIiAmrnclY.ZTRkxftd/C.6yLWiN3DJVGwEt2vB1dkrWiUWz75HSS', 'mr', 'Robert Johnson', 'Delhi NCR', 'mr_robert_003'),
   ('manager1', 'manager@zenrac.com', '$2b$10$iIiAmrnclY.ZTRkxftd/C.6yLWiN3DJVGwEt2vB1dkrWiUWz75HSS', 'manager', 'Vikram Singh', 'All', 'mgr_vikram_001'),
   ('admin', 'admin@zenrac.com', '$2b$10$iIiAmrnclY.ZTRkxftd/C.6yLWiN3DJVGwEt2vB1dkrWiUWz75HSS', 'admin', 'Admin User', 'All', 'admin_001')
-ON CONFLICT (username) DO NOTHING;
+ON CONFLICT (org_id, username) DO NOTHING;

@@ -33,7 +33,7 @@ function requireRole(...roles) {
 
 function generateToken(user) {
   return jwt.sign(
-    { id: user.id, user_id: user.user_id, username: user.username, role: user.role, name: user.name, territory: user.territory },
+    { id: user.id, org_id: user.org_id, user_id: user.user_id, username: user.username, role: user.role, name: user.name, territory: user.territory },
     JWT_SECRET,
     { expiresIn: '7d' }
   );
