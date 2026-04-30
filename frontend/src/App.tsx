@@ -38,13 +38,15 @@ import AuditLog from './components/AuditLog'
 import ConsentRegister from './components/ConsentRegister'
 import RegulatoryDocs from './components/RegulatoryDocs'
 import ComplianceInbox from './components/ComplianceInbox'
+import Institutions from './components/Institutions'
+import HCPDataQuality from './components/HCPDataQuality'
 import OfflineIndicator from './components/OfflineIndicator'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import './App.css'
 
-type Page = 'home' | 'clients' | 'tour-plans' | 'edetailing' | 'leaves' | 'inventory' | 'profile' | 'reports' | 'todays-plan' | 'dcr' | 'doctor360' | 'expense-claim' | 'create-expense-claim' | 'offline-requests' | 'enter-rcpa' | 'order-booking' | 'tour-plan-requests' | 'mr-list' | 'mr-detail' | 'my-dcrs' | 'territory-gap' | 'manager-insights' | 'follow-up-tasks' | 'knowledge-upload' | 'adverse-events' | 'nba' | 'doctor-management' | 'sales-entry' | 'sales-targets' | 'sales-dashboard' | 'content-library' | 'mlr-queue' | 'audit-log' | 'consent-register' | 'regulatory-docs' | 'compliance-inbox'
+type Page = 'home' | 'clients' | 'tour-plans' | 'edetailing' | 'leaves' | 'inventory' | 'profile' | 'reports' | 'todays-plan' | 'dcr' | 'doctor360' | 'expense-claim' | 'create-expense-claim' | 'offline-requests' | 'enter-rcpa' | 'order-booking' | 'tour-plan-requests' | 'mr-list' | 'mr-detail' | 'my-dcrs' | 'territory-gap' | 'manager-insights' | 'follow-up-tasks' | 'knowledge-upload' | 'adverse-events' | 'nba' | 'doctor-management' | 'sales-entry' | 'sales-targets' | 'sales-dashboard' | 'content-library' | 'mlr-queue' | 'audit-log' | 'consent-register' | 'regulatory-docs' | 'compliance-inbox' | 'institutions' | 'hcp-data-quality'
 
-const ALL_PAGES: string[] = ['home', 'clients', 'tour-plans', 'edetailing', 'leaves', 'inventory', 'profile', 'reports', 'todays-plan', 'dcr', 'doctor360', 'expense-claim', 'create-expense-claim', 'offline-requests', 'enter-rcpa', 'order-booking', 'tour-plan-requests', 'mr-list', 'mr-detail', 'my-dcrs', 'territory-gap', 'manager-insights', 'follow-up-tasks', 'knowledge-upload', 'adverse-events', 'nba', 'doctor-management', 'sales-entry', 'sales-targets', 'sales-dashboard', 'content-library', 'mlr-queue', 'audit-log', 'consent-register', 'regulatory-docs', 'compliance-inbox']
+const ALL_PAGES: string[] = ['home', 'clients', 'tour-plans', 'edetailing', 'leaves', 'inventory', 'profile', 'reports', 'todays-plan', 'dcr', 'doctor360', 'expense-claim', 'create-expense-claim', 'offline-requests', 'enter-rcpa', 'order-booking', 'tour-plan-requests', 'mr-list', 'mr-detail', 'my-dcrs', 'territory-gap', 'manager-insights', 'follow-up-tasks', 'knowledge-upload', 'adverse-events', 'nba', 'doctor-management', 'sales-entry', 'sales-targets', 'sales-dashboard', 'content-library', 'mlr-queue', 'audit-log', 'consent-register', 'regulatory-docs', 'compliance-inbox', 'institutions', 'hcp-data-quality']
 
 function AppContent() {
   const { isAuthenticated, user, logout: authLogout, isLoading } = useAuth()
@@ -227,6 +229,10 @@ function AppContent() {
             <RegulatoryDocs onLogout={handleLogout} onBack={handleBack} userName={userName} onNavigate={handleNavigate} />
           ) : currentPage === 'compliance-inbox' ? (
             <ComplianceInbox onLogout={handleLogout} onBack={handleBack} userName={userName} onNavigate={handleNavigate} />
+          ) : currentPage === 'institutions' ? (
+            <Institutions onLogout={handleLogout} onBack={handleBack} userName={userName} onNavigate={handleNavigate} />
+          ) : currentPage === 'hcp-data-quality' ? (
+            <HCPDataQuality onLogout={handleLogout} onBack={handleBack} userName={userName} onNavigate={handleNavigate} />
           ) : (
             <Home onLogout={handleLogout} onNavigate={handleNavigate} userName={userName} userEmail={userEmail} userMobile={userMobile} />
           )}

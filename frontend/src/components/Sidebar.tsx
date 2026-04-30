@@ -311,6 +311,26 @@ function Sidebar({ isOpen, onClose, userName, userEmail, userMobile, onNavigate,
             </>
           )}
 
+          {/* ── HCP Master Data (admin/manager) — Phase C.3 ── */}
+          {isManagerOrAdmin && (
+            <>
+              <div className="sidebar-divider"></div>
+              <div className="sidebar-section-label">HCP Master Data</div>
+              <button onClick={() => handleNavClick('institutions')} className={`sidebar-item ${currentPage === 'institutions' ? 'sidebar-item-active' : ''}`}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M3 21H21M5 21V7L13 3V21M19 21V11L13 7M9 9H9.01M9 12H9.01M9 15H9.01M9 18H9.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                <span>Institutions</span>
+              </button>
+              <button onClick={() => handleNavClick('hcp-data-quality')} className={`sidebar-item ${currentPage === 'hcp-data-quality' ? 'sidebar-item-active' : ''}`}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 8V12L14.5 14.5M21 12C21 16.97 16.97 21 12 21C7.03 21 3 16.97 3 12C3 7.03 7.03 3 12 3C16.97 3 21 7.03 21 12Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                <span>HCP Data Quality</span>
+              </button>
+            </>
+          )}
+
           {/* ── MLR Reviewers (medical/legal/regulatory) ── */}
           {isReviewer && (
             <>
