@@ -19,6 +19,10 @@ function Sidebar({ isOpen, onClose, userName, userEmail, userMobile, onNavigate,
   const role = user?.role || 'mr'
   const isMR = role === 'mr'
   const isManagerOrAdmin = role === 'manager' || role === 'admin'
+  const isAdmin = role === 'admin'
+  // MLR reviewer roles ship with Phase B. Any of the three roles (medical /
+  // legal / regulatory) sees the MLR queue link.
+  const isReviewer = role === 'medical_reviewer' || role === 'legal_reviewer' || role === 'regulatory_reviewer'
 
   const handleNavClick = (page: string) => {
     if (onNavigate) {
@@ -254,6 +258,34 @@ function Sidebar({ isOpen, onClose, userName, userEmail, userMobile, onNavigate,
                   <path d="M4 19.5A2.5 2.5 0 016.5 17H20M4 19.5A2.5 2.5 0 014 17V5a2 2 0 012-2h10l6 6v8a2 2 0 01-2 2H6.5A2.5 2.5 0 014 19.5zM14 3v6h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
                 <span>Knowledge Base</span>
+              </button>
+              <button onClick={() => handleNavClick('content-library')} className={`sidebar-item ${currentPage === 'content-library' ? 'sidebar-item-active' : ''}`}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M2 3H8C9.06087 3 10.0783 3.42143 10.8284 4.17157C11.5786 4.92172 12 5.93913 12 7V21C12 20.2044 11.6839 19.4413 11.1213 18.8787C10.5587 18.3161 9.79565 18 9 18H2V3Z M22 3H16C14.9391 3 13.9217 3.42143 13.1716 4.17157C12.4214 4.92172 12 5.93913 12 7V21C12 20.2044 12.3161 19.4413 12.8787 18.8787C13.4413 18.3161 14.2044 18 15 18H22V3Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                <span>Content Library</span>
+              </button>
+              {isAdmin && (
+                <button onClick={() => handleNavClick('mlr-queue')} className={`sidebar-item ${currentPage === 'mlr-queue' ? 'sidebar-item-active' : ''}`}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                  <span>MLR Queue (Admin)</span>
+                </button>
+              )}
+            </>
+          )}
+
+          {/* ── MLR Reviewers (medical/legal/regulatory) ── */}
+          {isReviewer && (
+            <>
+              <div className="sidebar-divider"></div>
+              <div className="sidebar-section-label">MLR Review</div>
+              <button onClick={() => handleNavClick('mlr-queue')} className={`sidebar-item ${currentPage === 'mlr-queue' ? 'sidebar-item-active' : ''}`}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                <span>Review Queue</span>
               </button>
             </>
           )}

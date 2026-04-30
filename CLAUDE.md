@@ -7,7 +7,15 @@ Fast-loading orientation file for Claude Code sessions. Keep concise. Update on 
 Pharma Sales Force Automation (SFA) platform with 9 AI features, evolving into a Veeva-class life-sciences suite (CRM + CLM/MLR + Compliance + Medical Affairs + HCP data).
 
 **Active strategic plan:** `/Users/apple/.claude/plans/study-the-readmes-and-graceful-ladybug.md`
-**Active phase: Phase B Week 1 + Week 2 done.** Phase A complete (A.1–A.8). Phase B Week 1 shipped migration v13 (CLM + MLR with 6 new tables) + 3 new routes (`/api/content`, `/api/mlr`, `/api/content-views`) + extended `users.role`. Week 2 shipped 3 AI features: **Claim Substantiation** (async hook on version upload — extracts marketing claims via LLM, looks up citations via existing knowledgeSearch RAG, writes to `content_claims`), **MLR Pre-Review** (async hook on submit — flags off-label / fair-balance / unsubstantiated-comparison issues; persists into `content_versions.ai_pre_review_notes` JSONB), **Content Recommender** (`GET /api/ai/content-recommender/:user_id` — daily-cached CLM-NBA cloning the existing NBA pattern, with rule-based fallback when LLM unavailable). All hooks fire-and-forget; parent endpoints never break on LLM failure. Next: **Phase B Week 3** — frontend (ContentLibrary.tsx, MLRReviewQueue.tsx, EDetailing.tsx wiring).
+**Active phase: Phase B COMPLETE (Weeks 1, 2, 3).** Phase A complete (A.1–A.8). Phase B shipped end-to-end: 6 new DB tables + 1 daily cache table + 3 backend routes + 3 AI features + 2 new frontend pages + EDetailing.tsx rewiring. **Next: Phase C** (Compliance + Medical Affairs + HCP Master Data).
+
+Phase B Week 3 frontend deliverables (just landed):
+- [frontend/src/components/ContentLibrary.tsx](frontend/src/components/ContentLibrary.tsx) — admin/manager: list assets, upload new asset (multipart), open detail with version history + per-version MLR decisions + claim counts + AI pre-review summaries, Submit for MLR / Publish (admin) / Distribute-to-all action buttons.
+- [frontend/src/components/MLRReviewQueue.tsx](frontend/src/components/MLRReviewQueue.tsx) — role-filtered queue (medical / legal / regulatory), open detail with file link + AI pre-review findings + other reviewers' decisions + extracted claims, decision form (approved / changes_requested / rejected) with required notes for non-approved.
+- [frontend/src/components/EDetailing.tsx](frontend/src/components/EDetailing.tsx) — fetches published content from `/api/content` and merges with the existing demo content; per-page (PDF), per-session (video), per-session (HTML) view events fire-and-forget POST to `/api/content-views`.
+- [frontend/src/App.tsx](frontend/src/App.tsx) — Page enum + renderer extended with `content-library` and `mlr-queue` routes.
+- [frontend/src/components/Sidebar.tsx](frontend/src/components/Sidebar.tsx) — Content Library link in manager/admin block; MLR Queue link in admin block + new isReviewer block (medical/legal/regulatory roles).
+- [frontend/src/contexts/AuthContext.tsx](frontend/src/contexts/AuthContext.tsx) — User type extended with the 3 reviewer roles.
 
 ## Stack
 

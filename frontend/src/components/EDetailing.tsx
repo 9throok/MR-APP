@@ -3,6 +3,7 @@ import { Document, Page, pdfjs } from 'react-pdf'
 import Header from './Header'
 import Sidebar from './Sidebar'
 import { edetailingStore } from '../store/edetailingStore'
+import { apiGet, apiPost } from '../services/apiService'
 import './EDetailing.css'
 import 'react-pdf/dist/Page/AnnotationLayer.css'
 import 'react-pdf/dist/Page/TextLayer.css'
@@ -127,6 +128,12 @@ function EDetailing({ onLogout, onBack, userName, onNavigate }: EDetailingProps)
   const [, setContentType] = useState<'doctor' | 'pharmacy' | 'key-account'>('doctor')
   const [showSendToDCR, setShowSendToDCR] = useState(false)
 
+  // Backend-fetched published content (Phase B). Each row maps to a ContentItem
+  // alongside the existing demo `dummyContent`. We keep the demo items because
+  // they include rich page-level metadata that powers the existing viewer UX —
+  // in production a fully migrated org would have its own published assets.
+  const [backendContent, setBackendContent] = useState<ContentItem[]>([])
+
   // PDF viewer state
   const [selectedPdf, setSelectedPdf] = useState<ContentItem | null>(null)
   const [pdfNumPages, setPdfNumPages] = useState(0)
@@ -169,7 +176,55 @@ function EDetailing({ onLogout, onBack, userName, onNavigate }: EDetailingProps)
     } catch {}
   }, [])
 
-  const filteredContent = dummyContent.filter((item) => {
+  // Fetch published content from the Phase B backend on mount. Errors are
+  // swallowed so the demo content still renders if the API is unreachable.
+  useEffect(() => {
+    let cancelled = false
+    apiGet('/content')
+      .then(resp => {
+        if (cancelled) return
+        type ApiAsset = {
+          id: number
+          title: string
+          asset_type: string
+          description: string | null
+          therapeutic_area: string | null
+          current_version_id: number | null
+          current_file_url: string | null
+        }
+        const items: ContentItem[] = (resp.data || [])
+          .filter((a: ApiAsset) => a.current_version_id && a.current_file_url)
+          .map((a: ApiAsset): ContentItem => {
+            // Map asset_type → ContentType. slide_deck/pdf/brochure → 'pdf' since
+            // the existing viewer renders PDFs; video → 'video'; everything else
+            // → 'html' so the viewer at least opens it.
+            const type: ContentType =
+              a.asset_type === 'video' ? 'video' :
+              a.asset_type === 'slide_deck' || a.asset_type === 'pdf' || a.asset_type === 'brochure' ? 'pdf' :
+              'html'
+            return {
+              id: 10000 + a.id, // offset so IDs never collide with dummy content
+              title: a.title,
+              type,
+              thumbnail: '',
+              category: a.therapeutic_area || 'General',
+              description: a.description || '',
+              url: a.current_file_url || '',
+              contentId: a.current_version_id || undefined,
+              metadata: [],
+            }
+          })
+        setBackendContent(items)
+      })
+      .catch(err => console.warn('[EDetailing] could not fetch /content:', err))
+    return () => { cancelled = true }
+  }, [])
+
+  // Merge backend assets with the demo content. Backend items appear first so
+  // newly-published material is most prominent.
+  const allContent: ContentItem[] = [...backendContent, ...dummyContent]
+
+  const filteredContent = allContent.filter((item) => {
     const matchesFilter = filter === 'all' || item.type === filter
     const matchesSearch =
       item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -177,6 +232,29 @@ function EDetailing({ onLogout, onBack, userName, onNavigate }: EDetailingProps)
       item.description.toLowerCase().includes(searchQuery.toLowerCase())
     return matchesFilter && matchesSearch
   })
+
+  // Best-effort fire-and-forget view recorder. Skip when contentId isn't set
+  // (demo items without a backing version) — the backend would 404 anyway.
+  const recordViewToBackend = (versionId: number | undefined, durationSeconds: number, slideIndex?: number) => {
+    if (!versionId || durationSeconds <= 0) return
+    const dcrIdRaw = sessionStorage.getItem('currentDcrId')
+    const doctorIdRaw = sessionStorage.getItem('currentDoctorId')
+    const payload: {
+      version_id: number
+      duration_seconds: number
+      slide_index?: number
+      doctor_id?: number
+      dcr_id?: number
+    } = { version_id: versionId, duration_seconds: durationSeconds }
+    if (slideIndex != null) payload.slide_index = slideIndex
+    const doctorId = doctorIdRaw ? parseInt(doctorIdRaw, 10) : NaN
+    if (Number.isFinite(doctorId)) payload.doctor_id = doctorId
+    const dcrId = dcrIdRaw ? parseInt(dcrIdRaw, 10) : NaN
+    if (Number.isFinite(dcrId)) payload.dcr_id = dcrId
+    apiPost('/content-views', payload).catch(err =>
+      console.warn('[EDetailing] view-tracking failed:', err)
+    )
+  }
 
   // ── PDF tracking ─────────────────────────────────────────────────────────
   const trackPdfPageTime = useCallback((pageNum: number) => {
@@ -199,11 +277,12 @@ function EDetailing({ onLogout, onBack, userName, onNavigate }: EDetailingProps)
     if (selectedPdf) {
       trackPdfPageTime(pdfCurrentPage)
       const totalSeconds = Object.values(pdfPagesTime).reduce((a, b) => a + b, 0) + (Date.now() - pdfPageStartTime) / 1000
+      const finalPagesTime = { ...pdfPagesTime, [pdfCurrentPage]: (pdfPagesTime[pdfCurrentPage] || 0) + (Date.now() - pdfPageStartTime) / 1000 }
       edetailingStore.addPdfLog({
         title: selectedPdf.title,
         type: 'PDF',
         watchedSeconds: Math.round(totalSeconds * 10) / 10,
-        pages: { ...pdfPagesTime, [pdfCurrentPage]: (pdfPagesTime[pdfCurrentPage] || 0) + (Date.now() - pdfPageStartTime) / 1000 },
+        pages: finalPagesTime,
         contentId: selectedPdf.contentId,
         description: selectedPdf.description,
         metadata: selectedPdf.metadata?.map((m) => ({
@@ -212,6 +291,12 @@ function EDetailing({ onLogout, onBack, userName, onNavigate }: EDetailingProps)
           keywords: m.keywords ?? [],
         })),
         viewedAt: new Date().toISOString(),
+      })
+      // Persist per-page view events to backend (one row per page viewed) so
+      // CLM analytics can roll up. Each page becomes a content_views row with
+      // slide_index = pageNum and duration_seconds = time on that page.
+      Object.entries(finalPagesTime).forEach(([pageStr, secs]) => {
+        recordViewToBackend(selectedPdf.contentId, Math.round((secs as number) * 10) / 10, parseInt(pageStr, 10))
       })
     }
     setSelectedPdf(null)
@@ -264,6 +349,8 @@ function EDetailing({ onLogout, onBack, userName, onNavigate }: EDetailingProps)
           }],
           contentId: selectedVideo.contentId,
         })
+        // Persist a single content_views row for the whole video session.
+        recordViewToBackend(selectedVideo.contentId, watchedSeconds)
       }
     }
     setSelectedVideo(null)
@@ -286,13 +373,22 @@ function EDetailing({ onLogout, onBack, userName, onNavigate }: EDetailingProps)
   }, [selectedHtml, htmlStartTime])
 
   const handleHtmlClose = useCallback(() => {
+    // Compute the final elapsed BEFORE the store call so we can also forward
+    // it to the backend. The trackHtmlTime callback already writes to the
+    // store, so we duplicate the math here rather than threading state.
+    if (selectedHtml) {
+      const elapsed = (Date.now() - htmlStartTime) / 1000
+      if (elapsed > 0) {
+        recordViewToBackend(selectedHtml.contentId, Math.round(elapsed * 10) / 10)
+      }
+    }
     trackHtmlTime()
     setSelectedHtml(null)
     if (htmlIntervalRef.current) {
       clearInterval(htmlIntervalRef.current)
       htmlIntervalRef.current = null
     }
-  }, [trackHtmlTime])
+  }, [selectedHtml, htmlStartTime, trackHtmlTime])
 
   useEffect(() => {
     if (selectedHtml) {

@@ -1,11 +1,15 @@
 import { createContext, useContext, useState, useEffect } from 'react'
 import type { ReactNode } from 'react'
 
+// Phase B added 3 reviewer roles (medical_reviewer, legal_reviewer,
+// regulatory_reviewer) so the MLR queue UI can route by role. Existing roles
+// still work everywhere — only Sidebar.tsx and the MLR pages branch on the
+// new values today.
 interface User {
   id: number
   username: string
   email: string
-  role: 'mr' | 'manager' | 'admin'
+  role: 'mr' | 'manager' | 'admin' | 'medical_reviewer' | 'legal_reviewer' | 'regulatory_reviewer'
   name: string
   territory: string
   user_id: string
