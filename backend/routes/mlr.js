@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
+const { recordAudit } = require('../middleware/auditLog');
 
 const VALID_DECISIONS = ['approved', 'changes_requested', 'rejected'];
 
@@ -237,6 +238,29 @@ router.patch('/reviews/:reviewId', async (req, res) => {
     }
 
     await client.query('COMMIT');
+
+    // Audit (regulated decision)
+    recordAudit({
+      req,
+      action: 'UPDATE',
+      tableName: 'mlr_reviews',
+      rowId: updated[0].id,
+      before: { decision: review.decision, decision_notes: review.decision_notes },
+      after: { decision: updated[0].decision, decision_notes: updated[0].decision_notes },
+      reason: `${review.reviewer_role} reviewer decided '${decision}'`,
+    });
+    if (newVersionStatus) {
+      recordAudit({
+        req,
+        action: 'UPDATE',
+        tableName: 'content_versions',
+        rowId: review.v_id,
+        before: { status: review.version_status },
+        after: { status: newVersionStatus },
+        reason: `Auto-flipped after MLR decision`,
+      });
+    }
+
     res.json({
       success: true,
       data: {

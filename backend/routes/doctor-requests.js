@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
 const { requireRole } = require('../middleware/auth');
+const { recordAudit } = require('../middleware/auditLog');
 
 // GET /api/doctor-requests — list doctor requests
 // MRs see only their own; managers/admins see all
@@ -119,6 +120,16 @@ router.patch('/:id/review', requireRole('manager', 'admin'), async (req, res) =>
     }
 
     await client.query('COMMIT');
+
+    recordAudit({
+      req,
+      action: 'UPDATE',
+      tableName: 'doctor_requests',
+      rowId: request.id,
+      after: { status: request.status, review_notes: request.review_notes, reviewed_by: request.reviewed_by },
+      reason: `Doctor request ${status} by ${req.user.user_id}`,
+    });
+
     res.json({ success: true, data: request });
   } catch (err) {
     await client.query('ROLLBACK');

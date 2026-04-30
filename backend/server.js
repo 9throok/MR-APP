@@ -22,6 +22,10 @@ const sampleRoutes = require('./routes/samples');
 const contentRoutes = require('./routes/content');
 const mlrRoutes = require('./routes/mlr');
 const contentViewRoutes = require('./routes/content-views');
+const auditRoutes = require('./routes/audit');
+const consentRoutes = require('./routes/consent');
+const regulatoryDocsRoutes = require('./routes/regulatory-documents');
+const complianceRoutes = require('./routes/compliance');
 const { authenticateToken } = require('./middleware/auth');
 const { attachOrgScope } = require('./middleware/orgScope');
 
@@ -57,6 +61,10 @@ app.use('/api/samples', authenticateToken, attachOrgScope, sampleRoutes);
 app.use('/api/content', authenticateToken, attachOrgScope, contentRoutes);
 app.use('/api/mlr', authenticateToken, attachOrgScope, mlrRoutes);
 app.use('/api/content-views', authenticateToken, attachOrgScope, contentViewRoutes);
+app.use('/api/audit', authenticateToken, attachOrgScope, auditRoutes);
+app.use('/api/consent', authenticateToken, attachOrgScope, consentRoutes);
+app.use('/api/regulatory-documents', authenticateToken, attachOrgScope, regulatoryDocsRoutes);
+app.use('/api/compliance', authenticateToken, attachOrgScope, complianceRoutes);
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', message: 'Server is running' });
