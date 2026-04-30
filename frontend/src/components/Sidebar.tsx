@@ -276,6 +276,41 @@ function Sidebar({ isOpen, onClose, userName, userEmail, userMobile, onNavigate,
             </>
           )}
 
+          {/* ── Compliance (admin/manager) — Phase C.1 ── */}
+          {isManagerOrAdmin && (
+            <>
+              <div className="sidebar-divider"></div>
+              <div className="sidebar-section-label">Compliance</div>
+              <button onClick={() => handleNavClick('compliance-inbox')} className={`sidebar-item ${currentPage === 'compliance-inbox' ? 'sidebar-item-active' : ''}`}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 9V13M12 17H12.01M10.29 3.86L1.82 18A2 2 0 003.53 21H20.47A2 2 0 0022.18 18L13.71 3.86A2 2 0 0010.29 3.86Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                <span>Compliance Inbox</span>
+              </button>
+              <button onClick={() => handleNavClick('consent-register')} className={`sidebar-item ${currentPage === 'consent-register' ? 'sidebar-item-active' : ''}`}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M9 12L11 14L15 10M21 12C21 16.97 16.97 21 12 21C7.03 21 3 16.97 3 12C3 7.03 7.03 3 12 3C16.97 3 21 7.03 21 12Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                <span>Consent Register</span>
+              </button>
+              <button onClick={() => handleNavClick('regulatory-docs')} className={`sidebar-item ${currentPage === 'regulatory-docs' ? 'sidebar-item-active' : ''}`}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M14 2H6C4.89 2 4 2.9 4 4V20C4 21.1 4.89 22 6 22H18C19.1 22 20 21.1 20 20V8L14 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M14 2V8H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                <span>Regulatory Docs</span>
+              </button>
+              {isAdmin && (
+                <button onClick={() => handleNavClick('audit-log')} className={`sidebar-item ${currentPage === 'audit-log' ? 'sidebar-item-active' : ''}`}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M9 5H7C5.89 5 5 5.89 5 7V19C5 20.1 5.89 21 7 21H17C18.1 21 19 20.1 19 19V7C19 5.89 18.1 5 17 5H15M9 5C9 6.1 9.89 7 11 7H13C14.1 7 15 6.1 15 5M9 5C9 3.89 9.89 3 11 3H13C14.1 3 15 3.89 15 5M9 12H15M9 16H13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                  <span>Audit Log</span>
+                </button>
+              )}
+            </>
+          )}
+
           {/* ── MLR Reviewers (medical/legal/regulatory) ── */}
           {isReviewer && (
             <>

@@ -7,15 +7,22 @@ Fast-loading orientation file for Claude Code sessions. Keep concise. Update on 
 Pharma Sales Force Automation (SFA) platform with 9 AI features, evolving into a Veeva-class life-sciences suite (CRM + CLM/MLR + Compliance + Medical Affairs + HCP data).
 
 **Active strategic plan:** `/Users/apple/.claude/plans/study-the-readmes-and-graceful-ladybug.md`
-**Active phase: Phase B COMPLETE (Weeks 1, 2, 3).** Phase A complete (A.1–A.8). Phase B shipped end-to-end: 6 new DB tables + 1 daily cache table + 3 backend routes + 3 AI features + 2 new frontend pages + EDetailing.tsx rewiring. **Next: Phase C** (Compliance + Medical Affairs + HCP Master Data).
+**Active phase: Phase C.1 COMPLETE (Compliance / Vault-lite).** Phase A complete (A.1–A.8). Phase B complete (Weeks 1–3). Phase C.1 shipped end-to-end. **Next per user-confirmed sequence: Phase C.3 (HCP Master Data) → Phase C.2 (Medical Affairs).**
 
-Phase B Week 3 frontend deliverables (just landed):
-- [frontend/src/components/ContentLibrary.tsx](frontend/src/components/ContentLibrary.tsx) — admin/manager: list assets, upload new asset (multipart), open detail with version history + per-version MLR decisions + claim counts + AI pre-review summaries, Submit for MLR / Publish (admin) / Distribute-to-all action buttons.
-- [frontend/src/components/MLRReviewQueue.tsx](frontend/src/components/MLRReviewQueue.tsx) — role-filtered queue (medical / legal / regulatory), open detail with file link + AI pre-review findings + other reviewers' decisions + extracted claims, decision form (approved / changes_requested / rejected) with required notes for non-approved.
-- [frontend/src/components/EDetailing.tsx](frontend/src/components/EDetailing.tsx) — fetches published content from `/api/content` and merges with the existing demo content; per-page (PDF), per-session (video), per-session (HTML) view events fire-and-forget POST to `/api/content-views`.
-- [frontend/src/App.tsx](frontend/src/App.tsx) — Page enum + renderer extended with `content-library` and `mlr-queue` routes.
-- [frontend/src/components/Sidebar.tsx](frontend/src/components/Sidebar.tsx) — Content Library link in manager/admin block; MLR Queue link in admin block + new isReviewer block (medical/legal/regulatory roles).
-- [frontend/src/contexts/AuthContext.tsx](frontend/src/contexts/AuthContext.tsx) — User type extended with the 3 reviewer roles.
+Phase C.1 deliverables (just landed):
+- [backend/db/migration_v15_compliance.sql](backend/db/migration_v15_compliance.sql) — 5 new tables: `audit_log`, `consent_records`, `regulatory_documents`, `regulatory_document_versions`, `compliance_findings`. RLS placeholders in line with v7–v14.
+- [backend/middleware/auditLog.js](backend/middleware/auditLog.js) — `recordAudit({req, action, tableName, rowId, before, after, reason})` helper. Fire-and-forget. Routes call explicitly on regulated mutations. Exports `REGULATED_TABLES` (18 entries).
+- [backend/routes/audit.js](backend/routes/audit.js) — admin/manager read of the trail: list with filters, per-row history, regulated-tables list, 30-day stats by table + actor.
+- [backend/routes/consent.js](backend/routes/consent.js) — append-only consent CRUD: `GET /doctor/:id`, `GET /doctor/:id/history`, `POST /` (grant/revoke/withdraw), `GET /check?doctor_id&channel`. The /check endpoint is the gate other routes call before sending marketing.
+- [backend/routes/regulatory-documents.js](backend/routes/regulatory-documents.js) — Multer-backed lite repo (uploads at `uploads/regulatory/<id>/`): list/detail/upload/version-upload/status-patch + `/expiring?days=N` for the dashboard.
+- [backend/routes/compliance.js](backend/routes/compliance.js) — Watchdog inbox read: list/stats/decision PATCH (acknowledged/dismissed/escalated/resolved).
+- [backend/services/complianceWatchdog.js](backend/services/complianceWatchdog.js) + [backend/prompts/complianceWatchdog.js](backend/prompts/complianceWatchdog.js) — async DCR scanner mirroring `aeDetection.js`. Flags off-label / fair-balance / gift-threshold / unsubstantiated-claim. Optionally pulls the active drug-label regulatory doc as label-hint context.
+- [backend/routes/dcr.js](backend/routes/dcr.js) — DCR POST now fires Watchdog + a rule-based consent check that logs an `unconsented_contact` finding when a marketing visit is recorded for a doctor whose `marketing_visit` consent is currently revoked/withdrawn. Also writes the audit row.
+- [backend/routes/mlr.js](backend/routes/mlr.js) + [backend/routes/doctor-requests.js](backend/routes/doctor-requests.js) — `recordAudit` calls on regulated decisions (review approval/rejection, version status auto-flip).
+- 4 new frontend pages — [AuditLog.tsx](frontend/src/components/AuditLog.tsx), [ConsentRegister.tsx](frontend/src/components/ConsentRegister.tsx), [RegulatoryDocs.tsx](frontend/src/components/RegulatoryDocs.tsx), [ComplianceInbox.tsx](frontend/src/components/ComplianceInbox.tsx). All reuse `KnowledgeUpload.css` chrome.
+- [frontend/src/App.tsx](frontend/src/App.tsx) — Page type + renderer extended with `audit-log`, `consent-register`, `regulatory-docs`, `compliance-inbox`.
+- [frontend/src/components/Sidebar.tsx](frontend/src/components/Sidebar.tsx) — new "Compliance" section visible to manager+admin (Compliance Inbox / Consent Register / Regulatory Docs); Audit Log gated to admin only.
+- E2E smoke (20/20 against fresh Postgres): login → audit/regulated-tables → POST consent → /check allowed → revoke → /check denied → DCR for revoked doctor → unconsented_contact finding auto-created → finding PATCH → multipart regulatory upload → audit_log captures all writes.
 
 ## Stack
 
@@ -46,11 +53,11 @@ Phase B Week 3 frontend deliverables (just landed):
 
 ## Implemented inventory (refresh on each phase exit)
 
-**Backend routes registered in [server.js](backend/server.js) (20):** auth, dcr, ai, products, tasks, knowledge, adverse-events, doctors, doctor-requests, rcpa, sales, targets, tour-plans, expenses, leaves, orders, samples, content, mlr, content-views.
+**Backend routes registered in [server.js](backend/server.js) (24):** auth, dcr, ai, products, tasks, knowledge, adverse-events, doctors, doctor-requests, rcpa, sales, targets, tour-plans, expenses, leaves, orders, samples, content, mlr, content-views, audit, consent, regulatory-documents, compliance.
 
-**AI features (9 prompts in [backend/prompts/](backend/prompts/)):** preCallBriefing, postCallExtraction, territoryGap, managerQuery, productSignals, nextBestAction, clinicalChat, aeDetection, competitorIntel.
+**AI features (10 prompts in [backend/prompts/](backend/prompts/)):** preCallBriefing, postCallExtraction, territoryGap, managerQuery, productSignals, nextBestAction, clinicalChat, aeDetection, competitorIntel, complianceWatchdog. (claimExtraction + mlrPreReview + contentRecommender from Phase B also live here.)
 
-**DB tables (35):** organizations, products, dcr, users, follow_up_tasks, drug_knowledge, knowledge_chunks, chat_sessions, chat_messages, adverse_events, doctor_profiles, doctor_requests, nba_recommendations, rcpa, pharmacy_profiles, distributors, secondary_sales, mr_targets, tour_plans, tour_plan_visits, expense_claims, expense_line_items, leaves, leave_balances, orders, order_line_items, sample_stock, sample_movements, content_assets, content_versions, mlr_reviews, content_distributions, content_views, content_claims, content_recommendations. Every tenant table has `org_id uuid NOT NULL` (FK → organizations.id) since `migration_v7_multitenancy.sql`.
+**DB tables (40):** organizations, products, dcr, users, follow_up_tasks, drug_knowledge, knowledge_chunks, chat_sessions, chat_messages, adverse_events, doctor_profiles, doctor_requests, nba_recommendations, rcpa, pharmacy_profiles, distributors, secondary_sales, mr_targets, tour_plans, tour_plan_visits, expense_claims, expense_line_items, leaves, leave_balances, orders, order_line_items, sample_stock, sample_movements, content_assets, content_versions, mlr_reviews, content_distributions, content_views, content_claims, content_recommendations, audit_log, consent_records, regulatory_documents, regulatory_document_versions, compliance_findings. Every tenant table has `org_id uuid NOT NULL` (FK → organizations.id) since `migration_v7_multitenancy.sql`.
 
 **Frontend-only stubs (Phase A targets — UI exists, no API/DB):**
 - Daily Tour Plans backend ✓ shipped (A.2). Frontend ([TourPlans.tsx](frontend/src/components/TourPlans.tsx)) still uses local state — wiring it to `/api/tour-plans` is a follow-up.
@@ -70,7 +77,9 @@ Phase B Week 3 frontend deliverables (just landed):
 - **Phase 0** — docs hygiene: this file + slim README + move legacy docs.
 - **Phase A** — finish SFA stubs (tour plans, expenses, leaves, orders, samples) + multi-tenancy retrofit + PWA.
 - **Phase B** — CLM/MLR content engine: content library, MLR approval workflow, AI claim substantiation, view tracking.
-- **Phase C** — Compliance (audit log, consent, sample chain-of-custody, regulatory docs) + Medical Affairs (medical queries, KOLs) + HCP master data layer.
+- **Phase C.1** ✅ — Compliance / Vault-lite: audit log, consent register, regulatory docs, AI Compliance Watchdog.
+- **Phase C.3** (next) — HCP Master Data: hospitals/clinics, hcp_affiliations, specialty taxonomy, territory_alignments, AI HCP Enrichment.
+- **Phase C.2** — Medical Affairs: medical queries, KOL profiles, medical engagements, AI auto-answer + KOL identifier.
 
 ## Out of scope (don't waste cycles)
 
