@@ -7,7 +7,18 @@ Fast-loading orientation file for Claude Code sessions. Keep concise. Update on 
 Pharma Sales Force Automation (SFA) platform with 9 AI features, evolving into a Veeva-class life-sciences suite (CRM + CLM/MLR + Compliance + Medical Affairs + HCP data).
 
 **Active strategic plan:** `/Users/apple/.claude/plans/study-the-readmes-and-graceful-ladybug.md`
-**Active phase: Phase C.3 COMPLETE (HCP Master Data Layer).** Phase A ✓, Phase B ✓, Phase C.1 ✓, Phase C.3 ✓. Phase C.3 shipped end-to-end: migration v16 + 4 new tables (institutions, hcp_specialties_taxonomy seeded with 32 codes, hcp_affiliations, territory_alignments) + 7 new fields on doctor_profiles (npi_number / mci_number / email / practice_address / last_enriched_at / enrichment_metadata / specialty_code FK) + 5 backend routes (institutions, affiliations, specialties, territory-alignments, hcp) + 1 AI HCP Enrichment service (synchronous LLM with taxonomy-validated specialty mapping) + data-quality dashboard + 2 new frontend pages (Institutions, HCPDataQuality with inline AI enrich modal) + Sidebar HCP Master Data section. Smoke test green: 16/16 endpoints validated against fresh Postgres. **Next: Phase C.2** (Medical Affairs — medical queries, KOL profiles, AI auto-answer + KOL identifier).
+**Active phase: Phase C COMPLETE — full Veeva-class life-sciences suite shipped.** Phase A ✓, Phase B ✓, Phase C.1 ✓, Phase C.3 ✓, Phase C.2 ✓.
+
+Phase C.2 (just landed) — Medical Affairs end-to-end:
+- migration v17 + 4 new tables (`medical_queries`, `kol_profiles`, `medical_engagements`, `engagement_attendees`)
+- 3 backend routes: `medical-queries.js` (capture + status machine open→in_review→answered→sent + claim flow + redraft), `kols.js` (CRUD + AI identify + tier validation), `medical-engagements.js` (engagements + attendees with auto-stamp on kol_profiles.last_engagement_at)
+- 2 new AI features:
+  - **AI Medical Query Auto-Answer** ([services/medicalQueryAnswer.js](backend/services/medicalQueryAnswer.js)) — RAG over `drug_knowledge` via existing `searchKnowledge`, fire-and-forget on capture, drafts citation-tagged answer; reviewer can re-trigger via POST /:id/redraft.
+  - **AI KOL Identifier** ([services/kolIdentifier.js](backend/services/kolIdentifier.js)) — synchronous LLM scoring; bundles signals from DCR (90d) + RCPA volume + active affiliations + existing kol_profiles row; returns tier suggestion + rationale + actions + data gaps; manager confirms via PATCH.
+- 3 new frontend pages: [MedicalQueries.tsx](frontend/src/components/MedicalQueries.tsx) (capture form + reviewer queue + claim/answer/send modal with re-draft button), [KOLDashboard.tsx](frontend/src/components/KOLDashboard.tsx) (list + AI Identify modal with confirm/persist), [MedicalEngagements.tsx](frontend/src/components/MedicalEngagements.tsx) (list + create + add-attendee with KOL tier display). Sidebar Medical Affairs section visible to admin/manager + medical_reviewer.
+- Smoke test green: 16/16 endpoints validated against fresh Postgres incl. status-machine 409 enforcement, audit capture across all writes, attendee dup-prevent, KOL last_engagement auto-stamp.
+
+**Phase C is fully complete.** No further phase scope is on the strategic plan. Open questions for next session: tighten existing work (RLS strict mode, wire remaining Phase A frontend stubs to backend, /test.sh extension for Phase B/C.1/C.2/C.3) or polish/demo deployment.
 
 Phase C.1 deliverables (just landed):
 - [backend/db/migration_v15_compliance.sql](backend/db/migration_v15_compliance.sql) — 5 new tables: `audit_log`, `consent_records`, `regulatory_documents`, `regulatory_document_versions`, `compliance_findings`. RLS placeholders in line with v7–v14.
@@ -53,11 +64,11 @@ Phase C.1 deliverables (just landed):
 
 ## Implemented inventory (refresh on each phase exit)
 
-**Backend routes registered in [server.js](backend/server.js) (29):** auth, dcr, ai, products, tasks, knowledge, adverse-events, doctors, doctor-requests, rcpa, sales, targets, tour-plans, expenses, leaves, orders, samples, content, mlr, content-views, audit, consent, regulatory-documents, compliance, institutions, affiliations, specialties, territory-alignments, hcp.
+**Backend routes registered in [server.js](backend/server.js) (32):** auth, dcr, ai, products, tasks, knowledge, adverse-events, doctors, doctor-requests, rcpa, sales, targets, tour-plans, expenses, leaves, orders, samples, content, mlr, content-views, audit, consent, regulatory-documents, compliance, institutions, affiliations, specialties, territory-alignments, hcp, medical-queries, kols, medical-engagements.
 
-**AI features (11 prompts in [backend/prompts/](backend/prompts/)):** preCallBriefing, postCallExtraction, territoryGap, managerQuery, productSignals, nextBestAction, clinicalChat, aeDetection, competitorIntel, complianceWatchdog, hcpEnrichment. (claimExtraction + mlrPreReview + contentRecommender from Phase B also live here.)
+**AI features (13 prompts in [backend/prompts/](backend/prompts/)):** preCallBriefing, postCallExtraction, territoryGap, managerQuery, productSignals, nextBestAction, clinicalChat, aeDetection, competitorIntel, complianceWatchdog, hcpEnrichment, medicalQueryAnswer, kolIdentifier. (claimExtraction + mlrPreReview + contentRecommender from Phase B also live here.)
 
-**DB tables (44):** organizations, products, dcr, users, follow_up_tasks, drug_knowledge, knowledge_chunks, chat_sessions, chat_messages, adverse_events, doctor_profiles, doctor_requests, nba_recommendations, rcpa, pharmacy_profiles, distributors, secondary_sales, mr_targets, tour_plans, tour_plan_visits, expense_claims, expense_line_items, leaves, leave_balances, orders, order_line_items, sample_stock, sample_movements, content_assets, content_versions, mlr_reviews, content_distributions, content_views, content_claims, content_recommendations, audit_log, consent_records, regulatory_documents, regulatory_document_versions, compliance_findings, institutions, hcp_specialties_taxonomy, hcp_affiliations, territory_alignments. Every tenant table has `org_id uuid NOT NULL` (FK → organizations.id) since `migration_v7_multitenancy.sql`. (`hcp_specialties_taxonomy` is the one shared-across-orgs table — RLS policy is open by design since it's controlled vocab.)
+**DB tables (48):** organizations, products, dcr, users, follow_up_tasks, drug_knowledge, knowledge_chunks, chat_sessions, chat_messages, adverse_events, doctor_profiles, doctor_requests, nba_recommendations, rcpa, pharmacy_profiles, distributors, secondary_sales, mr_targets, tour_plans, tour_plan_visits, expense_claims, expense_line_items, leaves, leave_balances, orders, order_line_items, sample_stock, sample_movements, content_assets, content_versions, mlr_reviews, content_distributions, content_views, content_claims, content_recommendations, audit_log, consent_records, regulatory_documents, regulatory_document_versions, compliance_findings, institutions, hcp_specialties_taxonomy, hcp_affiliations, territory_alignments, medical_queries, kol_profiles, medical_engagements, engagement_attendees. Every tenant table has `org_id uuid NOT NULL` (FK → organizations.id) since `migration_v7_multitenancy.sql`. (`hcp_specialties_taxonomy` is the one shared-across-orgs table — RLS policy is open by design since it's controlled vocab.)
 
 **Frontend-only stubs (Phase A targets — UI exists, no API/DB):**
 - Daily Tour Plans backend ✓ shipped (A.2). Frontend ([TourPlans.tsx](frontend/src/components/TourPlans.tsx)) still uses local state — wiring it to `/api/tour-plans` is a follow-up.
@@ -79,7 +90,7 @@ Phase C.1 deliverables (just landed):
 - **Phase B** — CLM/MLR content engine: content library, MLR approval workflow, AI claim substantiation, view tracking.
 - **Phase C.1** ✅ — Compliance / Vault-lite: audit log, consent register, regulatory docs, AI Compliance Watchdog.
 - **Phase C.3** ✅ — HCP Master Data: institutions, hcp_affiliations, specialty taxonomy, versioned territory_alignments, AI HCP Enrichment, data-quality dashboard.
-- **Phase C.2** (next) — Medical Affairs: medical queries, KOL profiles, medical engagements, AI auto-answer + KOL identifier.
+- **Phase C.2** ✅ — Medical Affairs: medical queries with RAG-backed AI auto-answer, KOL profiles + AI Identifier, medical engagements with attendees + auto-stamped KOL last_engagement.
 
 ## Out of scope (don't waste cycles)
 

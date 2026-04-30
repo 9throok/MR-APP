@@ -40,13 +40,16 @@ import RegulatoryDocs from './components/RegulatoryDocs'
 import ComplianceInbox from './components/ComplianceInbox'
 import Institutions from './components/Institutions'
 import HCPDataQuality from './components/HCPDataQuality'
+import MedicalQueries from './components/MedicalQueries'
+import KOLDashboard from './components/KOLDashboard'
+import MedicalEngagements from './components/MedicalEngagements'
 import OfflineIndicator from './components/OfflineIndicator'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import './App.css'
 
-type Page = 'home' | 'clients' | 'tour-plans' | 'edetailing' | 'leaves' | 'inventory' | 'profile' | 'reports' | 'todays-plan' | 'dcr' | 'doctor360' | 'expense-claim' | 'create-expense-claim' | 'offline-requests' | 'enter-rcpa' | 'order-booking' | 'tour-plan-requests' | 'mr-list' | 'mr-detail' | 'my-dcrs' | 'territory-gap' | 'manager-insights' | 'follow-up-tasks' | 'knowledge-upload' | 'adverse-events' | 'nba' | 'doctor-management' | 'sales-entry' | 'sales-targets' | 'sales-dashboard' | 'content-library' | 'mlr-queue' | 'audit-log' | 'consent-register' | 'regulatory-docs' | 'compliance-inbox' | 'institutions' | 'hcp-data-quality'
+type Page = 'home' | 'clients' | 'tour-plans' | 'edetailing' | 'leaves' | 'inventory' | 'profile' | 'reports' | 'todays-plan' | 'dcr' | 'doctor360' | 'expense-claim' | 'create-expense-claim' | 'offline-requests' | 'enter-rcpa' | 'order-booking' | 'tour-plan-requests' | 'mr-list' | 'mr-detail' | 'my-dcrs' | 'territory-gap' | 'manager-insights' | 'follow-up-tasks' | 'knowledge-upload' | 'adverse-events' | 'nba' | 'doctor-management' | 'sales-entry' | 'sales-targets' | 'sales-dashboard' | 'content-library' | 'mlr-queue' | 'audit-log' | 'consent-register' | 'regulatory-docs' | 'compliance-inbox' | 'institutions' | 'hcp-data-quality' | 'medical-queries' | 'kol-dashboard' | 'medical-engagements'
 
-const ALL_PAGES: string[] = ['home', 'clients', 'tour-plans', 'edetailing', 'leaves', 'inventory', 'profile', 'reports', 'todays-plan', 'dcr', 'doctor360', 'expense-claim', 'create-expense-claim', 'offline-requests', 'enter-rcpa', 'order-booking', 'tour-plan-requests', 'mr-list', 'mr-detail', 'my-dcrs', 'territory-gap', 'manager-insights', 'follow-up-tasks', 'knowledge-upload', 'adverse-events', 'nba', 'doctor-management', 'sales-entry', 'sales-targets', 'sales-dashboard', 'content-library', 'mlr-queue', 'audit-log', 'consent-register', 'regulatory-docs', 'compliance-inbox', 'institutions', 'hcp-data-quality']
+const ALL_PAGES: string[] = ['home', 'clients', 'tour-plans', 'edetailing', 'leaves', 'inventory', 'profile', 'reports', 'todays-plan', 'dcr', 'doctor360', 'expense-claim', 'create-expense-claim', 'offline-requests', 'enter-rcpa', 'order-booking', 'tour-plan-requests', 'mr-list', 'mr-detail', 'my-dcrs', 'territory-gap', 'manager-insights', 'follow-up-tasks', 'knowledge-upload', 'adverse-events', 'nba', 'doctor-management', 'sales-entry', 'sales-targets', 'sales-dashboard', 'content-library', 'mlr-queue', 'audit-log', 'consent-register', 'regulatory-docs', 'compliance-inbox', 'institutions', 'hcp-data-quality', 'medical-queries', 'kol-dashboard', 'medical-engagements']
 
 function AppContent() {
   const { isAuthenticated, user, logout: authLogout, isLoading } = useAuth()
@@ -233,6 +236,12 @@ function AppContent() {
             <Institutions onLogout={handleLogout} onBack={handleBack} userName={userName} onNavigate={handleNavigate} />
           ) : currentPage === 'hcp-data-quality' ? (
             <HCPDataQuality onLogout={handleLogout} onBack={handleBack} userName={userName} onNavigate={handleNavigate} />
+          ) : currentPage === 'medical-queries' ? (
+            <MedicalQueries onLogout={handleLogout} onBack={handleBack} userName={userName} onNavigate={handleNavigate} />
+          ) : currentPage === 'kol-dashboard' ? (
+            <KOLDashboard onLogout={handleLogout} onBack={handleBack} userName={userName} onNavigate={handleNavigate} />
+          ) : currentPage === 'medical-engagements' ? (
+            <MedicalEngagements onLogout={handleLogout} onBack={handleBack} userName={userName} onNavigate={handleNavigate} />
           ) : (
             <Home onLogout={handleLogout} onNavigate={handleNavigate} userName={userName} userEmail={userEmail} userMobile={userMobile} />
           )}

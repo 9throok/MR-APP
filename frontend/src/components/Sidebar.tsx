@@ -311,6 +311,36 @@ function Sidebar({ isOpen, onClose, userName, userEmail, userMobile, onNavigate,
             </>
           )}
 
+          {/* ── Medical Affairs — Phase C.2 ── */}
+          {(isManagerOrAdmin || role === 'medical_reviewer') && (
+            <>
+              <div className="sidebar-divider"></div>
+              <div className="sidebar-section-label">Medical Affairs</div>
+              <button onClick={() => handleNavClick('medical-queries')} className={`sidebar-item ${currentPage === 'medical-queries' ? 'sidebar-item-active' : ''}`}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M8 9H16M8 13H14M21 12C21 16.97 16.97 21 12 21C10.5 21 9 20.5 7.7 19.7L3 21L4.3 16.3C3.5 15 3 13.5 3 12C3 7.03 7.03 3 12 3C16.97 3 21 7.03 21 12Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                <span>Medical Queries</span>
+              </button>
+              {isManagerOrAdmin && (
+                <>
+                  <button onClick={() => handleNavClick('kol-dashboard')} className={`sidebar-item ${currentPage === 'kol-dashboard' ? 'sidebar-item-active' : ''}`}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M12 15L8.5 18L10 13L6 10H11L12 5L13 10H18L14 13L15.5 18L12 15Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    <span>KOL Dashboard</span>
+                  </button>
+                  <button onClick={() => handleNavClick('medical-engagements')} className={`sidebar-item ${currentPage === 'medical-engagements' ? 'sidebar-item-active' : ''}`}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M17 21V19C17 17.9 16.6 16.9 15.8 16.2C15.1 15.4 14.1 15 13 15H5C3.9 15 2.9 15.4 2.2 16.2C1.4 16.9 1 17.9 1 19V21M23 21V19C23 18.1 22.7 17.3 22.2 16.6C21.6 15.9 20.9 15.4 20 15.1M16 3.1C16.9 3.4 17.6 3.9 18.2 4.6C18.7 5.3 19 6.1 19 7C19 7.9 18.7 8.7 18.2 9.4C17.6 10.1 16.9 10.6 16 10.9M13 7C13 9.2 11.2 11 9 11C6.8 11 5 9.2 5 7C5 4.8 6.8 3 9 3C11.2 3 13 4.8 13 7Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    <span>Engagements</span>
+                  </button>
+                </>
+              )}
+            </>
+          )}
+
           {/* ── HCP Master Data (admin/manager) — Phase C.3 ── */}
           {isManagerOrAdmin && (
             <>
