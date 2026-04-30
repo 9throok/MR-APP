@@ -52,65 +52,17 @@ zenapp-backend/
 └── README.md
 ```
 
-## Quick Start
+## Setup
 
-### Backend (Docker)
+For local dev (Docker, migrations, seed data, default logins, all API endpoints), see [backend/SETUP.md](backend/SETUP.md). For migration / seed execution order, see [backend/db/SEED_DATA_GUIDE.md](backend/db/SEED_DATA_GUIDE.md).
 
-```bash
-cd backend
+## Documentation
 
-# Configure environment
-cp .env.example .env
-# Edit .env — set your LLM_PROVIDER and API key
-
-# Start Postgres + Node
-docker-compose -f docker-compose.local.yml up --build
-
-# Run migrations and seed data (in order)
-docker exec -i zenapp-postgres psql -U postgres -d zenapp < db/dummy_data.sql
-docker exec -i zenapp-postgres psql -U postgres -d zenapp < db/migration_v2.sql
-docker exec -i zenapp-postgres psql -U postgres -d zenapp < db/seed_users.sql
-docker exec -i zenapp-postgres psql -U postgres -d zenapp < db/seed_doctors.sql
-docker exec -i zenapp-postgres psql -U postgres -d zenapp < db/seed_knowledge.sql
-docker exec -i zenapp-postgres psql -U postgres -d zenapp < db/seed_demo_data.sql
-docker exec -i zenapp-postgres psql -U postgres -d zenapp < db/migration_v3.sql
-docker exec -i zenapp-postgres psql -U postgres -d zenapp < db/rcpa_dummy_data.sql
-
-# V4 RAG migration — knowledge_chunks (with pgvector), chat_sessions, chat_messages
-# Requires pgvector extension (included in postgres:16 Docker image)
-docker exec -i zenapp-postgres psql -U postgres -d zenapp < db/migration_v3_rag.sql
-
-# Chunk + embed existing knowledge base documents
-docker exec zenapp-backend-local node scripts/rechunk.js
-
-# V5 — pharmacy_profiles table (for NBA visit recommendations)
-docker exec -i zenapp-postgres psql -U postgres -d zenapp < db/migration_v4_pharmacies.sql
-docker exec -i zenapp-postgres psql -U postgres -d zenapp < db/seed_pharmacies.sql
-
-# V6 — doctor_requests table (MR doctor request/approval workflow)
-docker exec -i zenapp-postgres psql -U postgres -d zenapp < db/migration_v5_doctor_requests.sql
-```
-
-> **Note:** The RAG migration (`migration_v3_rag.sql`) requires the pgvector PostgreSQL extension. The default `postgres:16` Docker image does not include it. If pgvector is not available, the system will fall back to FTS-only search (no semantic/vector search). To enable pgvector, use `pgvector/pgvector:pg16` as your Docker image instead.
-
-### Frontend
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-Frontend runs on `http://localhost:5173`, backend on `http://localhost:3001`.
-
-### Default Logins
-
-| Username | Password | Role |
-|----------|----------|------|
-| `rahul` | `password123` | MR |
-| `priya` | `password123` | MR |
-| `robert` | `password123` | MR |
-| `manager1` | `password123` | Manager |
-| `admin` | `password123` | Admin |
-
-> See [backend/SETUP.md](backend/SETUP.md) for full setup guide, all API endpoints, and database details.
+| Doc | Purpose |
+|-----|---------|
+| [backend/SETUP.md](backend/SETUP.md) | Local setup, Docker, migrations, API endpoints, default logins |
+| [backend/db/SEED_DATA_GUIDE.md](backend/db/SEED_DATA_GUIDE.md) | Migration + seed execution order |
+| [FEATURES.md](FEATURES.md) | Feature inventory — every page, endpoint, and AI prompt |
+| [AI_FEATURES_REPORT.md](AI_FEATURES_REPORT.md) | Deep-dive on the 9 AI features |
+| [docs/APP_HEALTH_REPORT.md](docs/APP_HEALTH_REPORT.md) | Audit of frontend-only stubs and missing backend APIs |
+| [CLAUDE.md](CLAUDE.md) | Orientation file for Claude Code sessions |
