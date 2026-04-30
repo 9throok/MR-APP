@@ -26,6 +26,11 @@ const auditRoutes = require('./routes/audit');
 const consentRoutes = require('./routes/consent');
 const regulatoryDocsRoutes = require('./routes/regulatory-documents');
 const complianceRoutes = require('./routes/compliance');
+const institutionRoutes = require('./routes/institutions');
+const affiliationRoutes = require('./routes/affiliations');
+const specialtyRoutes = require('./routes/specialties');
+const territoryAlignmentRoutes = require('./routes/territory-alignments');
+const hcpRoutes = require('./routes/hcp');
 const { authenticateToken } = require('./middleware/auth');
 const { attachOrgScope } = require('./middleware/orgScope');
 
@@ -65,6 +70,11 @@ app.use('/api/audit', authenticateToken, attachOrgScope, auditRoutes);
 app.use('/api/consent', authenticateToken, attachOrgScope, consentRoutes);
 app.use('/api/regulatory-documents', authenticateToken, attachOrgScope, regulatoryDocsRoutes);
 app.use('/api/compliance', authenticateToken, attachOrgScope, complianceRoutes);
+app.use('/api/institutions', authenticateToken, attachOrgScope, institutionRoutes);
+app.use('/api/affiliations', authenticateToken, attachOrgScope, affiliationRoutes);
+app.use('/api/specialties', authenticateToken, attachOrgScope, specialtyRoutes);
+app.use('/api/territory-alignments', authenticateToken, attachOrgScope, territoryAlignmentRoutes);
+app.use('/api/hcp', authenticateToken, attachOrgScope, hcpRoutes);
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', message: 'Server is running' });
