@@ -5,6 +5,8 @@ const fs = require('fs');
 const multer = require('multer');
 const db = require('../config/db');
 const { requireRole } = require('../middleware/auth');
+const { extractAndSubstantiateClaims } = require('../services/contentScanner');
+const { runMlrPreReview } = require('../services/mlrPreReview');
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Multer setup for content asset uploads
@@ -17,7 +19,10 @@ const { requireRole } = require('../middleware/auth');
 // inserting upfront.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const ALLOWED_EXTS = ['.pdf', '.pptx', '.ppt', '.mp4', '.mov', '.webm', '.png', '.jpg', '.jpeg'];
+// File types accepted as marketing content. Decks/PDFs are the bulk of real
+// detail aids; plain text (.txt / .md) supports one-pagers and HTML-source
+// uploads; images and short videos cover banner + clip use cases.
+const ALLOWED_EXTS = ['.pdf', '.pptx', '.ppt', '.mp4', '.mov', '.webm', '.png', '.jpg', '.jpeg', '.txt', '.md'];
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB — slide decks and trial videos run large
 
 const storage = multer.diskStorage({
@@ -293,6 +298,13 @@ router.post('/', requireRole('manager', 'admin'), uploadContent.single('file'), 
     const version = versionRows[0];
 
     await client.query('COMMIT');
+
+    // Async claim-substantiation hook — fire-and-forget. Never blocks the
+    // response and never throws to caller (mirrors aeDetection pattern).
+    extractAndSubstantiateClaims(version).catch(err =>
+      console.error('[ContentScanner] async error on asset create:', err.message)
+    );
+
     res.status(201).json({ success: true, data: { ...asset, versions: [version] } });
   } catch (err) {
     await client.query('ROLLBACK');
@@ -354,9 +366,16 @@ router.post('/:id/versions', requireRole('manager', 'admin'), uploadContent.sing
        req.file.mimetype, req.file.size,
        expiry_date || null, change_notes || null]
     );
+    const newVersion = versionRows[0];
 
     await client.query('COMMIT');
-    res.status(201).json({ success: true, data: versionRows[0] });
+
+    // Async claim-substantiation hook — fire-and-forget.
+    extractAndSubstantiateClaims(newVersion).catch(err =>
+      console.error('[ContentScanner] async error on version upload:', err.message)
+    );
+
+    res.status(201).json({ success: true, data: newVersion });
   } catch (err) {
     await client.query('ROLLBACK');
     discardUpload(req.file);
@@ -472,6 +491,12 @@ router.post('/:id/versions/:vid/submit', async (req, res) => {
     }
 
     await client.query('COMMIT');
+
+    // Async MLR pre-review hook — fire-and-forget. Submit succeeds regardless.
+    runMlrPreReview(updated[0]).catch(err =>
+      console.error('[MLRPreReview] async error on submit:', err.message)
+    );
+
     res.json({ success: true, data: updated[0] });
   } catch (err) {
     await client.query('ROLLBACK');

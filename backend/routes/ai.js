@@ -9,6 +9,7 @@ const { buildProductSignalsMessages } = require('../prompts/productSignals');
 const { buildPostCallExtractionMessages } = require('../prompts/postCallExtraction');
 const { buildNextBestActionMessages } = require('../prompts/nextBestAction');
 const { buildCompetitorIntelMessages } = require('../prompts/competitorIntel');
+const { buildContentRecommenderMessages } = require('../prompts/contentRecommender');
 
 // ─────────────────────────────────────────────────────────────────────────────
 // POST /api/ai/precall-briefing
@@ -829,6 +830,242 @@ router.get('/competitor-intel', async (req, res) => {
 
   } catch (err) {
     console.error('[AI] competitor-intel error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GET /api/ai/content-recommender/:user_id
+//
+// Phase B "CLM NBA": for an MR, look at upcoming planned doctors (from tour
+// plans / recent visit cadence), the org's published content library, and the
+// MR's recent content_views. Recommend the best detail aid for each upcoming
+// doctor visit.
+//
+// Cached daily per (org, user, date) in content_recommendations. Pass
+// ?refresh=true to force regeneration. Cache pattern mirrors NBA exactly.
+// ─────────────────────────────────────────────────────────────────────────────
+router.get('/content-recommender/:user_id', async (req, res) => {
+  try {
+    const { user_id } = req.params;
+    const refresh = req.query.refresh === 'true';
+
+    // Authorisation: MR can only request their own; manager/admin can request any.
+    if (req.user.role === 'mr' && req.user.user_id !== user_id) {
+      return res.status(403).json({ error: 'MRs can only request their own content recommendations' });
+    }
+
+    // 1) Cache check — same daily UNIQUE shape as NBA
+    if (!refresh) {
+      const { rows: cached } = await db.query(
+        `SELECT * FROM content_recommendations
+         WHERE org_id = $1 AND user_id = $2 AND date = CURRENT_DATE`,
+        [req.org_id, user_id]
+      );
+      if (cached.length > 0 && cached[0].recommendations) {
+        return res.json({
+          success: true,
+          date: cached[0].date,
+          recommendations: cached[0].recommendations,
+          cached: true,
+        });
+      }
+    }
+
+    // 2) Gather signals — all org-scoped
+    const { rows: userRows } = await db.query(
+      'SELECT territory FROM users WHERE org_id = $1 AND user_id = $2',
+      [req.org_id, user_id]
+    );
+    const territory = userRows[0]?.territory || null;
+
+    // Doctors the MR is likely to visit next — recently visited or in territory
+    // and overdue. Prefer the recency-and-tier shape NBA already uses, but
+    // narrowed to the doctors' identifying fields the recommender needs.
+    const { rows: upcomingDoctors } = await db.query(
+      `WITH recent AS (
+         SELECT name AS doctor_name,
+                MAX(date)::text AS last_visit_date,
+                STRING_AGG(DISTINCT product, ', ' ORDER BY product) AS products_recent
+         FROM dcr
+         WHERE org_id = $1 AND user_id = $2
+           AND date >= CURRENT_DATE - INTERVAL '60 days'
+         GROUP BY name
+       )
+       SELECT d.name      AS "doctorName",
+              d.specialty,
+              d.tier,
+              r.last_visit_date  AS "lastVisitDate",
+              r.products_recent  AS "productsRecentlyDiscussed"
+       FROM doctor_profiles d
+       LEFT JOIN recent r ON r.doctor_name = d.name
+       WHERE d.org_id = $1
+         AND ($3::text IS NULL OR d.territory = $3)
+       ORDER BY
+         CASE d.tier WHEN 'A' THEN 1 WHEN 'B' THEN 2 ELSE 3 END,
+         r.last_visit_date NULLS FIRST
+       LIMIT 30`,
+      [req.org_id, user_id, territory]
+    );
+
+    // Published assets in the library — only versions in `published` status are
+    // promotable. Filter to those distributed to this MR or to 'all'.
+    const { rows: publishedAssets } = await db.query(
+      `SELECT a.id,
+              a.title,
+              a.asset_type,
+              a.therapeutic_area,
+              a.description,
+              p.name AS product_name
+       FROM content_assets a
+       LEFT JOIN products p ON p.id = a.product_id AND p.org_id = a.org_id
+       WHERE a.org_id = $1
+         AND a.current_version_id IS NOT NULL
+         AND EXISTS (
+           SELECT 1 FROM content_versions v
+           WHERE v.id = a.current_version_id AND v.org_id = a.org_id AND v.status = 'published'
+             AND EXISTS (
+               SELECT 1 FROM content_distributions dist
+               WHERE dist.version_id = v.id AND dist.org_id = v.org_id
+                 AND (
+                      dist.target_type = 'all'
+                   OR (dist.target_type = 'mr'        AND dist.target_id = $2)
+                   OR (dist.target_type = 'territory' AND dist.target_id = $3)
+                   OR (dist.target_type = 'role'      AND dist.target_id = 'mr')
+                 )
+             )
+         )
+       ORDER BY a.updated_at DESC
+       LIMIT 50`,
+      [req.org_id, user_id, territory || '']
+    );
+
+    // Recent views by this MR — context for "doctor already seen this asset"
+    const { rows: recentViews } = await db.query(
+      `SELECT a.title AS "assetTitle",
+              d.name  AS "doctorName",
+              ROUND(SUM(cv.duration_seconds)::numeric, 1) AS "totalSeconds",
+              COUNT(*)::int AS "slideCount",
+              MAX(cv.viewed_at)::text AS "viewedAt"
+       FROM content_views cv
+       JOIN content_versions v ON v.id = cv.version_id AND v.org_id = cv.org_id
+       JOIN content_assets a   ON a.id = v.asset_id   AND a.org_id = v.org_id
+       LEFT JOIN doctor_profiles d ON d.id = cv.doctor_id AND d.org_id = cv.org_id
+       WHERE cv.org_id = $1 AND cv.user_id = $2
+         AND cv.viewed_at >= NOW() - INTERVAL '30 days'
+       GROUP BY a.title, d.name
+       ORDER BY MAX(cv.viewed_at) DESC
+       LIMIT 20`,
+      [req.org_id, user_id]
+    );
+
+    // 3) Try LLM generation
+    let result = null;
+    try {
+      const dayOfWeek = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+      const llm = getLLMService();
+      const messages = buildContentRecommenderMessages({
+        userId: user_id,
+        dayOfWeek,
+        upcomingDoctors,
+        publishedAssets,
+        recentViews,
+      });
+      const llmResult = await llm.chat(messages, { requireJson: true });
+
+      // Light shape-validation. The LLM is asked to return asset_ids; trust the
+      // ones that are actually in the library, drop any hallucinated ids.
+      const validAssetIds = new Set(publishedAssets.map(a => a.id));
+      if (llmResult && Array.isArray(llmResult.recommendations)) {
+        result = {
+          recommendations: llmResult.recommendations.slice(0, 8).map((r, i) => ({
+            rank: r.rank || i + 1,
+            doctor: r.doctor || '',
+            specialty: r.specialty || '',
+            tier: r.tier || '',
+            priority: (r.priority || 'medium').toLowerCase(),
+            recommended_assets: Array.isArray(r.recommended_assets)
+              ? r.recommended_assets
+                  .filter(a => a && validAssetIds.has(parseInt(a.asset_id, 10)))
+                  .slice(0, 3)
+                  .map(a => ({
+                    asset_id: parseInt(a.asset_id, 10),
+                    title: a.title || '',
+                    why: (a.why || '').slice(0, 400),
+                  }))
+              : [],
+            talking_points: Array.isArray(r.talking_points) ? r.talking_points.slice(0, 5) : [],
+            best_time: r.best_time || '',
+          })),
+          library_insight: typeof llmResult.library_insight === 'string'
+            ? llmResult.library_insight.slice(0, 1000)
+            : '',
+          total_recommended: 0,
+        };
+        result.total_recommended = result.recommendations.length;
+      }
+    } catch (llmErr) {
+      console.error('[AI] content-recommender LLM error:', llmErr.message);
+    }
+
+    // 4) Fallback: if LLM failed or returned nothing, build a rule-based plan
+    // so the endpoint always returns SOMETHING usable. Only fires when the
+    // LLM call truly errored. Two-tier match:
+    //   - Per doctor: try therapeutic_area / specialty substring match first.
+    //   - If no per-doctor match, fall back to top-2 published assets (still
+    //     better than an empty recommendation list).
+    if (!result || !result.recommendations.length) {
+      const topAssets = publishedAssets.slice(0, 2);
+      const fallback = upcomingDoctors.slice(0, 5).map((doc, i) => {
+        const matched = publishedAssets.filter(a => {
+          if (!a.therapeutic_area || !doc.specialty) return false;
+          const ta = a.therapeutic_area.toLowerCase();
+          const sp = doc.specialty.toLowerCase();
+          return ta.includes(sp.slice(0, 6)) || sp.includes(ta.slice(0, 6));
+        }).slice(0, 2);
+        const chosen = matched.length > 0 ? matched : topAssets;
+        const why = matched.length > 0
+          ? `Topic match: ${matched[0].therapeutic_area} aligns with ${doc.specialty}.`
+          : 'Currently published asset — review for relevance to this doctor.';
+        return {
+          rank: i + 1,
+          doctor: doc.doctorName,
+          specialty: doc.specialty || '',
+          tier: doc.tier || '',
+          priority: doc.tier === 'A' ? 'high' : doc.tier === 'B' ? 'medium' : 'low',
+          recommended_assets: chosen.map(a => ({
+            asset_id: a.id,
+            title: a.title,
+            why
+          })),
+          talking_points: [],
+          best_time: '',
+        };
+      }).filter(r => r.recommended_assets.length > 0);
+      result = {
+        recommendations: fallback,
+        library_insight: 'AI generation unavailable — showing rule-based matches from the published library.',
+        total_recommended: fallback.length,
+      };
+    }
+
+    // 5) Cache the result for the day (UPSERT)
+    await db.query(
+      `INSERT INTO content_recommendations (org_id, user_id, date, recommendations)
+       VALUES ($1, $2, CURRENT_DATE, $3)
+       ON CONFLICT (org_id, user_id, date)
+       DO UPDATE SET recommendations = $3, generated_at = NOW()`,
+      [req.org_id, user_id, JSON.stringify(result)]
+    );
+
+    res.json({
+      success: true,
+      date: new Date().toISOString().split('T')[0],
+      recommendations: result,
+      cached: false,
+    });
+  } catch (err) {
+    console.error('[AI] content-recommender error:', err.message);
     res.status(500).json({ error: err.message });
   }
 });
