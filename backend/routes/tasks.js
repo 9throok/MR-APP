@@ -6,8 +6,8 @@ const db = require('../config/db');
 router.get('/', async (req, res) => {
   try {
     const { user_id, status } = req.query;
-    const conditions = [];
-    const params = [];
+    const conditions = ['org_id = $1'];
+    const params = [req.org_id];
 
     if (user_id) {
       params.push(user_id);
@@ -18,7 +18,7 @@ router.get('/', async (req, res) => {
       conditions.push(`status = $${params.length}`);
     }
 
-    const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+    const where = `WHERE ${conditions.join(' AND ')}`;
 
     const { rows } = await db.query(
       `SELECT * FROM follow_up_tasks ${where} ORDER BY due_date ASC NULLS LAST, created_at DESC`,
@@ -43,8 +43,8 @@ router.patch('/:id', async (req, res) => {
     }
 
     const { rows } = await db.query(
-      'UPDATE follow_up_tasks SET status = $1 WHERE id = $2 RETURNING *',
-      [status, id]
+      'UPDATE follow_up_tasks SET status = $1 WHERE id = $2 AND org_id = $3 RETURNING *',
+      [status, id, req.org_id]
     );
 
     if (rows.length === 0) {

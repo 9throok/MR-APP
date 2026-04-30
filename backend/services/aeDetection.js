@@ -24,12 +24,13 @@ async function scanForAdverseEvents(dcrRow) {
 
     console.log(`[AE] ⚠️  Potential AE detected in DCR ${dcrRow.id}: ${result.events.length} event(s)`);
 
-    // Insert each detected event
+    // Insert each detected event — inherit org_id from the source DCR
     for (const event of result.events) {
       await db.query(
-        `INSERT INTO adverse_events (dcr_id, user_id, doctor_name, drug, symptoms, severity, patient_info, timeline)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+        `INSERT INTO adverse_events (org_id, dcr_id, user_id, doctor_name, drug, symptoms, severity, patient_info, timeline)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
         [
+          dcrRow.org_id,
           dcrRow.id,
           dcrRow.user_id,
           dcrRow.name,

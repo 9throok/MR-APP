@@ -8,8 +8,8 @@ const { requireRole } = require('../middleware/auth');
 router.get('/', async (req, res) => {
   try {
     const { status } = req.query;
-    const conditions = [];
-    const params = [];
+    const conditions = ['dr.org_id = $1'];
+    const params = [req.org_id];
 
     // MRs can only see their own requests
     if (req.user.role === 'mr') {
@@ -22,12 +22,12 @@ router.get('/', async (req, res) => {
       conditions.push(`dr.status = $${params.length}`);
     }
 
-    const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+    const where = `WHERE ${conditions.join(' AND ')}`;
 
     const { rows } = await db.query(
       `SELECT dr.*, u.name AS requester_name
        FROM doctor_requests dr
-       LEFT JOIN users u ON dr.requested_by = u.user_id
+       LEFT JOIN users u ON dr.requested_by = u.user_id AND u.org_id = dr.org_id
        ${where}
        ORDER BY dr.created_at DESC`,
       params
@@ -44,7 +44,8 @@ router.get('/', async (req, res) => {
 router.get('/stats', requireRole('manager', 'admin'), async (req, res) => {
   try {
     const { rows } = await db.query(
-      `SELECT COUNT(*)::int AS pending FROM doctor_requests WHERE status = 'pending'`
+      `SELECT COUNT(*)::int AS pending FROM doctor_requests WHERE status = 'pending' AND org_id = $1`,
+      [req.org_id]
     );
     res.json({ success: true, stats: rows[0] });
   } catch (err) {
@@ -66,10 +67,10 @@ router.post('/', async (req, res) => {
     const effectiveTerritory = territory || req.user.territory || null;
 
     const { rows } = await db.query(
-      `INSERT INTO doctor_requests (requested_by, name, specialty, tier, territory, preferred_visit_day, hospital, phone, notes)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      `INSERT INTO doctor_requests (org_id, requested_by, name, specialty, tier, territory, preferred_visit_day, hospital, phone, notes)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
        RETURNING *`,
-      [req.user.user_id, name, specialty || null, tier || 'B', effectiveTerritory, preferred_visit_day || null, hospital || null, phone || null, notes || null]
+      [req.org_id, req.user.user_id, name, specialty || null, tier || 'B', effectiveTerritory, preferred_visit_day || null, hospital || null, phone || null, notes || null]
     );
 
     res.status(201).json({ success: true, data: rows[0] });
@@ -96,9 +97,9 @@ router.patch('/:id/review', requireRole('manager', 'admin'), async (req, res) =>
     const { rows } = await client.query(
       `UPDATE doctor_requests
        SET status = $1, review_notes = $2, reviewed_by = $3, reviewed_at = NOW()
-       WHERE id = $4 AND status = 'pending'
+       WHERE id = $4 AND org_id = $5 AND status = 'pending'
        RETURNING *`,
-      [status, review_notes || null, req.user.user_id, id]
+      [status, review_notes || null, req.user.user_id, id, req.org_id]
     );
 
     if (rows.length === 0) {
@@ -108,12 +109,12 @@ router.patch('/:id/review', requireRole('manager', 'admin'), async (req, res) =>
 
     const request = rows[0];
 
-    // On approval, create the doctor profile
+    // On approval, create the doctor profile (in the same org)
     if (status === 'approved') {
       await client.query(
-        `INSERT INTO doctor_profiles (name, specialty, tier, territory, preferred_visit_day, hospital, phone, notes)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-        [request.name, request.specialty, request.tier, request.territory, request.preferred_visit_day, request.hospital, request.phone, request.notes]
+        `INSERT INTO doctor_profiles (org_id, name, specialty, tier, territory, preferred_visit_day, hospital, phone, notes)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+        [req.org_id, request.name, request.specialty, request.tier, request.territory, request.preferred_visit_day, request.hospital, request.phone, request.notes]
       );
     }
 

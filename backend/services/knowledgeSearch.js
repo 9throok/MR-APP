@@ -10,7 +10,11 @@ const { preprocessQuery } = require('./queryPreprocessor');
  *
  * Searches knowledge_chunks (not full documents) for precise context.
  */
-async function searchKnowledge(query, productId = null, { limit = 10, tags = null } = {}) {
+async function searchKnowledge(query, orgId, productId = null, { limit = 10, tags = null } = {}) {
+  if (!orgId) {
+    throw new Error('searchKnowledge requires an orgId for tenant isolation');
+  }
+
   // Preprocess query: expand synonyms for FTS, clean for semantic
   const { ftsQuery, semanticQuery } = preprocessQuery(query);
 
@@ -42,6 +46,11 @@ async function searchKnowledge(query, productId = null, { limit = 10, tags = nul
   paramIdx++;
   const limitParam = `$${paramIdx}`;
 
+  // $4 = org_id (always required for tenant isolation)
+  params.push(orgId);
+  paramIdx++;
+  const orgFilter = `AND kc.org_id = $${paramIdx}`;
+
   // Build optional filters
   let productFilter = '';
   if (productId) {
@@ -60,8 +69,8 @@ async function searchKnowledge(query, productId = null, { limit = 10, tags = nul
   // Hybrid search with RRF (Reciprocal Rank Fusion)
   // If embeddings are unavailable, falls back to FTS-only
   const sql = queryEmbedding
-    ? buildHybridQuery(ftsParam, embParam, limitParam, productFilter, tagFilter)
-    : buildFTSOnlyQuery(ftsParam, limitParam, productFilter, tagFilter);
+    ? buildHybridQuery(ftsParam, embParam, limitParam, orgFilter, productFilter, tagFilter)
+    : buildFTSOnlyQuery(ftsParam, limitParam, orgFilter, productFilter, tagFilter);
 
   try {
     const { rows } = await db.query(sql, params);
@@ -69,14 +78,14 @@ async function searchKnowledge(query, productId = null, { limit = 10, tags = nul
   } catch (err) {
     console.error('[KnowledgeSearch] Query error:', err.message);
     // Fallback to simple FTS if hybrid query fails (e.g., pgvector not installed)
-    return fallbackFTSSearch(query, productId, limit);
+    return fallbackFTSSearch(query, orgId, productId, limit);
   }
 }
 
 /**
  * Hybrid search: FTS + Vector similarity combined via RRF
  */
-function buildHybridQuery(ftsParam, embParam, limitParam, productFilter, tagFilter) {
+function buildHybridQuery(ftsParam, embParam, limitParam, orgFilter, productFilter, tagFilter) {
   return `
     WITH fts AS (
       SELECT kc.id,
@@ -84,6 +93,7 @@ function buildHybridQuery(ftsParam, embParam, limitParam, productFilter, tagFilt
              ROW_NUMBER() OVER (ORDER BY ts_rank(to_tsvector('english', kc.content), plainto_tsquery('english', ${ftsParam})) DESC) AS fts_rank
       FROM knowledge_chunks kc
       WHERE to_tsvector('english', kc.content) @@ plainto_tsquery('english', ${ftsParam})
+      ${orgFilter}
       ${productFilter}
       ${tagFilter}
       LIMIT 20
@@ -94,6 +104,7 @@ function buildHybridQuery(ftsParam, embParam, limitParam, productFilter, tagFilt
              ROW_NUMBER() OVER (ORDER BY kc.embedding <=> ${embParam}::vector) AS sem_rank
       FROM knowledge_chunks kc
       WHERE kc.embedding IS NOT NULL
+      ${orgFilter}
       ${productFilter}
       ${tagFilter}
       ORDER BY kc.embedding <=> ${embParam}::vector
@@ -114,8 +125,8 @@ function buildHybridQuery(ftsParam, embParam, limitParam, productFilter, tagFilt
            c.rrf_score AS rank
     FROM combined c
     JOIN knowledge_chunks kc ON kc.id = c.id
-    JOIN drug_knowledge dk ON kc.knowledge_id = dk.id
-    LEFT JOIN products p ON kc.product_id = p.id
+    JOIN drug_knowledge dk ON kc.knowledge_id = dk.id AND dk.org_id = kc.org_id
+    LEFT JOIN products p ON kc.product_id = p.id AND p.org_id = kc.org_id
     ORDER BY c.rrf_score DESC
     LIMIT ${limitParam}
   `;
@@ -124,15 +135,16 @@ function buildHybridQuery(ftsParam, embParam, limitParam, productFilter, tagFilt
 /**
  * FTS-only search (when embeddings are unavailable)
  */
-function buildFTSOnlyQuery(ftsParam, limitParam, productFilter, tagFilter) {
+function buildFTSOnlyQuery(ftsParam, limitParam, orgFilter, productFilter, tagFilter) {
   return `
     SELECT kc.id, kc.knowledge_id, kc.content, kc.chunk_index, kc.metadata, kc.tags,
            kc.token_count, dk.filename, dk.category, p.name AS product_name,
            ts_rank(to_tsvector('english', kc.content), plainto_tsquery('english', ${ftsParam})) AS rank
     FROM knowledge_chunks kc
-    JOIN drug_knowledge dk ON kc.knowledge_id = dk.id
-    LEFT JOIN products p ON kc.product_id = p.id
+    JOIN drug_knowledge dk ON kc.knowledge_id = dk.id AND dk.org_id = kc.org_id
+    LEFT JOIN products p ON kc.product_id = p.id AND p.org_id = kc.org_id
     WHERE to_tsvector('english', kc.content) @@ plainto_tsquery('english', ${ftsParam})
+    ${orgFilter}
     ${productFilter}
     ${tagFilter}
     AND ts_rank(to_tsvector('english', kc.content), plainto_tsquery('english', ${ftsParam})) > 0.01
@@ -144,7 +156,7 @@ function buildFTSOnlyQuery(ftsParam, limitParam, productFilter, tagFilter) {
 /**
  * Simple fallback if hybrid/FTS queries fail entirely
  */
-async function fallbackFTSSearch(query, productId, limit) {
+async function fallbackFTSSearch(query, orgId, productId, limit) {
   const keywords = query
     .replace(/[^\w\s]/g, '')
     .split(/\s+/)
@@ -154,7 +166,7 @@ async function fallbackFTSSearch(query, productId, limit) {
 
   if (keywords.length === 0) return [];
 
-  const params = [];
+  const params = [orgId];
   if (productId) params.push(productId);
 
   const likeClauses = keywords.map(kw => {
@@ -166,10 +178,11 @@ async function fallbackFTSSearch(query, productId, limit) {
     `SELECT kc.id, kc.knowledge_id, kc.content, kc.chunk_index, kc.metadata, kc.tags,
             kc.token_count, dk.filename, dk.category, p.name AS product_name
      FROM knowledge_chunks kc
-     JOIN drug_knowledge dk ON kc.knowledge_id = dk.id
-     LEFT JOIN products p ON kc.product_id = p.id
-     WHERE (${likeClauses.join(' OR ')})
-     ${productId ? `AND kc.product_id = $1` : ''}
+     JOIN drug_knowledge dk ON kc.knowledge_id = dk.id AND dk.org_id = kc.org_id
+     LEFT JOIN products p ON kc.product_id = p.id AND p.org_id = kc.org_id
+     WHERE kc.org_id = $1
+     ${productId ? `AND kc.product_id = $2` : ''}
+     AND (${likeClauses.join(' OR ')})
      ORDER BY kc.created_at DESC
      LIMIT $${params.length + 1}`,
     [...params, limit]

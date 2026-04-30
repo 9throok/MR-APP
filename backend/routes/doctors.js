@@ -7,8 +7,8 @@ const { requireRole } = require('../middleware/auth');
 router.get('/', async (req, res) => {
   try {
     let { territory, tier } = req.query;
-    const conditions = [];
-    const params = [];
+    const conditions = ['org_id = $1'];
+    const params = [req.org_id];
 
     // MRs can only see doctors in their own territory
     if (req.user.role === 'mr' && req.user.territory) {
@@ -24,7 +24,7 @@ router.get('/', async (req, res) => {
       conditions.push(`tier = $${params.length}`);
     }
 
-    const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+    const where = `WHERE ${conditions.join(' AND ')}`;
 
     const { rows } = await db.query(
       `SELECT * FROM doctor_profiles ${where} ORDER BY tier ASC, name ASC`,
@@ -48,10 +48,10 @@ router.post('/', requireRole('manager', 'admin'), async (req, res) => {
     }
 
     const { rows } = await db.query(
-      `INSERT INTO doctor_profiles (name, specialty, tier, territory, preferred_visit_day, hospital, phone, notes)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      `INSERT INTO doctor_profiles (org_id, name, specialty, tier, territory, preferred_visit_day, hospital, phone, notes)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
        RETURNING *`,
-      [name, specialty || null, tier || 'B', territory || null, preferred_visit_day || null, hospital || null, phone || null, notes || null]
+      [req.org_id, name, specialty || null, tier || 'B', territory || null, preferred_visit_day || null, hospital || null, phone || null, notes || null]
     );
 
     res.status(201).json({ success: true, data: rows[0] });
@@ -77,9 +77,9 @@ router.patch('/:id', requireRole('manager', 'admin'), async (req, res) => {
            hospital = COALESCE($6, hospital),
            phone = COALESCE($7, phone),
            notes = COALESCE($8, notes)
-       WHERE id = $9
+       WHERE id = $9 AND org_id = $10
        RETURNING *`,
-      [name, specialty, tier, territory, preferred_visit_day, hospital, phone, notes, id]
+      [name, specialty, tier, territory, preferred_visit_day, hospital, phone, notes, id, req.org_id]
     );
 
     if (rows.length === 0) {
@@ -97,7 +97,10 @@ router.patch('/:id', requireRole('manager', 'admin'), async (req, res) => {
 router.delete('/:id', requireRole('admin'), async (req, res) => {
   try {
     const { id } = req.params;
-    const { rows } = await db.query('DELETE FROM doctor_profiles WHERE id = $1 RETURNING *', [id]);
+    const { rows } = await db.query(
+      'DELETE FROM doctor_profiles WHERE id = $1 AND org_id = $2 RETURNING *',
+      [id, req.org_id]
+    );
 
     if (rows.length === 0) {
       return res.status(404).json({ error: 'Doctor not found' });

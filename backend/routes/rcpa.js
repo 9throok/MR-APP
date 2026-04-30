@@ -24,10 +24,10 @@ router.post('/', async (req, res) => {
       if (!our_brand || !competitor_brand) continue;
 
       const { rows } = await db.query(
-        `INSERT INTO rcpa (user_id, pharmacy, doctor_name, our_brand, our_value, competitor_brand, competitor_company, competitor_value, date)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        `INSERT INTO rcpa (org_id, user_id, pharmacy, doctor_name, our_brand, our_value, competitor_brand, competitor_company, competitor_value, date)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
          RETURNING *`,
-        [user_id, pharmacy, doctor_name || null, our_brand, our_value || 0, competitor_brand, competitor_company || null, competitor_value || 0, date || new Date().toISOString().split('T')[0]]
+        [req.org_id, user_id, pharmacy, doctor_name || null, our_brand, our_value || 0, competitor_brand, competitor_company || null, competitor_value || 0, date || new Date().toISOString().split('T')[0]]
       );
       inserted.push(rows[0]);
     }
@@ -49,8 +49,8 @@ router.post('/', async (req, res) => {
 router.get('/', async (req, res) => {
   try {
     const { user_id, from_date, to_date } = req.query;
-    const conditions = [];
-    const params = [];
+    const conditions = ['org_id = $1'];
+    const params = [req.org_id];
 
     if (user_id) {
       params.push(user_id);
@@ -65,7 +65,7 @@ router.get('/', async (req, res) => {
       conditions.push(`date <= $${params.length}`);
     }
 
-    const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+    const where = `WHERE ${conditions.join(' AND ')}`;
     const { rows } = await db.query(
       `SELECT * FROM rcpa ${where} ORDER BY date DESC, id DESC LIMIT 500`,
       params

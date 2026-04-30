@@ -26,8 +26,8 @@ router.get('/template', requireRole('manager', 'admin'), (req, res) => {
 router.get('/', async (req, res) => {
   try {
     const { user_id, period, product_id } = req.query;
-    const conditions = [];
-    const params = [];
+    const conditions = ['t.org_id = $1'];
+    const params = [req.org_id];
 
     // MRs see only their own targets
     if (req.user.role === 'mr') {
@@ -47,12 +47,12 @@ router.get('/', async (req, res) => {
       conditions.push(`t.product_id = $${params.length}`);
     }
 
-    const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+    const where = `WHERE ${conditions.join(' AND ')}`;
 
     const { rows } = await db.query(
       `SELECT t.*, p.name AS product_name
        FROM mr_targets t
-       JOIN products p ON p.id = t.product_id
+       JOIN products p ON p.id = t.product_id AND p.org_id = t.org_id
        ${where}
        ORDER BY t.period DESC, t.user_id, p.name`,
       params
@@ -78,12 +78,12 @@ router.post('/', requireRole('manager', 'admin'), async (req, res) => {
     }
 
     const { rows } = await db.query(
-      `INSERT INTO mr_targets (user_id, product_id, period, target_qty, target_value, set_by)
-       VALUES ($1, $2, $3, $4, $5, $6)
-       ON CONFLICT (user_id, product_id, period)
-       DO UPDATE SET target_qty = $4, target_value = $5, set_by = $6, updated_at = NOW()
+      `INSERT INTO mr_targets (org_id, user_id, product_id, period, target_qty, target_value, set_by)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       ON CONFLICT (org_id, user_id, product_id, period)
+       DO UPDATE SET target_qty = $5, target_value = $6, set_by = $7, updated_at = NOW()
        RETURNING *`,
-      [user_id, product_id, period, target_qty, target_value, req.user.user_id]
+      [req.org_id, user_id, product_id, period, target_qty, target_value, req.user.user_id]
     );
 
     res.status(201).json({ success: true, data: rows[0] });
@@ -113,12 +113,12 @@ router.post('/bulk', requireRole('manager', 'admin'), async (req, res) => {
       }
 
       const { rows } = await db.query(
-        `INSERT INTO mr_targets (user_id, product_id, period, target_qty, target_value, set_by)
-         VALUES ($1, $2, $3, $4, $5, $6)
-         ON CONFLICT (user_id, product_id, period)
-         DO UPDATE SET target_qty = $4, target_value = $5, set_by = $6, updated_at = NOW()
+        `INSERT INTO mr_targets (org_id, user_id, product_id, period, target_qty, target_value, set_by)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)
+         ON CONFLICT (org_id, user_id, product_id, period)
+         DO UPDATE SET target_qty = $5, target_value = $6, set_by = $7, updated_at = NOW()
          RETURNING *`,
-        [user_id, product_id, period, target_qty, target_value, req.user.user_id]
+        [req.org_id, user_id, product_id, period, target_qty, target_value, req.user.user_id]
       );
       results.push(rows[0]);
     }
@@ -144,8 +144,11 @@ router.post('/upload', requireRole('manager', 'admin'), upload.single('file'), a
 
     if (!rows.length) return res.status(400).json({ error: 'File is empty' });
 
-    // Preload products for matching
-    const { rows: products } = await db.query('SELECT id, name FROM products');
+    // Preload products for matching (org-scoped)
+    const { rows: products } = await db.query(
+      'SELECT id, name FROM products WHERE org_id = $1',
+      [req.org_id]
+    );
     const productMap = {};
     products.forEach(p => { productMap[p.name.toLowerCase().trim()] = p.id; });
 
@@ -173,12 +176,12 @@ router.post('/upload', requireRole('manager', 'admin'), upload.single('file'), a
 
       try {
         const { rows: insertedRows } = await db.query(
-          `INSERT INTO mr_targets (user_id, product_id, period, target_qty, target_value, set_by)
-           VALUES ($1, $2, $3, $4, $5, $6)
-           ON CONFLICT (user_id, product_id, period)
-           DO UPDATE SET target_qty = $4, target_value = $5, set_by = $6, updated_at = NOW()
+          `INSERT INTO mr_targets (org_id, user_id, product_id, period, target_qty, target_value, set_by)
+           VALUES ($1, $2, $3, $4, $5, $6, $7)
+           ON CONFLICT (org_id, user_id, product_id, period)
+           DO UPDATE SET target_qty = $5, target_value = $6, set_by = $7, updated_at = NOW()
            RETURNING id`,
-          [mrUserId, productId, period, targetQty, targetValue, req.user.user_id]
+          [req.org_id, mrUserId, productId, period, targetQty, targetValue, req.user.user_id]
         );
         inserted.push(insertedRows[0].id);
       } catch (dbErr) {
@@ -204,7 +207,10 @@ router.post('/upload', requireRole('manager', 'admin'), upload.single('file'), a
 // ─────────────────────────────────────────────────────────────────────────────
 router.delete('/:id', requireRole('manager', 'admin'), async (req, res) => {
   try {
-    const { rows } = await db.query('DELETE FROM mr_targets WHERE id = $1 RETURNING id', [req.params.id]);
+    const { rows } = await db.query(
+      'DELETE FROM mr_targets WHERE id = $1 AND org_id = $2 RETURNING id',
+      [req.params.id, req.org_id]
+    );
     if (!rows.length) return res.status(404).json({ error: 'Target not found' });
     res.json({ success: true, deleted: rows[0].id });
   } catch (err) {

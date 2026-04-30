@@ -34,21 +34,19 @@ router.post('/precall-briefing', async (req, res) => {
     let { rows: dcrHistory } = await db.query(
       `SELECT date, visit_time, product, samples, call_summary, doctor_feedback, edetailing
        FROM dcr
-       WHERE user_id = $1
-         AND name ILIKE $2
+       WHERE org_id = $1 AND user_id = $2 AND name ILIKE $3
        ORDER BY date DESC
        LIMIT 10`,
-      [user_id, doctor_name]
+      [req.org_id, user_id, doctor_name]
     );
     if (dcrHistory.length === 0 && nameParts.length > 1) {
       ({ rows: dcrHistory } = await db.query(
         `SELECT date, visit_time, product, samples, call_summary, doctor_feedback, edetailing
          FROM dcr
-         WHERE user_id = $1
-           AND name ILIKE $2
+         WHERE org_id = $1 AND user_id = $2 AND name ILIKE $3
          ORDER BY date DESC
          LIMIT 10`,
-        [user_id, `%${lastName}%`]
+        [req.org_id, user_id, `%${lastName}%`]
       ));
     }
 
@@ -90,19 +88,18 @@ router.post('/pharmacy-briefing', async (req, res) => {
     const { rows: rcpaHistory } = await db.query(
       `SELECT pharmacy, doctor_name, our_brand, our_value, competitor_brand, competitor_company, competitor_value, date
        FROM rcpa
-       WHERE user_id = $1
-         AND pharmacy ILIKE $2
+       WHERE org_id = $1 AND user_id = $2 AND pharmacy ILIKE $3
        ORDER BY date DESC
        LIMIT 20`,
-      [user_id, `%${keyword}%`]
+      [req.org_id, user_id, `%${keyword}%`]
     );
 
-    // Get pharmacy profile if available
+    // Get pharmacy profile if available (org-scoped)
     let pharmacyProfile = null;
     try {
       const { rows } = await db.query(
-        'SELECT * FROM pharmacy_profiles WHERE name ILIKE $1 LIMIT 1',
-        [`%${keyword}%`]
+        'SELECT * FROM pharmacy_profiles WHERE org_id = $1 AND name ILIKE $2 LIMIT 1',
+        [req.org_id, `%${keyword}%`]
       );
       if (rows.length > 0) pharmacyProfile = rows[0];
     } catch { /* table may not exist */ }
@@ -180,12 +177,12 @@ router.get('/territory-gap-team', async (req, res) => {
     const thresholdDays = parseInt(req.query.threshold_days || '30', 10);
     const mrFilter = req.query.mr_user_id || null;
 
-    // Get all MRs (or a specific one)
-    let mrQuery = `SELECT user_id, name FROM users WHERE role = 'mr'`;
-    const mrParams = [];
+    // Get all MRs (or a specific one) — scoped to current org
+    let mrQuery = `SELECT user_id, name FROM users WHERE role = 'mr' AND org_id = $1`;
+    const mrParams = [req.org_id];
     if (mrFilter) {
-      mrQuery += ` AND user_id = $1`;
       mrParams.push(mrFilter);
+      mrQuery += ` AND user_id = $${mrParams.length}`;
     }
     const { rows: mrs } = await db.query(mrQuery, mrParams);
 
@@ -195,7 +192,7 @@ router.get('/territory-gap-team', async (req, res) => {
 
     const mrUserIds = mrs.map(m => m.user_id);
 
-    // Aggregate DCR data across all MRs
+    // Aggregate DCR data across all MRs (org-scoped)
     const { rows: doctorStats } = await db.query(
       `SELECT
          d.name                                AS "doctorName",
@@ -205,11 +202,11 @@ router.get('/territory-gap-team', async (req, res) => {
          COUNT(*)::int                         AS "totalVisits",
          (CURRENT_DATE - MAX(d.date))::int     AS "daysSinceLastVisit"
        FROM dcr d
-       JOIN users u ON u.user_id = d.user_id
-       WHERE d.user_id = ANY($1)
+       JOIN users u ON u.user_id = d.user_id AND u.org_id = d.org_id
+       WHERE d.org_id = $1 AND d.user_id = ANY($2)
        GROUP BY d.name, u.name, d.user_id
        ORDER BY "daysSinceLastVisit" DESC`,
-      [mrUserIds]
+      [req.org_id, mrUserIds]
     );
 
     if (doctorStats.length === 0) {
@@ -260,10 +257,10 @@ router.get('/territory-gap/:user_id', async (req, res) => {
          COUNT(*)::int                                           AS "totalVisits",
          (CURRENT_DATE - MAX(date))::int                        AS "daysSinceLastVisit"
        FROM dcr
-       WHERE user_id = $1
+       WHERE org_id = $1 AND user_id = $2
        GROUP BY name
        ORDER BY "daysSinceLastVisit" DESC`,
-      [user_id]
+      [req.org_id, user_id]
     );
 
     if (doctorStats.length === 0) {
@@ -308,9 +305,9 @@ router.post('/manager-query', async (req, res) => {
       return res.status(400).json({ error: 'query is required' });
     }
 
-    // Build dynamic SQL with optional filters
-    const conditions = [];
-    const params = [];
+    // Build dynamic SQL with optional filters (always scoped to current org)
+    const conditions = ['org_id = $1'];
+    const params = [req.org_id];
 
     if (user_ids && Array.isArray(user_ids) && user_ids.length > 0) {
       params.push(user_ids);
@@ -325,7 +322,7 @@ router.post('/manager-query', async (req, res) => {
       conditions.push(`date <= $${params.length}`);
     }
 
-    const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+    const where = `WHERE ${conditions.join(' AND ')}`;
 
     const { rows: teamData } = await db.query(
       `SELECT user_id, name, date, visit_time, product, samples, call_summary, doctor_feedback, edetailing
@@ -369,8 +366,8 @@ router.get('/product-signals', async (req, res) => {
   try {
     const { from_date, to_date, user_ids, products } = req.query;
 
-    const conditions = [];
-    const params = [];
+    const conditions = ['org_id = $1'];
+    const params = [req.org_id];
 
     if (from_date) {
       params.push(from_date);
@@ -395,7 +392,7 @@ router.get('/product-signals', async (req, res) => {
       }
     }
 
-    const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+    const where = `WHERE ${conditions.join(' AND ')}`;
 
     // Aggregate all product stats in one SQL query
     const { rows: productStats } = await db.query(
@@ -455,8 +452,11 @@ router.post('/post-call-extract', async (req, res) => {
       return res.status(400).json({ error: 'doctor_name and transcript are required' });
     }
 
-    // Fetch product list for context
-    const { rows: products } = await db.query('SELECT name FROM products ORDER BY id');
+    // Fetch product list for context (org-scoped)
+    const { rows: products } = await db.query(
+      'SELECT name FROM products WHERE org_id = $1 ORDER BY id',
+      [req.org_id]
+    );
 
     const llm = getLLMService();
     const messages = buildPostCallExtractionMessages(transcript, doctor_name, products);
@@ -599,8 +599,8 @@ router.get('/nba/:user_id', async (req, res) => {
     // Check for valid cached recommendations (unless refresh requested)
     if (!refresh) {
       const { rows: cached } = await db.query(
-        'SELECT * FROM nba_recommendations WHERE user_id = $1 AND date = CURRENT_DATE',
-        [user_id]
+        'SELECT * FROM nba_recommendations WHERE org_id = $1 AND user_id = $2 AND date = CURRENT_DATE',
+        [req.org_id, user_id]
       );
       if (cached.length > 0) {
         const normalized = normalizeNBAResult(cached[0].recommendations);
@@ -613,24 +613,28 @@ router.get('/nba/:user_id', async (req, res) => {
           });
         }
         // Bad cache — delete it
-        await db.query('DELETE FROM nba_recommendations WHERE user_id = $1 AND date = CURRENT_DATE', [user_id]);
+        await db.query(
+          'DELETE FROM nba_recommendations WHERE org_id = $1 AND user_id = $2 AND date = CURRENT_DATE',
+          [req.org_id, user_id]
+        );
       }
     }
 
     // Try LLM generation
     let result = null;
     try {
-      // Get the MR's territory so we only recommend their doctors/pharmacies
+      // Get the MR's territory so we only recommend their doctors/pharmacies (org-scoped)
       const { rows: userRows } = await db.query(
-        'SELECT territory FROM users WHERE user_id = $1', [user_id]
+        'SELECT territory FROM users WHERE org_id = $1 AND user_id = $2',
+        [req.org_id, user_id]
       );
       const territory = userRows[0]?.territory;
 
       const { rows: doctorProfiles } = await db.query(
         territory
-          ? 'SELECT * FROM doctor_profiles WHERE territory = $1 ORDER BY tier ASC, name ASC'
-          : 'SELECT * FROM doctor_profiles ORDER BY tier ASC, name ASC',
-        territory ? [territory] : []
+          ? 'SELECT * FROM doctor_profiles WHERE org_id = $1 AND territory = $2 ORDER BY tier ASC, name ASC'
+          : 'SELECT * FROM doctor_profiles WHERE org_id = $1 ORDER BY tier ASC, name ASC',
+        territory ? [req.org_id, territory] : [req.org_id]
       );
       const { rows: visitHistory } = await db.query(
         `SELECT
@@ -640,25 +644,25 @@ router.get('/nba/:user_id', async (req, res) => {
            (CURRENT_DATE - MAX(date))::int AS "daysSinceLastVisit",
            STRING_AGG(DISTINCT product, ', ') AS products
          FROM dcr
-         WHERE user_id = $1
+         WHERE org_id = $1 AND user_id = $2
          GROUP BY name
          ORDER BY "daysSinceLastVisit" DESC NULLS LAST`,
-        [user_id]
+        [req.org_id, user_id]
       );
       const { rows: pendingTasks } = await db.query(
-        "SELECT * FROM follow_up_tasks WHERE user_id = $1 AND status = 'pending' ORDER BY due_date ASC NULLS LAST",
-        [user_id]
+        "SELECT * FROM follow_up_tasks WHERE org_id = $1 AND user_id = $2 AND status = 'pending' ORDER BY due_date ASC NULLS LAST",
+        [req.org_id, user_id]
       );
 
-      // Fetch pharmacy profiles and visit history
+      // Fetch pharmacy profiles and visit history (org-scoped)
       let pharmacyProfiles = [];
       let pharmacyVisitHistory = [];
       try {
         const { rows: pharmacies } = await db.query(
           territory
-            ? 'SELECT * FROM pharmacy_profiles WHERE territory = $1 ORDER BY tier ASC, name ASC'
-            : 'SELECT * FROM pharmacy_profiles ORDER BY tier ASC, name ASC',
-          territory ? [territory] : []
+            ? 'SELECT * FROM pharmacy_profiles WHERE org_id = $1 AND territory = $2 ORDER BY tier ASC, name ASC'
+            : 'SELECT * FROM pharmacy_profiles WHERE org_id = $1 ORDER BY tier ASC, name ASC',
+          territory ? [req.org_id, territory] : [req.org_id]
         );
         pharmacyProfiles = pharmacies;
 
@@ -669,10 +673,10 @@ router.get('/nba/:user_id', async (req, res) => {
              COUNT(*)::int AS "totalVisits",
              (CURRENT_DATE - MAX(date))::int AS "daysSinceLastVisit"
            FROM rcpa
-           WHERE user_id = $1
+           WHERE org_id = $1 AND user_id = $2
            GROUP BY pharmacy
            ORDER BY "daysSinceLastVisit" DESC NULLS LAST`,
-          [user_id]
+          [req.org_id, user_id]
         );
         pharmacyVisitHistory = pharmacyVisits;
       } catch (pharmErr) {
@@ -694,12 +698,12 @@ router.get('/nba/:user_id', async (req, res) => {
       result = getStaticNBA(user_id);
     }
 
-    // Cache the result
+    // Cache the result (UNIQUE is per-org now: see migration_v7)
     await db.query(
-      `INSERT INTO nba_recommendations (user_id, date, recommendations)
-       VALUES ($1, CURRENT_DATE, $2)
-       ON CONFLICT (user_id, date) DO UPDATE SET recommendations = $2, generated_at = NOW()`,
-      [user_id, JSON.stringify(result)]
+      `INSERT INTO nba_recommendations (org_id, user_id, date, recommendations)
+       VALUES ($1, $2, CURRENT_DATE, $3)
+       ON CONFLICT (org_id, user_id, date) DO UPDATE SET recommendations = $3, generated_at = NOW()`,
+      [req.org_id, user_id, JSON.stringify(result)]
     );
 
     res.json({
@@ -726,11 +730,11 @@ router.get('/competitor-intel', async (req, res) => {
   try {
     const { from_date, to_date, user_ids } = req.query;
 
-    // ── Build shared filter conditions ────────────────────────────────
-    const dcrConditions = [];
-    const dcrParams = [];
-    const rcpaConditions = [];
-    const rcpaParams = [];
+    // ── Build shared filter conditions (always org-scoped) ───────────
+    const dcrConditions = ['org_id = $1'];
+    const dcrParams = [req.org_id];
+    const rcpaConditions = ['org_id = $1'];
+    const rcpaParams = [req.org_id];
 
     if (from_date) {
       dcrParams.push(from_date);
@@ -754,8 +758,8 @@ router.get('/competitor-intel', async (req, res) => {
       }
     }
 
-    const dcrWhere = dcrConditions.length > 0 ? `AND ${dcrConditions.join(' AND ')}` : '';
-    const rcpaWhere = rcpaConditions.length > 0 ? `WHERE ${rcpaConditions.join(' AND ')}` : '';
+    const dcrWhere = `AND ${dcrConditions.join(' AND ')}`;
+    const rcpaWhere = `WHERE ${rcpaConditions.join(' AND ')}`;
 
     // ── Fetch DCR records that mention competitors ────────────────────
     const { rows: dcrMentions } = await db.query(

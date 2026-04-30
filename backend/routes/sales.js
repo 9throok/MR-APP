@@ -13,15 +13,15 @@ const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 
 router.get('/distributors', async (req, res) => {
   try {
     const { territory } = req.query;
-    const conditions = [];
-    const params = [];
+    const conditions = ['org_id = $1'];
+    const params = [req.org_id];
 
     if (territory) {
       params.push(territory);
       conditions.push(`territory = $${params.length}`);
     }
 
-    const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+    const where = `WHERE ${conditions.join(' AND ')}`;
     const { rows } = await db.query(`SELECT * FROM distributors ${where} ORDER BY territory, name`, params);
     res.json({ success: true, data: rows });
   } catch (err) {
@@ -37,8 +37,8 @@ router.get('/distributors', async (req, res) => {
 router.get('/summary', async (req, res) => {
   try {
     const { user_id, period, territory } = req.query;
-    const conditions = [];
-    const params = [];
+    const conditions = ['ss.org_id = $1'];
+    const params = [req.org_id];
 
     // MRs see only their own data
     if (req.user.role === 'mr') {
@@ -58,7 +58,7 @@ router.get('/summary', async (req, res) => {
       conditions.push(`ss.territory = $${params.length}`);
     }
 
-    const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+    const where = `WHERE ${conditions.join(' AND ')}`;
 
     const { rows } = await db.query(
       `SELECT
@@ -70,7 +70,7 @@ router.get('/summary', async (req, res) => {
          SUM(ss.quantity) AS total_qty,
          SUM(ss.value) AS total_value
        FROM secondary_sales ss
-       JOIN products p ON p.id = ss.product_id
+       JOIN products p ON p.id = ss.product_id AND p.org_id = ss.org_id
        ${where}
        GROUP BY ss.user_id, ss.territory, to_char(ss.sale_date, 'YYYY-MM'), p.name, ss.product_id
        ORDER BY period DESC, ss.user_id, p.name`,
@@ -91,8 +91,8 @@ router.get('/summary', async (req, res) => {
 router.get('/performance', async (req, res) => {
   try {
     const { user_id, period } = req.query;
-    const conditions = [];
-    const params = [];
+    const conditions = ['t.org_id = $1'];
+    const params = [req.org_id];
 
     if (req.user.role === 'mr') {
       params.push(req.user.user_id);
@@ -107,7 +107,7 @@ router.get('/performance', async (req, res) => {
       conditions.push(`t.period = $${params.length}`);
     }
 
-    const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+    const where = `WHERE ${conditions.join(' AND ')}`;
 
     const { rows } = await db.query(
       `SELECT
@@ -123,13 +123,13 @@ router.get('/performance', async (req, res) => {
            THEN ROUND((COALESCE(s.actual_value, 0) / t.target_value) * 100, 1)
            ELSE 0 END AS achievement_pct
        FROM mr_targets t
-       JOIN products p ON p.id = t.product_id
+       JOIN products p ON p.id = t.product_id AND p.org_id = t.org_id
        LEFT JOIN (
-         SELECT user_id, product_id, to_char(sale_date, 'YYYY-MM') AS period,
+         SELECT org_id, user_id, product_id, to_char(sale_date, 'YYYY-MM') AS period,
                 SUM(quantity) AS actual_qty, SUM(value) AS actual_value
          FROM secondary_sales
-         GROUP BY user_id, product_id, to_char(sale_date, 'YYYY-MM')
-       ) s ON s.user_id = t.user_id AND s.product_id = t.product_id AND s.period = t.period
+         GROUP BY org_id, user_id, product_id, to_char(sale_date, 'YYYY-MM')
+       ) s ON s.org_id = t.org_id AND s.user_id = t.user_id AND s.product_id = t.product_id AND s.period = t.period
        ${where}
        ORDER BY t.period DESC, t.user_id, p.name`,
       params
@@ -149,8 +149,8 @@ router.get('/performance', async (req, res) => {
 router.get('/growth', async (req, res) => {
   try {
     const { user_id } = req.query;
-    const conditions = [];
-    const params = [];
+    const conditions = ['org_id = $1'];
+    const params = [req.org_id];
 
     if (req.user.role === 'mr') {
       params.push(req.user.user_id);
@@ -160,7 +160,7 @@ router.get('/growth', async (req, res) => {
       conditions.push(`user_id = $${params.length}`);
     }
 
-    const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+    const where = `WHERE ${conditions.join(' AND ')}`;
 
     const { rows } = await db.query(
       `WITH monthly AS (
@@ -202,32 +202,33 @@ router.get('/growth', async (req, res) => {
 router.get('/activity-productivity', async (req, res) => {
   try {
     const { user_id, period } = req.query;
-    const conditions_sales = [];
-    const conditions_dcr = [];
-    const params = [];
 
+    // $1 is always org_id; $2 is user_id (if filtering); $3 is period (if filtering)
+    const params = [req.org_id];
+    const orgFilter = `org_id = $1`;
+
+    let userFilter = '';
+    let userParam = null;
     if (req.user.role === 'mr') {
       params.push(req.user.user_id);
-      conditions_sales.push(`user_id = $${params.length}`);
-      conditions_dcr.push(`user_id = $${params.length}`);
+      userParam = params.length;
+      userFilter = `AND user_id = $${userParam}`;
     } else if (user_id) {
       params.push(user_id);
-      conditions_sales.push(`user_id = $${params.length}`);
-      conditions_dcr.push(`user_id = $${params.length}`);
+      userParam = params.length;
+      userFilter = `AND user_id = $${userParam}`;
     }
 
-    // For period filtering, we need separate param indices
-    let periodParamSales = null;
-    let periodParamDcr = null;
+    let periodParam = null;
     if (period) {
       params.push(period);
-      periodParamSales = params.length;
-      conditions_sales.push(`to_char(sale_date, 'YYYY-MM') = $${periodParamSales}`);
-      conditions_dcr.push(`to_char(date, 'YYYY-MM') = $${periodParamSales}`);
+      periodParam = params.length;
     }
 
-    const whereSales = conditions_sales.length ? `WHERE ${conditions_sales.join(' AND ')}` : '';
-    const whereDcr = conditions_dcr.length ? `WHERE ${conditions_dcr.join(' AND ')}` : '';
+    const whereSales = `WHERE ${orgFilter} ${userFilter} ${periodParam ? `AND to_char(sale_date, 'YYYY-MM') = $${periodParam}` : ''}`;
+    const whereDcr = `WHERE ${orgFilter} ${userFilter} ${periodParam ? `AND to_char(date, 'YYYY-MM') = $${periodParam}` : ''}`;
+    const whereTargets = `WHERE ${orgFilter} ${userFilter} ${periodParam ? `AND period = $${periodParam}` : ''}`;
+    const whereUsers = `WHERE ${orgFilter} AND u.role = 'mr' ${userParam ? `AND u.user_id = $${userParam}` : ''}`;
 
     const { rows } = await db.query(
       `WITH sales_agg AS (
@@ -242,8 +243,7 @@ router.get('/activity-productivity', async (req, res) => {
          SELECT user_id,
                 SUM(target_value) AS total_target
          FROM mr_targets
-         ${period ? `WHERE period = $${periodParamSales}` : ''}
-         ${!period && req.user.role === 'mr' ? `WHERE user_id = $1` : (!period && user_id ? `WHERE user_id = $1` : '')}
+         ${whereTargets}
          GROUP BY user_id
        ),
        dcr_agg AS (
@@ -257,6 +257,7 @@ router.get('/activity-productivity', async (req, res) => {
        doctor_count AS (
          SELECT territory, COUNT(*) AS total_doctors
          FROM doctor_profiles
+         WHERE ${orgFilter}
          GROUP BY territory
        )
        SELECT
@@ -280,8 +281,7 @@ router.get('/activity-productivity', async (req, res) => {
        LEFT JOIN target_agg t ON t.user_id = u.user_id
        LEFT JOIN dcr_agg d ON d.user_id = u.user_id
        LEFT JOIN doctor_count dc ON dc.territory = u.territory
-       WHERE u.role = 'mr'
-       ${req.user.role === 'mr' ? `AND u.user_id = $1` : (user_id ? `AND u.user_id = $1` : '')}
+       ${whereUsers.replace('org_id', 'u.org_id')}
        ORDER BY u.name`,
       params
     );
@@ -300,8 +300,8 @@ router.get('/activity-productivity', async (req, res) => {
 router.get('/export', async (req, res) => {
   try {
     const { user_id, from_date, to_date } = req.query;
-    const conditions = [];
-    const params = [];
+    const conditions = ['ss.org_id = $1'];
+    const params = [req.org_id];
 
     if (req.user.role === 'mr') {
       params.push(req.user.user_id);
@@ -319,14 +319,14 @@ router.get('/export', async (req, res) => {
       conditions.push(`ss.sale_date <= $${params.length}`);
     }
 
-    const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+    const where = `WHERE ${conditions.join(' AND ')}`;
 
     const { rows } = await db.query(
       `SELECT ss.user_id, ss.territory, d.name AS distributor, p.name AS product,
               ss.sale_date, ss.quantity, ss.value, ss.batch_number, ss.notes
        FROM secondary_sales ss
-       JOIN products p ON p.id = ss.product_id
-       LEFT JOIN distributors d ON d.id = ss.distributor_id
+       JOIN products p ON p.id = ss.product_id AND p.org_id = ss.org_id
+       LEFT JOIN distributors d ON d.id = ss.distributor_id AND d.org_id = ss.org_id
        ${where}
        ORDER BY ss.sale_date DESC`,
       params
@@ -367,17 +367,25 @@ router.get('/execution-scorecard', async (req, res) => {
     const isManager = req.user.role === 'manager' || req.user.role === 'admin';
     const userFilter = isManager ? null : req.user.user_id;
 
+    // $1 = org_id always; $2 = user_id when filtering
+    const baseParams = [req.org_id];
+    if (userFilter) baseParams.push(userFilter);
+    const userClause = userFilter ? `AND ft.user_id = $2` : '';
+    const userClauseDcr = userFilter ? `AND user_id = $2` : '';
+    const userClauseRcpa = userFilter ? `AND user_id = $2` : '';
+
     const [overdueResult, coverageResult, marketShareResult] = await Promise.all([
       // 1. Overdue follow-up tasks per MR
       db.query(
         `SELECT ft.user_id, u.name, COUNT(*) AS count
          FROM follow_up_tasks ft
-         JOIN users u ON u.user_id = ft.user_id
+         JOIN users u ON u.user_id = ft.user_id AND u.org_id = ft.org_id
          WHERE ft.status = 'overdue'
-         ${userFilter ? `AND ft.user_id = $1` : ''}
+           AND ft.org_id = $1
+           ${userClause}
          GROUP BY ft.user_id, u.name
          ORDER BY count DESC`,
-        userFilter ? [userFilter] : []
+        baseParams
       ),
 
       // 2. Doctor coverage: cold (30+ days), at-risk (15-29), healthy (<15)
@@ -387,15 +395,15 @@ router.get('/execution-scorecard', async (req, res) => {
            COUNT(*) FILTER (WHERE sub.days_since >= 15 AND sub.days_since < 30) AS at_risk,
            COUNT(*) FILTER (WHERE sub.days_since < 15) AS healthy
          FROM (
-           SELECT user_id, name AS doctor_name, (CURRENT_DATE - MAX(date)) AS days_since
+           SELECT org_id, user_id, name AS doctor_name, (CURRENT_DATE - MAX(date)) AS days_since
            FROM dcr
-           ${userFilter ? `WHERE user_id = $1` : ''}
-           GROUP BY user_id, name
+           WHERE org_id = $1 ${userClauseDcr}
+           GROUP BY org_id, user_id, name
          ) sub
-         JOIN users u ON u.user_id = sub.user_id
+         JOIN users u ON u.user_id = sub.user_id AND u.org_id = sub.org_id
          GROUP BY sub.user_id, u.name
          ORDER BY cold DESC`,
-        userFilter ? [userFilter] : []
+        baseParams
       ),
 
       // 3. RCPA market share
@@ -407,8 +415,8 @@ router.get('/execution-scorecard', async (req, res) => {
              THEN ROUND(SUM(our_value) * 100.0 / (SUM(our_value) + SUM(competitor_value)), 1)
              ELSE 0 END AS share_pct
          FROM rcpa
-         ${userFilter ? `WHERE user_id = $1` : ''}`,
-        userFilter ? [userFilter] : []
+         WHERE org_id = $1 ${userClauseRcpa}`,
+        baseParams
       )
     ]);
 
@@ -457,8 +465,8 @@ router.get('/execution-scorecard', async (req, res) => {
 router.get('/', async (req, res) => {
   try {
     const { user_id, from_date, to_date, product_id, period } = req.query;
-    const conditions = [];
-    const params = [];
+    const conditions = ['ss.org_id = $1'];
+    const params = [req.org_id];
 
     // MRs see only their own data
     if (req.user.role === 'mr') {
@@ -486,13 +494,13 @@ router.get('/', async (req, res) => {
       conditions.push(`to_char(ss.sale_date, 'YYYY-MM') = $${params.length}`);
     }
 
-    const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+    const where = `WHERE ${conditions.join(' AND ')}`;
 
     const { rows } = await db.query(
       `SELECT ss.*, p.name AS product_name, d.name AS distributor_name, d.code AS distributor_code
        FROM secondary_sales ss
-       JOIN products p ON p.id = ss.product_id
-       LEFT JOIN distributors d ON d.id = ss.distributor_id
+       JOIN products p ON p.id = ss.product_id AND p.org_id = ss.org_id
+       LEFT JOIN distributors d ON d.id = ss.distributor_id AND d.org_id = ss.org_id
        ${where}
        ORDER BY ss.sale_date DESC, ss.id DESC
        LIMIT 1000`,
@@ -518,18 +526,21 @@ router.post('/', requireRole('manager', 'admin'), async (req, res) => {
       return res.status(400).json({ error: 'user_id, product_id, sale_date, quantity, and value are required' });
     }
 
-    // Look up MR's territory
-    const { rows: userRows } = await db.query('SELECT territory FROM users WHERE user_id = $1', [user_id]);
+    // Look up MR's territory (must be in same org)
+    const { rows: userRows } = await db.query(
+      'SELECT territory FROM users WHERE user_id = $1 AND org_id = $2',
+      [user_id, req.org_id]
+    );
     if (!userRows.length) {
       return res.status(400).json({ error: `MR with user_id '${user_id}' not found` });
     }
     const territory = userRows[0].territory;
 
     const { rows } = await db.query(
-      `INSERT INTO secondary_sales (user_id, territory, distributor_id, product_id, sale_date, quantity, value, batch_number, notes, uploaded_by)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+      `INSERT INTO secondary_sales (org_id, user_id, territory, distributor_id, product_id, sale_date, quantity, value, batch_number, notes, uploaded_by)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
        RETURNING *`,
-      [user_id, territory, distributor_id || null, product_id, sale_date, quantity, value, batch_number || null, notes || null, req.user.user_id]
+      [req.org_id, user_id, territory, distributor_id || null, product_id, sale_date, quantity, value, batch_number || null, notes || null, req.user.user_id]
     );
 
     res.status(201).json({ success: true, data: rows[0] });
@@ -565,9 +576,12 @@ router.patch('/:id', requireRole('manager', 'admin'), async (req, res) => {
 
     fields.push(`updated_at = NOW()`);
     params.push(id);
+    params.push(req.org_id);
 
     const { rows } = await db.query(
-      `UPDATE secondary_sales SET ${fields.join(', ')} WHERE id = $${params.length} RETURNING *`,
+      `UPDATE secondary_sales SET ${fields.join(', ')}
+       WHERE id = $${params.length - 1} AND org_id = $${params.length}
+       RETURNING *`,
       params
     );
 
@@ -585,7 +599,10 @@ router.patch('/:id', requireRole('manager', 'admin'), async (req, res) => {
 // ─────────────────────────────────────────────────────────────────────────────
 router.delete('/:id', requireRole('manager', 'admin'), async (req, res) => {
   try {
-    const { rows } = await db.query('DELETE FROM secondary_sales WHERE id = $1 RETURNING id', [req.params.id]);
+    const { rows } = await db.query(
+      'DELETE FROM secondary_sales WHERE id = $1 AND org_id = $2 RETURNING id',
+      [req.params.id, req.org_id]
+    );
     if (!rows.length) return res.status(404).json({ error: 'Sale record not found' });
     res.json({ success: true, deleted: rows[0].id });
   } catch (err) {
@@ -609,17 +626,26 @@ router.post('/upload', requireRole('manager', 'admin'), upload.single('file'), a
     if (!rows.length) return res.status(400).json({ error: 'File is empty' });
     if (rows.length > 5000) return res.status(400).json({ error: 'Maximum 5000 rows per upload' });
 
-    // Preload products and distributors for matching
-    const { rows: products } = await db.query('SELECT id, name FROM products');
+    // Preload products and distributors for matching (org-scoped)
+    const { rows: products } = await db.query(
+      'SELECT id, name FROM products WHERE org_id = $1',
+      [req.org_id]
+    );
     const productMap = {};
     products.forEach(p => { productMap[p.name.toLowerCase().trim()] = p.id; });
 
-    const { rows: distributors } = await db.query('SELECT id, code, territory FROM distributors');
+    const { rows: distributors } = await db.query(
+      'SELECT id, code, territory FROM distributors WHERE org_id = $1',
+      [req.org_id]
+    );
     const distMap = {};
-    distributors.forEach(d => { distMap[d.code.toLowerCase().trim()] = d; });
+    distributors.forEach(d => { if (d.code) distMap[d.code.toLowerCase().trim()] = d; });
 
     // Preload user territories
-    const { rows: users } = await db.query("SELECT user_id, territory FROM users WHERE role = 'mr'");
+    const { rows: users } = await db.query(
+      "SELECT user_id, territory FROM users WHERE role = 'mr' AND org_id = $1",
+      [req.org_id]
+    );
     const userTerritoryMap = {};
     users.forEach(u => { userTerritoryMap[u.user_id] = u.territory; });
 
@@ -671,10 +697,10 @@ router.post('/upload', requireRole('manager', 'admin'), upload.single('file'), a
 
       try {
         const { rows: insertedRows } = await db.query(
-          `INSERT INTO secondary_sales (user_id, territory, distributor_id, product_id, sale_date, quantity, value, batch_number, notes, uploaded_by, upload_batch_id)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+          `INSERT INTO secondary_sales (org_id, user_id, territory, distributor_id, product_id, sale_date, quantity, value, batch_number, notes, uploaded_by, upload_batch_id)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
            RETURNING id`,
-          [mrUserId, territory, distributorId, productId, saleDate, qty, val, batchNum, notes, req.user.user_id, batchId]
+          [req.org_id, mrUserId, territory, distributorId, productId, saleDate, qty, val, batchNum, notes, req.user.user_id, batchId]
         );
         inserted.push(insertedRows[0].id);
       } catch (dbErr) {

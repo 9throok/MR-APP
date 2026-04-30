@@ -7,8 +7,8 @@ const { requireRole } = require('../middleware/auth');
 router.get('/', async (req, res) => {
   try {
     const { status, severity, user_id } = req.query;
-    const conditions = [];
-    const params = [];
+    const conditions = ['ae.org_id = $1'];
+    const params = [req.org_id];
 
     if (status) {
       params.push(status);
@@ -23,12 +23,12 @@ router.get('/', async (req, res) => {
       conditions.push(`ae.user_id = $${params.length}`);
     }
 
-    const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+    const where = `WHERE ${conditions.join(' AND ')}`;
 
     const { rows } = await db.query(
       `SELECT ae.*, d.call_summary, d.doctor_feedback
        FROM adverse_events ae
-       LEFT JOIN dcr d ON ae.dcr_id = d.id
+       LEFT JOIN dcr d ON ae.dcr_id = d.id AND d.org_id = ae.org_id
        ${where}
        ORDER BY ae.detected_at DESC`,
       params
@@ -56,7 +56,8 @@ router.get('/stats', async (req, res) => {
         COUNT(*) FILTER (WHERE severity = 'severe')::int AS severe,
         COUNT(*) FILTER (WHERE severity = 'critical')::int AS critical
       FROM adverse_events
-    `);
+      WHERE org_id = $1
+    `, [req.org_id]);
 
     res.json({ success: true, stats: rows[0] });
   } catch (err) {
@@ -78,9 +79,9 @@ router.patch('/:id/review', requireRole('manager', 'admin'), async (req, res) =>
     const { rows } = await db.query(
       `UPDATE adverse_events
        SET status = $1, review_notes = $2, reviewed_by = $3, reviewed_at = NOW()
-       WHERE id = $4
+       WHERE id = $4 AND org_id = $5
        RETURNING *`,
-      [status, review_notes || null, req.user.user_id, id]
+      [status, review_notes || null, req.user.user_id, id, req.org_id]
     );
 
     if (rows.length === 0) {

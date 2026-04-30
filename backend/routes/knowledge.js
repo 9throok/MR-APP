@@ -5,6 +5,7 @@ const path = require('path');
 const fs = require('fs');
 const db = require('../config/db');
 const { authenticateToken, requireRole } = require('../middleware/auth');
+const { attachOrgScope } = require('../middleware/orgScope');
 const { getLLMService } = require('../services/llm');
 const { searchKnowledge } = require('../services/knowledgeSearch');
 const { buildClinicalChatMessages } = require('../prompts/clinicalChat');
@@ -43,7 +44,7 @@ const upload = multer({
 });
 
 // POST /api/knowledge/upload — upload a knowledge base file
-router.post('/upload', authenticateToken, requireRole('admin', 'manager'), upload.single('file'), async (req, res) => {
+router.post('/upload', authenticateToken, attachOrgScope, requireRole('admin', 'manager'), upload.single('file'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'File is required' });
@@ -59,16 +60,19 @@ router.post('/upload', authenticateToken, requireRole('admin', 'manager'), uploa
 
     // Insert into drug_knowledge (source of truth)
     const { rows } = await db.query(
-      `INSERT INTO drug_knowledge (product_id, filename, content, category, uploaded_by)
-       VALUES ($1, $2, $3, $4, $5)
-       RETURNING id, product_id, filename, category, uploaded_by, uploaded_at`,
-      [product_id, req.file.originalname, content, category || 'general', req.user.user_id]
+      `INSERT INTO drug_knowledge (org_id, product_id, filename, content, category, uploaded_by)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       RETURNING id, org_id, product_id, filename, category, uploaded_by, uploaded_at`,
+      [req.org_id, product_id, req.file.originalname, content, category || 'general', req.user.user_id]
     );
 
     const knowledgeId = rows[0].id;
 
-    // Get product name for tagging
-    const productResult = await db.query('SELECT name FROM products WHERE id = $1', [product_id]);
+    // Get product name for tagging — must belong to same org
+    const productResult = await db.query(
+      'SELECT name FROM products WHERE id = $1 AND org_id = $2',
+      [product_id, req.org_id]
+    );
     const productName = productResult.rows[0]?.name || null;
 
     // Chunk the document
@@ -83,16 +87,16 @@ router.post('/upload', authenticateToken, requireRole('admin', 'manager'), uploa
       console.warn('[Knowledge] Embedding generation failed, storing chunks without embeddings:', err.message);
     }
 
-    // Batch insert chunks
+    // Batch insert chunks (org_id inherited from parent doc)
     for (let i = 0; i < chunks.length; i++) {
       const chunk = chunks[i];
       const embedding = embeddings[i] ? toPgVector(embeddings[i]) : null;
 
       await db.query(
-        `INSERT INTO knowledge_chunks (knowledge_id, product_id, chunk_index, content, token_count, metadata, tags, embedding)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8::vector)`,
+        `INSERT INTO knowledge_chunks (org_id, knowledge_id, product_id, chunk_index, content, token_count, metadata, tags, embedding)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9::vector)`,
         [
-          knowledgeId, product_id, chunk.chunkIndex, chunk.content,
+          req.org_id, knowledgeId, product_id, chunk.chunkIndex, chunk.content,
           chunk.tokenCount, JSON.stringify(chunk.metadata), chunk.tags,
           embedding
         ]
@@ -111,22 +115,26 @@ router.post('/upload', authenticateToken, requireRole('admin', 'manager'), uploa
 });
 
 // GET /api/knowledge — list knowledge entries
-router.get('/', authenticateToken, async (req, res) => {
+router.get('/', authenticateToken, attachOrgScope, async (req, res) => {
   try {
     const { product_id } = req.query;
-    let query = `SELECT dk.id, dk.product_id, dk.filename, dk.category, dk.uploaded_by, dk.uploaded_at, p.name as product_name
-                 FROM drug_knowledge dk
-                 LEFT JOIN products p ON dk.product_id = p.id`;
-    const params = [];
+    const conditions = ['dk.org_id = $1'];
+    const params = [req.org_id];
 
     if (product_id) {
-      query += ' WHERE dk.product_id = $1';
       params.push(product_id);
+      conditions.push(`dk.product_id = $${params.length}`);
     }
 
-    query += ' ORDER BY dk.uploaded_at DESC';
-
-    const { rows } = await db.query(query, params);
+    const where = `WHERE ${conditions.join(' AND ')}`;
+    const { rows } = await db.query(
+      `SELECT dk.id, dk.product_id, dk.filename, dk.category, dk.uploaded_by, dk.uploaded_at, p.name as product_name
+       FROM drug_knowledge dk
+       LEFT JOIN products p ON dk.product_id = p.id AND p.org_id = dk.org_id
+       ${where}
+       ORDER BY dk.uploaded_at DESC`,
+      params
+    );
     res.json({ success: true, data: rows });
   } catch (err) {
     console.error('[Knowledge] GET error:', err.message);
@@ -135,10 +143,13 @@ router.get('/', authenticateToken, async (req, res) => {
 });
 
 // DELETE /api/knowledge/:id — delete a knowledge entry (chunks cascade-deleted)
-router.delete('/:id', authenticateToken, requireRole('admin', 'manager'), async (req, res) => {
+router.delete('/:id', authenticateToken, attachOrgScope, requireRole('admin', 'manager'), async (req, res) => {
   try {
     const { id } = req.params;
-    const { rows } = await db.query('DELETE FROM drug_knowledge WHERE id = $1 RETURNING *', [id]);
+    const { rows } = await db.query(
+      'DELETE FROM drug_knowledge WHERE id = $1 AND org_id = $2 RETURNING *',
+      [id, req.org_id]
+    );
 
     if (rows.length === 0) {
       return res.status(404).json({ error: 'Knowledge entry not found' });
@@ -152,16 +163,16 @@ router.delete('/:id', authenticateToken, requireRole('admin', 'manager'), async 
 });
 
 // GET /api/knowledge/preview/:filename — get document content for preview
-router.get('/preview/:filename', authenticateToken, async (req, res) => {
+router.get('/preview/:filename', authenticateToken, attachOrgScope, async (req, res) => {
   try {
     const { filename } = req.params;
     const { rows } = await db.query(
       `SELECT dk.id, dk.filename, dk.content, dk.category, p.name as product_name
        FROM drug_knowledge dk
-       LEFT JOIN products p ON dk.product_id = p.id
-       WHERE dk.filename = $1
+       LEFT JOIN products p ON dk.product_id = p.id AND p.org_id = dk.org_id
+       WHERE dk.filename = $1 AND dk.org_id = $2
        LIMIT 1`,
-      [filename]
+      [filename, req.org_id]
     );
     if (rows.length === 0) {
       return res.status(404).json({ error: 'Document not found' });
@@ -174,9 +185,9 @@ router.get('/preview/:filename', authenticateToken, async (req, res) => {
 });
 
 // GET /api/knowledge/sessions — list chat sessions for the current user
-router.get('/sessions', authenticateToken, async (req, res) => {
+router.get('/sessions', authenticateToken, attachOrgScope, async (req, res) => {
   try {
-    const sessions = await listSessions(req.user.user_id);
+    const sessions = await listSessions(req.user.user_id, req.org_id);
     res.json({ success: true, data: sessions });
   } catch (err) {
     console.error('[Knowledge] Sessions error:', err.message);
@@ -185,7 +196,7 @@ router.get('/sessions', authenticateToken, async (req, res) => {
 });
 
 // POST /api/knowledge/chat — clinical assistant chat with conversation memory
-router.post('/chat', authenticateToken, async (req, res) => {
+router.post('/chat', authenticateToken, attachOrgScope, async (req, res) => {
   try {
     const { query, product_id, session_id } = req.body;
 
@@ -194,16 +205,16 @@ router.post('/chat', authenticateToken, async (req, res) => {
     }
 
     // Get or create conversation session
-    const sessionId = await getOrCreateSession(req.user.user_id, session_id, product_id);
+    const sessionId = await getOrCreateSession(req.user.user_id, req.org_id, session_id, product_id);
 
     // Get conversation history for context
-    const conversationHistory = await getRecentMessages(sessionId);
+    const conversationHistory = await getRecentMessages(sessionId, req.org_id);
 
     // Rewrite query to be self-contained if there's history
     const rewrittenQuery = await rewriteQuery(query, conversationHistory);
 
-    // Search knowledge base with rewritten query
-    const knowledgeResults = await searchKnowledge(rewrittenQuery, product_id);
+    // Search knowledge base with rewritten query (org-scoped)
+    const knowledgeResults = await searchKnowledge(rewrittenQuery, req.org_id, product_id);
 
     // Build LLM messages with knowledge context and conversation history
     const messages = buildClinicalChatMessages(rewrittenQuery, knowledgeResults, conversationHistory);
@@ -238,8 +249,8 @@ router.post('/chat', authenticateToken, async (req, res) => {
     }));
 
     // Save messages to conversation history
-    await saveMessage(sessionId, 'user', query);
-    await saveMessage(sessionId, 'assistant', answer, sources);
+    await saveMessage(sessionId, req.org_id, 'user', query);
+    await saveMessage(sessionId, req.org_id, 'assistant', answer, sources);
 
     res.json({
       success: true,

@@ -14,7 +14,16 @@ const doctorRequestRoutes = require('./routes/doctor-requests');
 const rcpaRoutes = require('./routes/rcpa');
 const salesRoutes = require('./routes/sales');
 const targetRoutes = require('./routes/targets');
+const tourPlanRoutes = require('./routes/tour-plans');
+const expenseRoutes = require('./routes/expenses');
+const leaveRoutes = require('./routes/leaves');
+const orderRoutes = require('./routes/orders');
+const sampleRoutes = require('./routes/samples');
+const contentRoutes = require('./routes/content');
+const mlrRoutes = require('./routes/mlr');
+const contentViewRoutes = require('./routes/content-views');
 const { authenticateToken } = require('./middleware/auth');
+const { attachOrgScope } = require('./middleware/orgScope');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -28,18 +37,26 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // Public routes
 app.use('/api/auth', authRoutes);
 
-// Protected routes
-app.use('/api/dcr', authenticateToken, dcrRoutes);
-app.use('/api/ai', authenticateToken, aiRoutes);
-app.use('/api/products', authenticateToken, productRoutes);
-app.use('/api/tasks', authenticateToken, taskRoutes);
+// Protected routes — every authenticated request gets req.org_id attached
+app.use('/api/dcr', authenticateToken, attachOrgScope, dcrRoutes);
+app.use('/api/ai', authenticateToken, attachOrgScope, aiRoutes);
+app.use('/api/products', authenticateToken, attachOrgScope, productRoutes);
+app.use('/api/tasks', authenticateToken, attachOrgScope, taskRoutes);
 app.use('/api/knowledge', knowledgeRoutes);
-app.use('/api/adverse-events', authenticateToken, adverseEventRoutes);
-app.use('/api/doctors', authenticateToken, doctorRoutes);
-app.use('/api/doctor-requests', authenticateToken, doctorRequestRoutes);
-app.use('/api/rcpa', authenticateToken, rcpaRoutes);
-app.use('/api/sales', authenticateToken, salesRoutes);
-app.use('/api/targets', authenticateToken, targetRoutes);
+app.use('/api/adverse-events', authenticateToken, attachOrgScope, adverseEventRoutes);
+app.use('/api/doctors', authenticateToken, attachOrgScope, doctorRoutes);
+app.use('/api/doctor-requests', authenticateToken, attachOrgScope, doctorRequestRoutes);
+app.use('/api/rcpa', authenticateToken, attachOrgScope, rcpaRoutes);
+app.use('/api/sales', authenticateToken, attachOrgScope, salesRoutes);
+app.use('/api/targets', authenticateToken, attachOrgScope, targetRoutes);
+app.use('/api/tour-plans', authenticateToken, attachOrgScope, tourPlanRoutes);
+app.use('/api/expenses', authenticateToken, attachOrgScope, expenseRoutes);
+app.use('/api/leaves', authenticateToken, attachOrgScope, leaveRoutes);
+app.use('/api/orders', authenticateToken, attachOrgScope, orderRoutes);
+app.use('/api/samples', authenticateToken, attachOrgScope, sampleRoutes);
+app.use('/api/content', authenticateToken, attachOrgScope, contentRoutes);
+app.use('/api/mlr', authenticateToken, attachOrgScope, mlrRoutes);
+app.use('/api/content-views', authenticateToken, attachOrgScope, contentViewRoutes);
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', message: 'Server is running' });
