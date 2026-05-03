@@ -1,8 +1,17 @@
 import { useState, useEffect } from 'react'
+import { Search, Plus, UserCheck } from 'lucide-react'
 import Header from './Header'
 import Sidebar from './Sidebar'
 import { apiGet, apiPost } from '../services/apiService'
 import './KnowledgeUpload.css'
+import './admin/AdminUI.css'
+import {
+  Badge,
+  DataTable,
+  consentStatusTone,
+  humanise,
+  type DataTableColumn,
+} from './admin'
 
 interface ConsentRegisterProps {
   onLogout: () => void
@@ -38,12 +47,6 @@ interface HistoryRow {
 }
 
 const CHANNELS = ['marketing_email', 'marketing_visit', 'sample_distribution', 'data_processing']
-const STATUS_COLOR: Record<string, string> = {
-  granted: '#15803d',
-  revoked: '#b91c1c',
-  withdrawn: '#b45309',
-  no_consent: '#6b7280',
-}
 
 function ConsentRegister({ onLogout, onBack, userName, onNavigate }: ConsentRegisterProps) {
   const [doctors, setDoctors] = useState<Doctor[]>([])
@@ -68,6 +71,7 @@ function ConsentRegister({ onLogout, onBack, userName, onNavigate }: ConsentRegi
   const loadDoctorState = async (doc: Doctor) => {
     setSelectedDoctor(doc)
     setError(null)
+    setShowForm(false)
     try {
       const [s, h] = await Promise.all([
         apiGet(`/consent/doctor/${doc.id}`),
@@ -105,146 +109,206 @@ function ConsentRegister({ onLogout, onBack, userName, onNavigate }: ConsentRegi
 
   const filtered = doctors.filter(d => !search || d.name.toLowerCase().includes(search.toLowerCase()))
 
+  const historyColumns: DataTableColumn<HistoryRow>[] = [
+    {
+      key: 'recorded_at',
+      label: 'When',
+      width: '120px',
+      render: h => <span className="cell-muted">{new Date(h.recorded_at).toLocaleDateString('en-IN')}</span>,
+    },
+    {
+      key: 'channel',
+      label: 'Channel',
+      render: h => humanise(h.channel),
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      width: '120px',
+      render: h => <Badge tone={consentStatusTone[h.status] || 'neutral'}>{h.status}</Badge>,
+    },
+    {
+      key: 'recorded_by',
+      label: 'Recorded by',
+      render: h => <span className="cell-muted">{h.recorded_by}</span>,
+    },
+    {
+      key: 'source',
+      label: 'Source',
+      render: h => h.source ? humanise(h.source) : '—',
+    },
+    {
+      key: 'notes',
+      label: 'Notes',
+      className: 'cell-truncate',
+      render: h => <span className="cell-muted">{h.notes || '—'}</span>,
+    },
+  ]
+
   return (
     <div className="knowledge-page">
       <Header onLogout={onLogout} onMenuClick={() => setSidebarOpen(true)} onNavigateHome={onBack} />
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} userName={userName} onNavigate={onNavigate} onLogout={onLogout} currentPage="consent-register" />
 
       <div className="knowledge-content">
-        <div className="entries-section">
-          <h2 style={{ marginTop: 0 }}>Doctor Consent Register</h2>
-          <p style={{ color: '#6b7280', fontSize: 14 }}>Per-doctor consent state per channel. Append-only — every grant / revoke is a new row in the history.</p>
+        <div className="admin-page-intro">
+          <div>
+            <h2 className="admin-page-title">Doctor Consent Register</h2>
+            <p className="admin-page-lead">
+              Per-doctor consent state per channel. Append-only — every grant, revoke or withdrawal is preserved as a new history row.
+            </p>
+          </div>
+        </div>
 
-          {error && <div style={{ color: '#b91c1c', marginBottom: 12 }}>{error}</div>}
+        {error && <div className="admin-error">{error}</div>}
 
-          <div style={{ display: 'grid', gridTemplateColumns: '300px 1fr', gap: 24 }}>
-            {/* Doctor list */}
-            <div>
+        <div className="admin-split">
+          {/* Master list */}
+          <div className="admin-card-flat" style={{ padding: 14 }}>
+            <div className="admin-row" style={{ position: 'relative', marginBottom: 12 }}>
+              <Search size={16} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none' }} />
               <input
                 type="search"
                 placeholder="Search doctors…"
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                style={{ width: '100%', padding: 8, marginBottom: 12, border: '1px solid #d1d5db', borderRadius: 4 }}
+                className="admin-input"
+                style={{ paddingLeft: 36 }}
               />
-              <div style={{ maxHeight: '60vh', overflow: 'auto', border: '1px solid #e5e7eb', borderRadius: 4 }}>
-                {loading ? <div style={{ padding: 12 }}>Loading…</div> : filtered.map(d => (
+            </div>
+            <div style={{ maxHeight: '60vh', overflow: 'auto', display: 'flex', flexDirection: 'column', gap: 4 }}>
+              {loading ? (
+                <div className="admin-helper-text">Loading…</div>
+              ) : filtered.length === 0 ? (
+                <div className="admin-helper-text">No doctors match your search.</div>
+              ) : filtered.map(d => {
+                const isActive = selectedDoctor?.id === d.id
+                return (
                   <button
                     key={d.id}
                     onClick={() => loadDoctorState(d)}
+                    className="btn"
                     style={{
-                      display: 'block',
-                      width: '100%',
+                      justifyContent: 'flex-start',
                       textAlign: 'left',
                       padding: '10px 12px',
-                      background: selectedDoctor?.id === d.id ? '#eff6ff' : 'white',
-                      border: 'none',
-                      borderBottom: '1px solid #f3f4f6',
-                      cursor: 'pointer',
+                      background: isActive ? '#ecfdf5' : 'white',
+                      borderColor: isActive ? '#86efac' : 'var(--border-color)',
+                      color: 'var(--text-primary)',
+                      flexDirection: 'column',
+                      alignItems: 'flex-start',
+                      gap: 2,
                     }}
                   >
-                    <div style={{ fontWeight: 600, fontSize: 14 }}>{d.name}</div>
-                    <div style={{ fontSize: 12, color: '#6b7280' }}>{d.specialty || '—'} · {d.territory || '—'}</div>
+                    <span style={{ fontWeight: 600, fontSize: 13 }}>{d.name}</span>
+                    <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--text-secondary)' }}>
+                      {d.specialty || '—'} · {d.territory || '—'}
+                    </span>
                   </button>
-                ))}
-              </div>
+                )
+              })}
             </div>
+          </div>
 
-            {/* Detail */}
-            <div>
-              {!selectedDoctor ? (
-                <div style={{ color: '#6b7280', padding: 24 }}>Select a doctor on the left to view consent state.</div>
-              ) : (
-                <>
-                  <h3 style={{ marginTop: 0 }}>{selectedDoctor.name}</h3>
+          {/* Detail */}
+          <div className="admin-stack">
+            {!selectedDoctor ? (
+              <div className="admin-empty">
+                <div className="admin-empty-icon"><UserCheck size={20} /></div>
+                <div className="admin-empty-title">Select a doctor</div>
+                <p className="admin-empty-hint">Pick a name on the left to view consent state and history.</p>
+              </div>
+            ) : (
+              <>
+                <div className="admin-card">
+                  <div className="admin-row-spread" style={{ marginBottom: 16 }}>
+                    <div>
+                      <h3 style={{ margin: '0 0 4px', fontSize: 18, fontWeight: 700 }}>{selectedDoctor.name}</h3>
+                      <div className="admin-stat-hint">{selectedDoctor.specialty || '—'} · {selectedDoctor.territory || '—'}</div>
+                    </div>
+                    <button onClick={() => setShowForm(v => !v)} className="btn btn-primary btn-sm">
+                      <Plus size={14} />
+                      {showForm ? 'Cancel' : 'Record consent event'}
+                    </button>
+                  </div>
 
-                  <h4 style={{ marginBottom: 8 }}>Current consent per channel</h4>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 12, marginBottom: 24 }}>
+                  <div className="admin-section-title">Current consent per channel</div>
+                  <div className="admin-stat-grid" style={{ marginBottom: 0 }}>
                     {CHANNELS.map(ch => {
                       const s = state[ch] || { channel: ch, status: 'no_consent' }
+                      const tone = s.status === 'granted' ? 'success'
+                        : s.status === 'revoked' ? 'danger'
+                        : s.status === 'withdrawn' ? 'warning' : 'default'
                       return (
-                        <div key={ch} style={{ padding: 12, border: '1px solid #e5e7eb', borderRadius: 6 }}>
-                          <div style={{ fontSize: 12, color: '#6b7280', textTransform: 'uppercase', letterSpacing: 0.5 }}>{ch.replace(/_/g, ' ')}</div>
-                          <div style={{ fontSize: 16, fontWeight: 700, color: STATUS_COLOR[s.status] || '#374151', marginTop: 4 }}>{s.status.replace(/_/g, ' ')}</div>
-                          {s.recorded_at && <div style={{ fontSize: 11, color: '#6b7280', marginTop: 4 }}>since {new Date(s.recorded_at).toLocaleDateString('en-IN')}</div>}
+                        <div key={ch} className={`admin-stat-card ${tone === 'default' ? '' : `tone-${tone}`}`}>
+                          <div className="admin-stat-label">{humanise(ch)}</div>
+                          <div className="admin-stat-value" style={{ fontSize: 20 }}>
+                            {humanise(s.status)}
+                          </div>
+                          {s.recorded_at && <div className="admin-stat-hint">since {new Date(s.recorded_at).toLocaleDateString('en-IN')}</div>}
                         </div>
                       )
                     })}
                   </div>
+                </div>
 
-                  <button onClick={() => setShowForm(v => !v)} className="upload-btn" style={{ marginBottom: 16 }}>
-                    {showForm ? 'Cancel' : '+ Record consent event'}
-                  </button>
-
-                  {showForm && (
-                    <form onSubmit={submitConsent} style={{ background: '#f9fafb', padding: 16, borderRadius: 6, marginBottom: 24 }}>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
-                        <label>
-                          Channel
-                          <select value={formChannel} onChange={e => setFormChannel(e.target.value)} style={{ width: '100%', padding: 6, marginTop: 4 }}>
-                            {CHANNELS.map(c => <option key={c} value={c}>{c.replace(/_/g, ' ')}</option>)}
-                          </select>
-                        </label>
-                        <label>
-                          Status
-                          <select value={formStatus} onChange={e => setFormStatus(e.target.value)} style={{ width: '100%', padding: 6, marginTop: 4 }}>
-                            <option value="granted">granted</option>
-                            <option value="revoked">revoked</option>
-                            <option value="withdrawn">withdrawn</option>
-                          </select>
-                        </label>
-                        <label>
-                          Source
-                          <select value={formSource} onChange={e => setFormSource(e.target.value)} style={{ width: '100%', padding: 6, marginTop: 4 }}>
-                            <option value="verbal">verbal</option>
-                            <option value="written">written</option>
-                            <option value="digital_signature">digital signature</option>
-                            <option value="imported">imported</option>
-                          </select>
-                        </label>
+                {showForm && (
+                  <form onSubmit={submitConsent} className="admin-card">
+                    <div className="admin-section-title">Record consent event</div>
+                    <div className="admin-form-grid">
+                      <div>
+                        <label className="admin-field-label">Channel</label>
+                        <select value={formChannel} onChange={e => setFormChannel(e.target.value)} className="admin-select">
+                          {CHANNELS.map(c => <option key={c} value={c}>{humanise(c)}</option>)}
+                        </select>
                       </div>
-                      <label style={{ display: 'block', marginTop: 12 }}>
-                        Notes
-                        <textarea value={formNotes} onChange={e => setFormNotes(e.target.value)} rows={2} style={{ width: '100%', padding: 6, marginTop: 4, border: '1px solid #d1d5db', borderRadius: 4 }} />
-                      </label>
-                      <button type="submit" disabled={submitting} className="upload-btn" style={{ marginTop: 12 }}>
-                        {submitting ? 'Recording…' : 'Record'}
+                      <div>
+                        <label className="admin-field-label">Status</label>
+                        <select value={formStatus} onChange={e => setFormStatus(e.target.value)} className="admin-select">
+                          <option value="granted">Granted</option>
+                          <option value="revoked">Revoked</option>
+                          <option value="withdrawn">Withdrawn</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="admin-field-label">Source</label>
+                        <select value={formSource} onChange={e => setFormSource(e.target.value)} className="admin-select">
+                          <option value="verbal">Verbal</option>
+                          <option value="written">Written</option>
+                          <option value="digital_signature">Digital signature</option>
+                          <option value="imported">Imported</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div className="admin-form-grid" style={{ marginTop: 14 }}>
+                      <div className="admin-field-wide">
+                        <label className="admin-field-label">Notes</label>
+                        <textarea value={formNotes} onChange={e => setFormNotes(e.target.value)} rows={2} className="admin-textarea" />
+                      </div>
+                    </div>
+                    <div className="admin-row" style={{ marginTop: 14, justifyContent: 'flex-end' }}>
+                      <button type="button" className="btn btn-ghost btn-sm" onClick={() => setShowForm(false)}>Cancel</button>
+                      <button type="submit" disabled={submitting} className="btn btn-primary btn-sm">
+                        {submitting ? 'Recording…' : 'Record event'}
                       </button>
-                    </form>
-                  )}
+                    </div>
+                  </form>
+                )}
 
-                  <h4 style={{ marginBottom: 8 }}>History</h4>
-                  {history.length === 0 ? (
-                    <div style={{ color: '#6b7280' }}>No consent events recorded yet.</div>
-                  ) : (
-                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                      <thead>
-                        <tr style={{ borderBottom: '2px solid #e5e7eb', textAlign: 'left' }}>
-                          <th style={{ padding: 8 }}>When</th>
-                          <th style={{ padding: 8 }}>Channel</th>
-                          <th style={{ padding: 8 }}>Status</th>
-                          <th style={{ padding: 8 }}>By</th>
-                          <th style={{ padding: 8 }}>Source</th>
-                          <th style={{ padding: 8 }}>Notes</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {history.map(h => (
-                          <tr key={h.id} style={{ borderBottom: '1px solid #f3f4f6' }}>
-                            <td style={{ padding: 8, fontSize: 13 }}>{new Date(h.recorded_at).toLocaleDateString('en-IN')}</td>
-                            <td style={{ padding: 8, fontSize: 13 }}>{h.channel.replace(/_/g, ' ')}</td>
-                            <td style={{ padding: 8, fontSize: 13, color: STATUS_COLOR[h.status] || '#374151', fontWeight: 600 }}>{h.status}</td>
-                            <td style={{ padding: 8, fontSize: 13 }}>{h.recorded_by}</td>
-                            <td style={{ padding: 8, fontSize: 13 }}>{h.source || '—'}</td>
-                            <td style={{ padding: 8, fontSize: 13, color: '#6b7280' }}>{h.notes || '—'}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  )}
-                </>
-              )}
-            </div>
+                <div>
+                  <div className="admin-row-spread" style={{ marginBottom: 12 }}>
+                    <div className="admin-section-title" style={{ margin: 0 }}>History</div>
+                    <span className="admin-count-pill">{history.length} events</span>
+                  </div>
+                  <DataTable
+                    columns={historyColumns}
+                    rows={history}
+                    rowKey={h => h.id}
+                    empty="No consent events recorded yet."
+                  />
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>

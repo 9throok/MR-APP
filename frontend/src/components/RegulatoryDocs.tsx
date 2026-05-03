@@ -1,8 +1,17 @@
 import { useState, useEffect } from 'react'
+import { AlertTriangle, Plus, ExternalLink } from 'lucide-react'
 import Header from './Header'
 import Sidebar from './Sidebar'
 import { apiGet, apiUpload } from '../services/apiService'
 import './KnowledgeUpload.css'
+import './admin/AdminUI.css'
+import {
+  Badge,
+  Banner,
+  DataTable,
+  humanise,
+  type DataTableColumn,
+} from './admin'
 
 interface RegulatoryDocsProps {
   onLogout: () => void
@@ -92,7 +101,6 @@ function RegulatoryDocs({ onLogout, onBack, userName, onNavigate }: RegulatoryDo
       if (expiryDate) fd.append('expiry_date', expiryDate)
       fd.append('file', file)
       await apiUpload('/regulatory-documents', fd)
-      // reset form
       setTitle(''); setJurisdiction(''); setDescription(''); setEffectiveDate(''); setExpiryDate(''); setFile(null)
       setShowForm(false)
       await load()
@@ -103,112 +111,150 @@ function RegulatoryDocs({ onLogout, onBack, userName, onNavigate }: RegulatoryDo
     }
   }
 
+  const columns: DataTableColumn<DocumentRow>[] = [
+    {
+      key: 'title',
+      label: 'Title',
+      render: d => <span style={{ fontWeight: 600 }}>{d.title}</span>,
+    },
+    {
+      key: 'doc_type',
+      label: 'Type',
+      width: '170px',
+      render: d => <Badge tone="info">{humanise(d.doc_type)}</Badge>,
+    },
+    {
+      key: 'jurisdiction',
+      label: 'Jurisdiction',
+      width: '110px',
+      render: d => <span className="cell-muted">{d.jurisdiction || '—'}</span>,
+    },
+    {
+      key: 'product_name',
+      label: 'Product',
+      width: '140px',
+      render: d => <span className="cell-muted">{d.product_name || 'cross-product'}</span>,
+    },
+    {
+      key: 'current_version_number',
+      label: 'Current',
+      width: '90px',
+      render: d => d.current_version_number ? <Badge tone="neutral">v{d.current_version_number}</Badge> : <span className="cell-muted">—</span>,
+    },
+    {
+      key: 'current_expiry_date',
+      label: 'Expiry',
+      width: '120px',
+      render: d => <span className="cell-muted">{d.current_expiry_date ? new Date(d.current_expiry_date).toLocaleDateString('en-IN') : '—'}</span>,
+    },
+    {
+      key: 'open',
+      label: '',
+      width: '100px',
+      align: 'right',
+      render: d => d.current_file_url ? (
+        <a href={d.current_file_url} target="_blank" rel="noopener noreferrer" className="btn btn-secondary btn-sm">
+          Open <ExternalLink size={12} />
+        </a>
+      ) : <span className="cell-muted">—</span>,
+    },
+  ]
+
   return (
     <div className="knowledge-page">
       <Header onLogout={onLogout} onMenuClick={() => setSidebarOpen(true)} onNavigateHome={onBack} />
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} userName={userName} onNavigate={onNavigate} onLogout={onLogout} currentPage="regulatory-docs" />
 
       <div className="knowledge-content">
-        <div className="entries-section">
-          <h2 style={{ marginTop: 0 }}>Regulatory Document Repository</h2>
-          <p style={{ color: '#6b7280', fontSize: 14 }}>Drug labels, IFUs, MoH approvals, SOPs, safety communications. Versioned with effective and expiry dates.</p>
+        <div className="admin-page-intro">
+          <div>
+            <h2 className="admin-page-title">Regulatory Document Repository</h2>
+            <p className="admin-page-lead">
+              Drug labels, IFUs, MoH approvals, SOPs, safety communications. Versioned with effective and expiry dates.
+            </p>
+          </div>
+          <button onClick={() => setShowForm(v => !v)} className="btn btn-primary">
+            <Plus size={14} />
+            {showForm ? 'Cancel' : 'Upload document'}
+          </button>
+        </div>
 
-          {error && <div style={{ color: '#b91c1c', marginBottom: 12 }}>{error}</div>}
+        {error && <div className="admin-error">{error}</div>}
 
-          {expiring.length > 0 && (
-            <div style={{ background: '#fef3c7', padding: 12, borderRadius: 6, marginBottom: 16 }}>
-              <strong>⚠️ Expiring within 60 days ({expiring.length}):</strong>
-              <ul style={{ margin: '8px 0 0 20px', padding: 0 }}>
+        {expiring.length > 0 && (
+          <div style={{ marginBottom: 18 }}>
+            <Banner
+              tone="warning"
+              icon={<AlertTriangle size={16} />}
+              title={`${expiring.length} document${expiring.length === 1 ? '' : 's'} expiring within 60 days`}
+            >
+              <ul style={{ margin: '6px 0 0 0', padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 4 }}>
                 {expiring.map(e => (
-                  <li key={e.document_id} style={{ fontSize: 13 }}>
-                    <strong>{e.title}</strong> v{e.version_number} — {e.days_until_expiry} day(s) until {new Date(e.expiry_date).toLocaleDateString('en-IN')}
+                  <li key={e.document_id}>
+                    <strong>{e.title}</strong> v{e.version_number} — {e.days_until_expiry} day{e.days_until_expiry === 1 ? '' : 's'} until {new Date(e.expiry_date).toLocaleDateString('en-IN')}
                   </li>
                 ))}
               </ul>
-            </div>
-          )}
+            </Banner>
+          </div>
+        )}
 
-          <button onClick={() => setShowForm(v => !v)} className="upload-btn" style={{ marginBottom: 16 }}>
-            {showForm ? 'Cancel' : '+ Upload new document'}
-          </button>
-
-          {showForm && (
-            <form onSubmit={submit} style={{ background: '#f9fafb', padding: 16, borderRadius: 6, marginBottom: 24 }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                <label>
-                  Title*
-                  <input value={title} onChange={e => setTitle(e.target.value)} required style={{ width: '100%', padding: 6, marginTop: 4, border: '1px solid #d1d5db', borderRadius: 4 }} />
-                </label>
-                <label>
-                  Document type*
-                  <select value={docType} onChange={e => setDocType(e.target.value)} style={{ width: '100%', padding: 6, marginTop: 4 }}>
-                    {DOC_TYPES.map(t => <option key={t} value={t}>{t.replace(/_/g, ' ')}</option>)}
-                  </select>
-                </label>
-                <label>
-                  Jurisdiction
-                  <input value={jurisdiction} onChange={e => setJurisdiction(e.target.value)} placeholder="e.g. IN, EU, US-FDA" style={{ width: '100%', padding: 6, marginTop: 4, border: '1px solid #d1d5db', borderRadius: 4 }} />
-                </label>
-                <label>
-                  Effective date
-                  <input type="date" value={effectiveDate} onChange={e => setEffectiveDate(e.target.value)} style={{ width: '100%', padding: 6, marginTop: 4, border: '1px solid #d1d5db', borderRadius: 4 }} />
-                </label>
-                <label>
-                  Expiry date
-                  <input type="date" value={expiryDate} onChange={e => setExpiryDate(e.target.value)} style={{ width: '100%', padding: 6, marginTop: 4, border: '1px solid #d1d5db', borderRadius: 4 }} />
-                </label>
-                <label>
-                  File*
-                  <input type="file" onChange={e => setFile(e.target.files?.[0] || null)} required style={{ width: '100%', padding: 6, marginTop: 4 }} />
-                </label>
+        {showForm && (
+          <form onSubmit={submit} className="admin-card" style={{ marginBottom: 18 }}>
+            <div className="admin-section-title">Upload new document</div>
+            <div className="admin-form-grid-2">
+              <div>
+                <label className="admin-field-label">Title*</label>
+                <input value={title} onChange={e => setTitle(e.target.value)} required className="admin-input" />
               </div>
-              <label style={{ display: 'block', marginTop: 12 }}>
-                Description
-                <textarea value={description} onChange={e => setDescription(e.target.value)} rows={2} style={{ width: '100%', padding: 6, marginTop: 4, border: '1px solid #d1d5db', borderRadius: 4 }} />
-              </label>
-              <button type="submit" disabled={submitting} className="upload-btn" style={{ marginTop: 12 }}>
-                {submitting ? 'Uploading…' : 'Upload'}
+              <div>
+                <label className="admin-field-label">Document type*</label>
+                <select value={docType} onChange={e => setDocType(e.target.value)} className="admin-select">
+                  {DOC_TYPES.map(t => <option key={t} value={t}>{humanise(t)}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="admin-field-label">Jurisdiction</label>
+                <input value={jurisdiction} onChange={e => setJurisdiction(e.target.value)} placeholder="e.g. IN, EU, US-FDA" className="admin-input" />
+              </div>
+              <div>
+                <label className="admin-field-label">Effective date</label>
+                <input type="date" value={effectiveDate} onChange={e => setEffectiveDate(e.target.value)} className="admin-input" />
+              </div>
+              <div>
+                <label className="admin-field-label">Expiry date</label>
+                <input type="date" value={expiryDate} onChange={e => setExpiryDate(e.target.value)} className="admin-input" />
+              </div>
+              <div>
+                <label className="admin-field-label">File*</label>
+                <input type="file" onChange={e => setFile(e.target.files?.[0] || null)} required className="admin-input" style={{ padding: 7 }} />
+              </div>
+              <div className="admin-field-wide">
+                <label className="admin-field-label">Description</label>
+                <textarea value={description} onChange={e => setDescription(e.target.value)} rows={2} className="admin-textarea" />
+              </div>
+            </div>
+            <div className="admin-row" style={{ marginTop: 14, justifyContent: 'flex-end' }}>
+              <button type="button" className="btn btn-ghost btn-sm" onClick={() => setShowForm(false)}>Cancel</button>
+              <button type="submit" disabled={submitting} className="btn btn-primary btn-sm">
+                {submitting ? 'Uploading…' : 'Upload document'}
               </button>
-            </form>
-          )}
+            </div>
+          </form>
+        )}
 
-          {loading ? (
-            <div>Loading…</div>
-          ) : docs.length === 0 ? (
-            <div style={{ color: '#6b7280', padding: 24, textAlign: 'center' }}>No regulatory documents uploaded yet.</div>
-          ) : (
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ borderBottom: '2px solid #e5e7eb', textAlign: 'left' }}>
-                  <th style={{ padding: 8 }}>Title</th>
-                  <th style={{ padding: 8 }}>Type</th>
-                  <th style={{ padding: 8 }}>Jurisdiction</th>
-                  <th style={{ padding: 8 }}>Product</th>
-                  <th style={{ padding: 8 }}>Current ver</th>
-                  <th style={{ padding: 8 }}>Expiry</th>
-                  <th style={{ padding: 8 }}></th>
-                </tr>
-              </thead>
-              <tbody>
-                {docs.map(d => (
-                  <tr key={d.id} style={{ borderBottom: '1px solid #f3f4f6' }}>
-                    <td style={{ padding: 8, fontSize: 13, fontWeight: 600 }}>{d.title}</td>
-                    <td style={{ padding: 8, fontSize: 13 }}>{d.doc_type.replace(/_/g, ' ')}</td>
-                    <td style={{ padding: 8, fontSize: 13 }}>{d.jurisdiction || '—'}</td>
-                    <td style={{ padding: 8, fontSize: 13 }}>{d.product_name || '—'}</td>
-                    <td style={{ padding: 8, fontSize: 13 }}>{d.current_version_number ? `v${d.current_version_number}` : '—'}</td>
-                    <td style={{ padding: 8, fontSize: 13 }}>{d.current_expiry_date ? new Date(d.current_expiry_date).toLocaleDateString('en-IN') : '—'}</td>
-                    <td style={{ padding: 8 }}>
-                      {d.current_file_url ? (
-                        <a href={d.current_file_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: '#2563eb', textDecoration: 'underline' }}>Open</a>
-                      ) : '—'}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
+        <div className="admin-row-spread" style={{ marginBottom: 12 }}>
+          <div className="admin-section-title" style={{ margin: 0 }}>All documents</div>
+          <span className="admin-count-pill">{docs.length} document{docs.length === 1 ? '' : 's'}</span>
         </div>
+
+        <DataTable
+          columns={columns}
+          rows={docs}
+          rowKey={d => d.id}
+          loading={loading}
+          empty="No regulatory documents uploaded yet. Upload the first one above."
+        />
       </div>
     </div>
   )

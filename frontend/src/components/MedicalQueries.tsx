@@ -1,8 +1,21 @@
 import { useState, useEffect } from 'react'
+import { Plus, Sparkles, Check, Send, RotateCcw } from 'lucide-react'
 import Header from './Header'
 import Sidebar from './Sidebar'
 import { apiGet, apiPost, apiPatch } from '../services/apiService'
 import './KnowledgeUpload.css'
+import './admin/AdminUI.css'
+import {
+  Badge,
+  Banner,
+  DataTable,
+  Modal,
+  Toolbar,
+  queryStatusTone,
+  urgencyTone,
+  humanise,
+  type DataTableColumn,
+} from './admin'
 
 interface MedicalQueriesProps {
   onLogout: () => void
@@ -32,20 +45,6 @@ interface Query {
   sent_at: string | null
   send_method: string | null
   created_at: string
-}
-
-const URGENCY_COLOR: Record<string, string> = {
-  low: '#6b7280',
-  standard: '#374151',
-  high: '#b45309',
-  critical: '#7f1d1d',
-}
-const STATUS_COLOR: Record<string, string> = {
-  open: '#b91c1c',
-  in_review: '#b45309',
-  answered: '#15803d',
-  sent: '#15803d',
-  closed_no_action: '#6b7280',
 }
 
 const CATEGORIES = ['efficacy', 'safety', 'dosing', 'interaction', 'off_label', 'clinical_data', 'administration', 'other']
@@ -148,140 +147,262 @@ function MedicalQueries({ onLogout, onBack, userName, onNavigate }: MedicalQueri
     }
   }
 
+  const columns: DataTableColumn<Query>[] = [
+    {
+      key: 'created_at',
+      label: 'When',
+      width: '110px',
+      render: q => <span className="cell-muted">{new Date(q.created_at).toLocaleDateString('en-IN')}</span>,
+    },
+    {
+      key: 'doctor_name',
+      label: 'Doctor',
+      width: '180px',
+      render: q => <span style={{ fontWeight: 600 }}>{q.doctor_name}</span>,
+    },
+    {
+      key: 'question',
+      label: 'Question',
+      className: 'cell-truncate',
+      render: q => q.question,
+    },
+    {
+      key: 'category',
+      label: 'Category',
+      width: '120px',
+      render: q => q.category ? <Badge tone="purple">{humanise(q.category)}</Badge> : <span className="cell-muted">—</span>,
+    },
+    {
+      key: 'urgency',
+      label: 'Urgency',
+      width: '100px',
+      render: q => <Badge tone={urgencyTone[q.urgency] || 'neutral'}>{q.urgency}</Badge>,
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      width: '120px',
+      render: q => <Badge tone={queryStatusTone[q.status] || 'neutral'}>{humanise(q.status)}</Badge>,
+    },
+    {
+      key: 'ai_draft',
+      label: 'AI draft',
+      width: '90px',
+      render: q => q.ai_draft_answer
+        ? <Badge tone="info" icon={<Sparkles size={11} />}>Drafted</Badge>
+        : q.ai_drafted_at
+          ? <Badge tone="muted">Partial</Badge>
+          : <Badge tone="muted">Pending</Badge>,
+    },
+    {
+      key: 'action',
+      label: '',
+      width: '90px',
+      align: 'right',
+      render: q => q.status === 'open'
+        ? <button onClick={e => { e.stopPropagation(); claim(q) }} className="btn btn-primary btn-sm">Claim</button>
+        : <button onClick={e => { e.stopPropagation(); setSelected(q); setDraftFinal(q.final_answer || q.ai_draft_answer || '') }} className="btn btn-secondary btn-sm">Open</button>,
+    },
+  ]
+
   return (
     <div className="knowledge-page">
       <Header onLogout={onLogout} onMenuClick={() => setSidebarOpen(true)} onNavigateHome={onBack} />
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} userName={userName} onNavigate={onNavigate} onLogout={onLogout} currentPage="medical-queries" />
 
       <div className="knowledge-content">
-        <div className="entries-section">
-          <h2 style={{ marginTop: 0 }}>Medical Queries</h2>
-          <p style={{ color: '#6b7280', fontSize: 14 }}>Doctor scientific questions captured from MRs. AI drafts a citation-backed answer; a medical reviewer approves before sending.</p>
-
-          {error && <div style={{ color: '#b91c1c', marginBottom: 12 }}>{error}</div>}
-
-          <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
-            <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} style={{ padding: 8, border: '1px solid #d1d5db', borderRadius: 4 }}>
-              <option value="">All statuses</option>
-              <option value="open">open</option>
-              <option value="in_review">in_review</option>
-              <option value="answered">answered</option>
-              <option value="sent">sent</option>
-              <option value="closed_no_action">closed</option>
-            </select>
-            <select value={urgencyFilter} onChange={e => setUrgencyFilter(e.target.value)} style={{ padding: 8, border: '1px solid #d1d5db', borderRadius: 4 }}>
-              <option value="">All urgencies</option>
-              {URGENCIES.map(u => <option key={u} value={u}>{u}</option>)}
-            </select>
-            <button onClick={load} className="upload-btn" style={{ padding: '8px 16px' }}>Refresh</button>
-            <button onClick={() => setShowForm(v => !v)} className="upload-btn" style={{ padding: '8px 16px', marginLeft: 'auto' }}>{showForm ? 'Cancel' : '+ Capture query'}</button>
+        <div className="admin-page-intro">
+          <div>
+            <h2 className="admin-page-title">Medical Queries</h2>
+            <p className="admin-page-lead">
+              Doctor scientific questions captured from MRs. AI drafts a citation-backed answer; a medical reviewer approves before sending.
+            </p>
           </div>
-
-          {showForm && (
-            <form onSubmit={submitCapture} style={{ background: '#f9fafb', padding: 16, borderRadius: 6, marginBottom: 24 }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: 12 }}>
-                <label>Doctor name*<input value={doctorName} onChange={e => setDoctorName(e.target.value)} required style={{ width: '100%', padding: 6, marginTop: 4, border: '1px solid #d1d5db', borderRadius: 4 }} /></label>
-                <label>Doctor id (optional)<input type="number" value={doctorId} onChange={e => setDoctorId(e.target.value)} style={{ width: '100%', padding: 6, marginTop: 4, border: '1px solid #d1d5db', borderRadius: 4 }} /></label>
-                <label>Captured via<select value={capturedVia} onChange={e => setCapturedVia(e.target.value)} style={{ width: '100%', padding: 6, marginTop: 4 }}>{CAPTURED_VIA.map(c => <option key={c} value={c}>{c.replace(/_/g, ' ')}</option>)}</select></label>
-              </div>
-              <label style={{ display: 'block', marginTop: 12 }}>Question*<textarea value={question} onChange={e => setQuestion(e.target.value)} required rows={3} style={{ width: '100%', padding: 6, marginTop: 4, border: '1px solid #d1d5db', borderRadius: 4 }} /></label>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginTop: 12 }}>
-                <label>Product<input value={product} onChange={e => setProduct(e.target.value)} style={{ width: '100%', padding: 6, marginTop: 4, border: '1px solid #d1d5db', borderRadius: 4 }} /></label>
-                <label>Category<select value={category} onChange={e => setCategory(e.target.value)} style={{ width: '100%', padding: 6, marginTop: 4 }}><option value="">—</option>{CATEGORIES.map(c => <option key={c} value={c}>{c.replace(/_/g, ' ')}</option>)}</select></label>
-                <label>Urgency<select value={urgency} onChange={e => setUrgency(e.target.value)} style={{ width: '100%', padding: 6, marginTop: 4 }}>{URGENCIES.map(u => <option key={u} value={u}>{u}</option>)}</select></label>
-              </div>
-              <button type="submit" disabled={submitting} className="upload-btn" style={{ marginTop: 12 }}>{submitting ? 'Saving…' : 'Capture (AI drafts in background)'}</button>
-            </form>
-          )}
-
-          {loading ? <div>Loading…</div> : list.length === 0 ? (
-            <div style={{ color: '#6b7280', padding: 24, textAlign: 'center' }}>No queries match the filter.</div>
-          ) : (
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ borderBottom: '2px solid #e5e7eb', textAlign: 'left' }}>
-                  <th style={{ padding: 8 }}>When</th>
-                  <th style={{ padding: 8 }}>Doctor</th>
-                  <th style={{ padding: 8 }}>Question</th>
-                  <th style={{ padding: 8 }}>Cat</th>
-                  <th style={{ padding: 8 }}>Urgency</th>
-                  <th style={{ padding: 8 }}>Status</th>
-                  <th style={{ padding: 8 }}>AI draft</th>
-                  <th style={{ padding: 8 }}></th>
-                </tr>
-              </thead>
-              <tbody>
-                {list.map(q => (
-                  <tr key={q.id} style={{ borderBottom: '1px solid #f3f4f6' }}>
-                    <td style={{ padding: 8, fontSize: 12 }}>{new Date(q.created_at).toLocaleDateString('en-IN')}</td>
-                    <td style={{ padding: 8, fontSize: 13 }}>{q.doctor_name}</td>
-                    <td style={{ padding: 8, fontSize: 13, maxWidth: 380, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{q.question}</td>
-                    <td style={{ padding: 8, fontSize: 12 }}>{q.category || '—'}</td>
-                    <td style={{ padding: 8, fontSize: 12, color: URGENCY_COLOR[q.urgency], fontWeight: 600 }}>{q.urgency}</td>
-                    <td style={{ padding: 8, fontSize: 12, color: STATUS_COLOR[q.status], fontWeight: 600 }}>{q.status}</td>
-                    <td style={{ padding: 8, fontSize: 12 }}>{q.ai_draft_answer ? '✓' : (q.ai_drafted_at ? 'partial' : '…')}</td>
-                    <td style={{ padding: 8 }}>
-                      {q.status === 'open' ? (
-                        <button onClick={() => claim(q)} style={{ background: '#2563eb', color: 'white', border: 'none', padding: '4px 10px', borderRadius: 4, cursor: 'pointer', fontSize: 12 }}>Claim</button>
-                      ) : (
-                        <button onClick={() => { setSelected(q); setDraftFinal(q.final_answer || q.ai_draft_answer || '') }} style={{ background: 'none', border: '1px solid #d1d5db', padding: '4px 10px', borderRadius: 4, cursor: 'pointer', fontSize: 12 }}>Open</button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
+          <button onClick={() => setShowForm(v => !v)} className="btn btn-primary">
+            <Plus size={14} />
+            {showForm ? 'Cancel' : 'Capture query'}
+          </button>
         </div>
 
-        {selected && (
-          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }} onClick={() => setSelected(null)}>
-            <div style={{ background: 'white', maxWidth: 760, width: '100%', maxHeight: '92vh', overflow: 'auto', borderRadius: 8, padding: 24 }} onClick={ev => ev.stopPropagation()}>
-              <h3 style={{ marginTop: 0 }}>Query #{selected.id} — {selected.doctor_name}</h3>
-              <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 12 }}>
-                {selected.product || 'no product'} · {selected.category || 'no category'} · <span style={{ color: URGENCY_COLOR[selected.urgency], fontWeight: 600 }}>{selected.urgency}</span> · status <span style={{ color: STATUS_COLOR[selected.status], fontWeight: 600 }}>{selected.status}</span>
-              </div>
-              <h4>Question</h4>
-              <div style={{ background: '#f3f4f6', padding: 12, borderRadius: 4, marginBottom: 16, fontSize: 14 }}>{selected.question}</div>
+        {error && <div className="admin-error">{error}</div>}
 
-              <h4>AI draft answer {selected.ai_drafted_at ? <span style={{ color: '#6b7280', fontSize: 12, fontWeight: 400 }}>· drafted {new Date(selected.ai_drafted_at).toLocaleString('en-IN')}</span> : null}</h4>
+        {showForm && (
+          <form onSubmit={submitCapture} className="admin-card" style={{ marginBottom: 18 }}>
+            <div className="admin-section-title">Capture new query</div>
+            <div className="admin-form-grid">
+              <div>
+                <label className="admin-field-label">Doctor name*</label>
+                <input value={doctorName} onChange={e => setDoctorName(e.target.value)} required className="admin-input" />
+              </div>
+              <div>
+                <label className="admin-field-label">Doctor id</label>
+                <input type="number" value={doctorId} onChange={e => setDoctorId(e.target.value)} className="admin-input" placeholder="Optional" />
+              </div>
+              <div>
+                <label className="admin-field-label">Captured via</label>
+                <select value={capturedVia} onChange={e => setCapturedVia(e.target.value)} className="admin-select">
+                  {CAPTURED_VIA.map(c => <option key={c} value={c}>{humanise(c)}</option>)}
+                </select>
+              </div>
+              <div className="admin-field-wide">
+                <label className="admin-field-label">Question*</label>
+                <textarea value={question} onChange={e => setQuestion(e.target.value)} required rows={3} className="admin-textarea" />
+              </div>
+              <div>
+                <label className="admin-field-label">Product</label>
+                <input value={product} onChange={e => setProduct(e.target.value)} className="admin-input" />
+              </div>
+              <div>
+                <label className="admin-field-label">Category</label>
+                <select value={category} onChange={e => setCategory(e.target.value)} className="admin-select">
+                  <option value="">—</option>
+                  {CATEGORIES.map(c => <option key={c} value={c}>{humanise(c)}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="admin-field-label">Urgency</label>
+                <select value={urgency} onChange={e => setUrgency(e.target.value)} className="admin-select">
+                  {URGENCIES.map(u => <option key={u} value={u}>{humanise(u)}</option>)}
+                </select>
+              </div>
+            </div>
+            <div className="admin-row" style={{ marginTop: 14, justifyContent: 'flex-end' }}>
+              <button type="button" onClick={() => setShowForm(false)} className="btn btn-ghost btn-sm">Cancel</button>
+              <button type="submit" disabled={submitting} className="btn btn-primary btn-sm">
+                {submitting ? 'Saving…' : 'Capture (AI drafts in background)'}
+              </button>
+            </div>
+          </form>
+        )}
+
+        <Toolbar>
+          <Toolbar.Field label="Status">
+            <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="admin-select" style={{ width: 160 }}>
+              <option value="">All</option>
+              <option value="open">Open</option>
+              <option value="in_review">In review</option>
+              <option value="answered">Answered</option>
+              <option value="sent">Sent</option>
+              <option value="closed_no_action">Closed</option>
+            </select>
+          </Toolbar.Field>
+          <Toolbar.Field label="Urgency">
+            <select value={urgencyFilter} onChange={e => setUrgencyFilter(e.target.value)} className="admin-select" style={{ width: 140 }}>
+              <option value="">All</option>
+              {URGENCIES.map(u => <option key={u} value={u}>{humanise(u)}</option>)}
+            </select>
+          </Toolbar.Field>
+          <button type="button" onClick={load} className="btn btn-secondary btn-sm">Refresh</button>
+          <Toolbar.Spacer />
+          <Toolbar.Count n={list.length} noun="query" />
+        </Toolbar>
+
+        <DataTable
+          columns={columns}
+          rows={list}
+          rowKey={q => q.id}
+          loading={loading}
+          empty="No queries match the current filters."
+        />
+      </div>
+
+      <Modal
+        open={!!selected}
+        onClose={() => setSelected(null)}
+        width="wide"
+        title={selected ? `Query #${selected.id} — ${selected.doctor_name}` : ''}
+        subtitle={selected ? (
+          <span className="admin-row" style={{ gap: 8 }}>
+            <Badge tone="purple">{humanise(selected.category) || 'No category'}</Badge>
+            <Badge tone={urgencyTone[selected.urgency] || 'neutral'}>{selected.urgency}</Badge>
+            <Badge tone={queryStatusTone[selected.status] || 'neutral'}>{humanise(selected.status)}</Badge>
+            {selected.product && <span>· {selected.product}</span>}
+          </span>
+        ) : undefined}
+        footer={selected ? (
+          <>
+            {selected.status === 'in_review' && (
+              <button onClick={() => transition('answered')} className="btn btn-primary btn-sm">
+                <Check size={14} /> Save as answered
+              </button>
+            )}
+            {selected.status === 'answered' && (
+              <>
+                <button onClick={() => transition('sent', { send_method: 'email' })} className="btn btn-primary btn-sm">
+                  <Send size={14} /> Mark sent (email)
+                </button>
+                <button onClick={() => transition('in_review')} className="btn btn-secondary btn-sm">
+                  Revert to in_review
+                </button>
+              </>
+            )}
+            {(selected.status === 'open' || selected.status === 'in_review') && (
+              <button onClick={() => transition('closed_no_action')} className="btn btn-ghost btn-sm">
+                Close (no action)
+              </button>
+            )}
+            <span className="admin-modal-footer-spacer" />
+            <button onClick={() => setSelected(null)} className="btn btn-secondary btn-sm">Close</button>
+          </>
+        ) : null}
+      >
+        {selected && (
+          <div className="admin-stack">
+            <div>
+              <div className="admin-section-title">Question</div>
+              <div className="admin-card-flat" style={{ background: 'var(--bg-secondary)' }}>
+                {selected.question}
+              </div>
+            </div>
+
+            <div>
+              <div className="admin-row-spread" style={{ marginBottom: 8 }}>
+                <div className="admin-section-title" style={{ margin: 0 }}>
+                  AI draft answer
+                  {selected.ai_drafted_at && (
+                    <span style={{ fontWeight: 500, fontSize: 11, color: 'var(--text-secondary)', textTransform: 'none', letterSpacing: 0, marginLeft: 8 }}>
+                      drafted {new Date(selected.ai_drafted_at).toLocaleString('en-IN')}
+                    </span>
+                  )}
+                </div>
+                <button onClick={redraft} className="btn btn-secondary btn-sm">
+                  <RotateCcw size={13} /> Re-draft with AI
+                </button>
+              </div>
               {selected.ai_draft_answer ? (
-                <div style={{ background: '#eff6ff', padding: 12, borderRadius: 4, fontSize: 13, marginBottom: 8 }}>{selected.ai_draft_answer}</div>
+                <Banner tone="info" icon={<Sparkles size={16} />}>
+                  {selected.ai_draft_answer}
+                </Banner>
               ) : (
-                <div style={{ color: '#6b7280', fontSize: 13, marginBottom: 8 }}>No draft yet (LLM may have been unreachable when captured).</div>
+                <div className="admin-helper-text">No draft yet (LLM may have been unreachable when captured).</div>
               )}
               {selected.ai_draft_citations && selected.ai_draft_citations.length > 0 && (
-                <details style={{ marginBottom: 12 }}>
-                  <summary style={{ cursor: 'pointer', fontSize: 13 }}>{selected.ai_draft_citations.length} citation(s)</summary>
-                  <ol style={{ fontSize: 12, color: '#374151' }}>
-                    {selected.ai_draft_citations.map((c, i) => <li key={i}>[{c.marker}] doc#{c.source_doc_id}: <em>{c.snippet}</em></li>)}
+                <details style={{ marginTop: 8 }}>
+                  <summary style={{ cursor: 'pointer', fontSize: 12, color: 'var(--text-secondary)' }}>
+                    {selected.ai_draft_citations.length} citation{selected.ai_draft_citations.length === 1 ? '' : 's'}
+                  </summary>
+                  <ol style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 8 }}>
+                    {selected.ai_draft_citations.map((c, i) => (
+                      <li key={i}>[{c.marker}] doc#{c.source_doc_id}: <em>{c.snippet}</em></li>
+                    ))}
                   </ol>
                 </details>
               )}
-              <button onClick={redraft} style={{ marginBottom: 16, padding: '6px 12px', background: 'white', color: '#374151', border: '1px solid #d1d5db', borderRadius: 4, cursor: 'pointer', fontSize: 12 }}>Re-draft with AI</button>
+            </div>
 
-              <h4>Final answer (reviewer)</h4>
-              <textarea value={draftFinal} onChange={e => setDraftFinal(e.target.value)} rows={6} style={{ width: '100%', padding: 8, border: '1px solid #d1d5db', borderRadius: 4, fontSize: 13 }} />
-
-              <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
-                {selected.status === 'in_review' && (
-                  <button onClick={() => transition('answered')} style={{ padding: '8px 14px', background: '#15803d', color: 'white', border: 'none', borderRadius: 4, cursor: 'pointer' }}>Save as answered</button>
-                )}
-                {selected.status === 'answered' && (
-                  <>
-                    <button onClick={() => transition('sent', { send_method: 'email' })} style={{ padding: '8px 14px', background: '#2563eb', color: 'white', border: 'none', borderRadius: 4, cursor: 'pointer' }}>Mark sent (email)</button>
-                    <button onClick={() => transition('in_review')} style={{ padding: '8px 14px', background: 'white', color: '#b45309', border: '1px solid #d1d5db', borderRadius: 4, cursor: 'pointer' }}>Revert to in_review</button>
-                  </>
-                )}
-                {(selected.status === 'open' || selected.status === 'in_review') && (
-                  <button onClick={() => transition('closed_no_action')} style={{ padding: '8px 14px', background: '#6b7280', color: 'white', border: 'none', borderRadius: 4, cursor: 'pointer' }}>Close (no action)</button>
-                )}
-                <button onClick={() => setSelected(null)} style={{ padding: '8px 14px', background: 'white', color: '#374151', border: '1px solid #d1d5db', borderRadius: 4, cursor: 'pointer', marginLeft: 'auto' }}>Close</button>
-              </div>
+            <div>
+              <div className="admin-section-title">Final answer (reviewer)</div>
+              <textarea
+                value={draftFinal}
+                onChange={e => setDraftFinal(e.target.value)}
+                rows={6}
+                className="admin-textarea"
+                placeholder="Edit the AI draft, or write a fresh answer. This is what gets sent to the doctor."
+              />
             </div>
           </div>
         )}
-      </div>
+      </Modal>
     </div>
   )
 }

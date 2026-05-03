@@ -1,8 +1,23 @@
 import { useState, useEffect } from 'react'
+import { AlertTriangle, ShieldAlert, Sparkles, ScrollText } from 'lucide-react'
 import Header from './Header'
 import Sidebar from './Sidebar'
 import { apiGet, apiPatch } from '../services/apiService'
 import './KnowledgeUpload.css'
+import './admin/AdminUI.css'
+import {
+  Badge,
+  Banner,
+  DataTable,
+  Modal,
+  StatCard,
+  Toolbar,
+  findingStatusTone,
+  severityTone,
+  detectedByTone,
+  humanise,
+  type DataTableColumn,
+} from './admin'
 
 interface ComplianceInboxProps {
   onLogout: () => void
@@ -29,24 +44,11 @@ interface Finding {
   created_at: string
 }
 
-const SEVERITY_COLOR: Record<string, string> = {
-  low: '#6b7280',
-  medium: '#b45309',
-  high: '#b91c1c',
-  critical: '#7f1d1d',
-}
-
-const STATUS_COLOR: Record<string, string> = {
-  open: '#b91c1c',
-  acknowledged: '#b45309',
-  dismissed: '#6b7280',
-  escalated: '#7f1d1d',
-  resolved: '#15803d',
-}
+interface SeverityStat { severity: string; total: number }
 
 function ComplianceInbox({ onLogout, onBack, userName, onNavigate }: ComplianceInboxProps) {
   const [findings, setFindings] = useState<Finding[]>([])
-  const [stats, setStats] = useState<{ byStatus?: { status: string; total: number }[]; bySeverity?: { severity: string; total: number }[]; byType?: { finding_type: string; total: number }[] }>({})
+  const [stats, setStats] = useState<{ bySeverity?: SeverityStat[] }>({})
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [statusFilter, setStatusFilter] = useState('open')
@@ -95,133 +97,179 @@ function ComplianceInbox({ onLogout, onBack, userName, onNavigate }: ComplianceI
     }
   }
 
+  // Build the severity stat tiles in a stable order so the row layout is
+  // consistent even when only some severities have findings.
+  const severityOrder: Array<Finding['severity']> = ['critical', 'high', 'medium', 'low']
+  const severityStats = severityOrder.map(sev => {
+    const row = stats.bySeverity?.find(s => s.severity === sev)
+    return { severity: sev, total: row?.total ?? 0 }
+  })
+
+  const columns: DataTableColumn<Finding>[] = [
+    {
+      key: 'created_at',
+      label: 'When',
+      width: '120px',
+      render: f => <span className="cell-muted">{new Date(f.created_at).toLocaleDateString('en-IN')}</span>,
+    },
+    {
+      key: 'finding_type',
+      label: 'Type',
+      render: f => humanise(f.finding_type),
+    },
+    {
+      key: 'severity',
+      label: 'Severity',
+      width: '110px',
+      render: f => <Badge tone={severityTone[f.severity] || 'neutral'}>{f.severity}</Badge>,
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      width: '130px',
+      render: f => <Badge tone={findingStatusTone[f.status] || 'neutral'}>{humanise(f.status)}</Badge>,
+    },
+    {
+      key: 'source',
+      label: 'Source',
+      width: '160px',
+      render: f => <span className="cell-muted">{f.source_table} #{f.source_row_id}</span>,
+    },
+    {
+      key: 'description',
+      label: 'Description',
+      className: 'cell-truncate',
+      render: f => f.description,
+    },
+    {
+      key: 'detected_by',
+      label: 'Detected by',
+      width: '110px',
+      render: f => <Badge tone={detectedByTone[f.detected_by] || 'neutral'}>{f.detected_by}</Badge>,
+    },
+  ]
+
   return (
     <div className="knowledge-page">
       <Header onLogout={onLogout} onMenuClick={() => setSidebarOpen(true)} onNavigateHome={onBack} />
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} userName={userName} onNavigate={onNavigate} onLogout={onLogout} currentPage="compliance-inbox" />
 
       <div className="knowledge-content">
-        <div className="entries-section">
-          <h2 style={{ marginTop: 0 }}>AI Compliance Watchdog</h2>
-          <p style={{ color: '#6b7280', fontSize: 14 }}>Findings detected by the AI Watchdog scan of DCRs (off-label promotion, missing fair-balance, gift threshold, unconsented contact). Triage each finding.</p>
-
-          {/* Top stats */}
-          {stats.bySeverity && stats.bySeverity.length > 0 && (
-            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 24 }}>
-              {stats.bySeverity.map(s => (
-                <div key={s.severity} style={{ padding: 12, border: `2px solid ${SEVERITY_COLOR[s.severity]}`, borderRadius: 6, minWidth: 120 }}>
-                  <div style={{ fontSize: 12, color: '#6b7280', textTransform: 'uppercase' }}>{s.severity}</div>
-                  <div style={{ fontSize: 22, fontWeight: 700, color: SEVERITY_COLOR[s.severity] }}>{s.total}</div>
-                  <div style={{ fontSize: 11, color: '#6b7280' }}>open findings</div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Filters */}
-          <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
-            <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} style={{ padding: 8, border: '1px solid #d1d5db', borderRadius: 4 }}>
-              <option value="">All statuses</option>
-              <option value="open">open</option>
-              <option value="acknowledged">acknowledged</option>
-              <option value="dismissed">dismissed</option>
-              <option value="escalated">escalated</option>
-              <option value="resolved">resolved</option>
-            </select>
-            <select value={severityFilter} onChange={e => setSeverityFilter(e.target.value)} style={{ padding: 8, border: '1px solid #d1d5db', borderRadius: 4 }}>
-              <option value="">All severities</option>
-              <option value="critical">critical</option>
-              <option value="high">high</option>
-              <option value="medium">medium</option>
-              <option value="low">low</option>
-            </select>
-            <button onClick={load} className="upload-btn" style={{ padding: '8px 16px' }}>Refresh</button>
+        <div className="admin-page-intro">
+          <div>
+            <h2 className="admin-page-title">AI Compliance Watchdog</h2>
+            <p className="admin-page-lead">
+              Findings from the AI scan of DCRs (off-label promotion, missing fair-balance, gift threshold, unconsented contact). Triage each finding to keep the inbox clean.
+            </p>
           </div>
-
-          {error && <div style={{ color: '#b91c1c', marginBottom: 12 }}>{error}</div>}
-          {loading ? (
-            <div>Loading findings…</div>
-          ) : findings.length === 0 ? (
-            <div style={{ color: '#6b7280', padding: 24, textAlign: 'center' }}>No findings match the current filters.</div>
-          ) : (
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ borderBottom: '2px solid #e5e7eb', textAlign: 'left' }}>
-                  <th style={{ padding: 8 }}>When</th>
-                  <th style={{ padding: 8 }}>Type</th>
-                  <th style={{ padding: 8 }}>Severity</th>
-                  <th style={{ padding: 8 }}>Status</th>
-                  <th style={{ padding: 8 }}>Source</th>
-                  <th style={{ padding: 8 }}>Description</th>
-                  <th style={{ padding: 8 }}></th>
-                </tr>
-              </thead>
-              <tbody>
-                {findings.map(f => (
-                  <tr key={f.id} style={{ borderBottom: '1px solid #f3f4f6' }}>
-                    <td style={{ padding: 8, fontSize: 13 }}>{new Date(f.created_at).toLocaleDateString('en-IN')}</td>
-                    <td style={{ padding: 8, fontSize: 13 }}>{f.finding_type.replace(/_/g, ' ')}</td>
-                    <td style={{ padding: 8, fontSize: 12, color: SEVERITY_COLOR[f.severity], fontWeight: 700 }}>{f.severity}</td>
-                    <td style={{ padding: 8, fontSize: 12, color: STATUS_COLOR[f.status], fontWeight: 600 }}>{f.status}</td>
-                    <td style={{ padding: 8, fontSize: 12, color: '#6b7280' }}>{f.source_table} #{f.source_row_id}</td>
-                    <td style={{ padding: 8, fontSize: 13, maxWidth: 400, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.description}</td>
-                    <td style={{ padding: 8 }}>
-                      <button onClick={() => { setSelected(f); setDecisionNotes(f.review_notes || '') }} style={{ background: 'none', border: '1px solid #d1d5db', padding: '4px 10px', borderRadius: 4, cursor: 'pointer', fontSize: 12 }}>Review</button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
         </div>
 
-        {/* Detail / decision modal */}
+        <div className="admin-stat-grid">
+          {severityStats.map(s => (
+            <StatCard
+              key={s.severity}
+              label={s.severity}
+              value={s.total}
+              hint={`${s.severity === 'critical' || s.severity === 'high' ? 'needs immediate review' : 'open findings'}`}
+              tone={s.severity === 'critical' ? 'danger' : s.severity === 'high' ? 'warning' : 'default'}
+              icon={s.severity === 'critical' || s.severity === 'high' ? <AlertTriangle size={12} /> : <ShieldAlert size={12} />}
+            />
+          ))}
+        </div>
+
+        <Toolbar>
+          <Toolbar.Field label="Status">
+            <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="admin-select" style={{ width: 160 }}>
+              <option value="">All</option>
+              <option value="open">Open</option>
+              <option value="acknowledged">Acknowledged</option>
+              <option value="dismissed">Dismissed</option>
+              <option value="escalated">Escalated</option>
+              <option value="resolved">Resolved</option>
+            </select>
+          </Toolbar.Field>
+          <Toolbar.Field label="Severity">
+            <select value={severityFilter} onChange={e => setSeverityFilter(e.target.value)} className="admin-select" style={{ width: 140 }}>
+              <option value="">All</option>
+              <option value="critical">Critical</option>
+              <option value="high">High</option>
+              <option value="medium">Medium</option>
+              <option value="low">Low</option>
+            </select>
+          </Toolbar.Field>
+          <button type="button" onClick={load} className="btn btn-secondary btn-sm">Refresh</button>
+          <Toolbar.Spacer />
+          <Toolbar.Count n={findings.length} noun="finding" />
+        </Toolbar>
+
+        {error && <div className="admin-error">{error}</div>}
+
+        <DataTable
+          columns={columns}
+          rows={findings}
+          rowKey={f => f.id}
+          loading={loading}
+          empty="No findings match the current filters. Try widening the status or severity."
+          onRowClick={f => { setSelected(f); setDecisionNotes(f.review_notes || '') }}
+        />
+      </div>
+
+      <Modal
+        open={!!selected}
+        onClose={() => setSelected(null)}
+        title={selected ? humanise(selected.finding_type) : ''}
+        subtitle={selected ? (
+          <span className="admin-row" style={{ gap: 8 }}>
+            <Badge tone={severityTone[selected.severity] || 'neutral'}>{selected.severity}</Badge>
+            <Badge tone={findingStatusTone[selected.status] || 'neutral'}>{humanise(selected.status)}</Badge>
+            <span>· {selected.source_table} #{selected.source_row_id}</span>
+            <span>· detected by {selected.detected_by}</span>
+            <span>· {new Date(selected.created_at).toLocaleString('en-IN')}</span>
+          </span>
+        ) : undefined}
+        footer={selected ? (
+          <>
+            <button onClick={() => decide('acknowledged')} disabled={submitting} className="btn btn-warning btn-sm">Acknowledge</button>
+            <button onClick={() => decide('escalated')} disabled={submitting} className="btn btn-danger btn-sm">Escalate</button>
+            <button onClick={() => decide('resolved')} disabled={submitting} className="btn btn-primary btn-sm">Resolve</button>
+            <button onClick={() => decide('dismissed')} disabled={submitting} className="btn btn-ghost btn-sm">Dismiss</button>
+            <span className="admin-modal-footer-spacer" />
+            <button onClick={() => setSelected(null)} className="btn btn-secondary btn-sm">Cancel</button>
+          </>
+        ) : null}
+      >
         {selected && (
-          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }} onClick={() => setSelected(null)}>
-            <div style={{ background: 'white', maxWidth: 720, width: '100%', maxHeight: '90vh', overflow: 'auto', borderRadius: 8, padding: 24 }} onClick={ev => ev.stopPropagation()}>
-              <h3 style={{ marginTop: 0 }}>
-                <span style={{ color: SEVERITY_COLOR[selected.severity] }}>[{selected.severity.toUpperCase()}]</span> {selected.finding_type.replace(/_/g, ' ')}
-              </h3>
-              <div style={{ fontSize: 13, color: '#6b7280', marginBottom: 16 }}>
-                Detected by {selected.detected_by} on {selected.source_table} #{selected.source_row_id} — {new Date(selected.created_at).toLocaleString('en-IN')}
-              </div>
+          <div className="admin-stack">
+            <div>
+              <div className="admin-section-title">Description</div>
+              <p style={{ margin: 0, lineHeight: 1.55 }}>{selected.description}</p>
+            </div>
 
-              <h4>Description</h4>
-              <p style={{ marginTop: 0 }}>{selected.description}</p>
+            {selected.evidence_quote && (
+              <Banner tone="warning" icon={<ScrollText size={16} />} title="Evidence quote">
+                <em>"{selected.evidence_quote}"</em>
+              </Banner>
+            )}
 
-              {selected.evidence_quote && (
-                <>
-                  <h4>Evidence</h4>
-                  <blockquote style={{ background: '#fef3c7', padding: 12, borderLeft: '4px solid #d97706', margin: 0, fontStyle: 'italic' }}>{selected.evidence_quote}</blockquote>
-                </>
-              )}
+            {selected.recommendation && (
+              <Banner tone="info" icon={<Sparkles size={16} />} title="Recommendation">
+                {selected.recommendation}
+              </Banner>
+            )}
 
-              {selected.recommendation && (
-                <>
-                  <h4 style={{ marginTop: 12 }}>Recommendation</h4>
-                  <p style={{ marginTop: 0 }}>{selected.recommendation}</p>
-                </>
-              )}
-
-              <h4 style={{ marginTop: 16 }}>Decision</h4>
+            <div>
+              <div className="admin-section-title">Decision notes</div>
               <textarea
+                className="admin-textarea"
                 value={decisionNotes}
                 onChange={e => setDecisionNotes(e.target.value)}
                 placeholder="Notes (recommended for dismiss / escalate / resolve)"
-                rows={3}
-                style={{ width: '100%', padding: 8, border: '1px solid #d1d5db', borderRadius: 4 }}
+                rows={4}
               />
-              <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
-                <button onClick={() => decide('acknowledged')} disabled={submitting} style={{ padding: '8px 14px', background: '#b45309', color: 'white', border: 'none', borderRadius: 4, cursor: 'pointer' }}>Acknowledge</button>
-                <button onClick={() => decide('escalated')} disabled={submitting} style={{ padding: '8px 14px', background: '#7f1d1d', color: 'white', border: 'none', borderRadius: 4, cursor: 'pointer' }}>Escalate</button>
-                <button onClick={() => decide('resolved')} disabled={submitting} style={{ padding: '8px 14px', background: '#15803d', color: 'white', border: 'none', borderRadius: 4, cursor: 'pointer' }}>Resolve</button>
-                <button onClick={() => decide('dismissed')} disabled={submitting} style={{ padding: '8px 14px', background: '#6b7280', color: 'white', border: 'none', borderRadius: 4, cursor: 'pointer' }}>Dismiss</button>
-                <button onClick={() => setSelected(null)} style={{ padding: '8px 14px', background: 'white', color: '#374151', border: '1px solid #d1d5db', borderRadius: 4, cursor: 'pointer', marginLeft: 'auto' }}>Cancel</button>
-              </div>
             </div>
           </div>
         )}
-      </div>
+      </Modal>
     </div>
   )
 }

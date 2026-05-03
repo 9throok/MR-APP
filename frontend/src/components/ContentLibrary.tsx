@@ -104,6 +104,9 @@ function ContentLibrary({ onLogout, onBack, userName, onNavigate }: ContentLibra
   const [uploading, setUploading] = useState(false)
   const [busyVersionId, setBusyVersionId] = useState<number | null>(null)
   const [message, setMessage] = useState('')
+  const [previewVersion, setPreviewVersion] = useState<ContentVersion | null>(null)
+  const [previewText, setPreviewText] = useState<string>('')
+  const [previewLoading, setPreviewLoading] = useState(false)
 
   // Upload form state
   const [title, setTitle] = useState('')
@@ -216,6 +219,24 @@ function ContentLibrary({ onLogout, onBack, userName, onNavigate }: ContentLibra
     }
   }
 
+  // Inline preview: text fetched eagerly so we can render in a <pre>; PDFs go
+  // straight into an <iframe> via the file URL; pptx (and other unknown types)
+  // fall through to a download button since browsers can't render them inline.
+  const openPreview = async (v: ContentVersion) => {
+    setPreviewVersion(v)
+    setPreviewText('')
+    if ((v.mime_type || '').startsWith('text/')) {
+      setPreviewLoading(true)
+      try {
+        const res = await fetch(v.file_url)
+        setPreviewText(res.ok ? await res.text() : `(Failed to load: HTTP ${res.status})`)
+      } catch (err) {
+        setPreviewText(`(Failed to load: ${err instanceof Error ? err.message : String(err)})`)
+      }
+      setPreviewLoading(false)
+    }
+  }
+
   // ── Detail panel (selected asset + version history) ────────────────────────
   const renderDetail = () => {
     if (!selectedAsset) return null
@@ -272,10 +293,10 @@ function ContentLibrary({ onLogout, onBack, userName, onNavigate }: ContentLibra
                         {busyVersionId === v.id ? 'Distributing…' : 'Distribute to all'}
                       </button>
                     )}
-                    <a href={v.file_url} target="_blank" rel="noopener noreferrer"
-                      style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid #d1d5db', textDecoration: 'none', color: '#0a3d62', fontSize: 13 }}>
-                      Open file
-                    </a>
+                    <button type="button" onClick={() => openPreview(v)}
+                      style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid #d1d5db', background: '#fff', color: '#0a3d62', fontSize: 13, cursor: 'pointer' }}>
+                      Preview
+                    </button>
                   </div>
                 </div>
                 {v.change_notes && (
@@ -430,6 +451,59 @@ function ContentLibrary({ onLogout, onBack, userName, onNavigate }: ContentLibra
         </section>
 
         {renderDetail()}
+
+        {previewVersion && (
+          <div role="dialog" aria-modal="true"
+            onClick={() => setPreviewVersion(null)}
+            style={{
+              position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)',
+              zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24,
+            }}>
+            <div onClick={e => e.stopPropagation()}
+              style={{
+                background: '#fff', borderRadius: 10, width: 'min(960px, 100%)',
+                maxHeight: '85vh',
+                // PDFs need a tall fixed pane; text/binary previews can hug their content.
+                height: previewVersion.mime_type === 'application/pdf' ? 'min(85vh, 800px)' : 'auto',
+                display: 'flex', flexDirection: 'column', overflow: 'hidden',
+              }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', borderBottom: '1px solid #e5e7eb' }}>
+                <div style={{ fontSize: 14, color: '#374151' }}>
+                  <strong>v{previewVersion.version_number}</strong>
+                  <span style={{ marginLeft: 10, color: '#6b7280' }}>{previewVersion.mime_type || 'unknown type'}</span>
+                </div>
+                <button type="button" onClick={() => setPreviewVersion(null)}
+                  style={{ padding: '4px 12px', borderRadius: 6, border: '1px solid #d1d5db', background: '#fff', cursor: 'pointer' }}>
+                  Close
+                </button>
+              </div>
+              <div style={{ flex: 1, overflow: 'auto', background: '#f9fafb', minHeight: 0 }}>
+                {(previewVersion.mime_type || '').startsWith('text/') ? (
+                  previewLoading ? (
+                    <div style={{ padding: 24, color: '#6b7280' }}>Loading…</div>
+                  ) : (
+                    <pre style={{ margin: 0, padding: 20, fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', fontSize: 13, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                      {previewText}
+                    </pre>
+                  )
+                ) : (previewVersion.mime_type === 'application/pdf') ? (
+                  <iframe src={previewVersion.file_url} title={`v${previewVersion.version_number}`}
+                    style={{ width: '100%', height: '100%', border: 0 }} />
+                ) : (
+                  <div style={{ padding: 32, textAlign: 'center', color: '#374151' }}>
+                    <p style={{ marginBottom: 16 }}>
+                      This file type ({previewVersion.mime_type || 'unknown'}) can't be previewed in the browser.
+                    </p>
+                    <a href={previewVersion.file_url} download
+                      style={{ display: 'inline-block', padding: '8px 18px', borderRadius: 8, background: '#0a3d62', color: '#fff', textDecoration: 'none', fontSize: 14 }}>
+                      Download to view
+                    </a>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   )

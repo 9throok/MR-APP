@@ -1,8 +1,21 @@
 import { useState, useEffect } from 'react'
+import { Sparkles, Star, Mic2, Users } from 'lucide-react'
 import Header from './Header'
 import Sidebar from './Sidebar'
 import { apiGet, apiPost, apiPatch } from '../services/apiService'
 import './KnowledgeUpload.css'
+import './admin/AdminUI.css'
+import {
+  Badge,
+  Banner,
+  DataTable,
+  Modal,
+  StatCard,
+  Toolbar,
+  kolTierTone,
+  sentimentTone,
+  type DataTableColumn,
+} from './admin'
 
 interface KOLDashboardProps {
   onLogout: () => void
@@ -40,16 +53,9 @@ interface KolSuggestion {
   data_gaps: string[]
 }
 
-const TIER_COLOR: Record<string, string> = {
-  T1: '#7f1d1d',
-  T2: '#b45309',
-  T3: '#374151',
-  emerging: '#2563eb',
-}
-
 function KOLDashboard({ onLogout, onBack, userName, onNavigate }: KOLDashboardProps) {
   const [kols, setKols] = useState<KOL[]>([])
-  const [stats, setStats] = useState<{ byTier?: { kol_tier: string | null; total: number }[]; counters?: { total_kols: number; advisory_board_members: number; speaker_bureau_members: number; ai_suggested: number } }>({})
+  const [stats, setStats] = useState<{ counters?: { total_kols: number; advisory_board_members: number; speaker_bureau_members: number; ai_suggested: number } }>({})
   const [doctors, setDoctors] = useState<DoctorRow[]>([])
   const [tierFilter, setTierFilter] = useState('')
   const [loading, setLoading] = useState(true)
@@ -113,128 +119,224 @@ function KOLDashboard({ onLogout, onBack, userName, onNavigate }: KOLDashboardPr
     }
   }
 
+  const closeIdentify = () => {
+    setShowIdentify(false)
+    setSuggestion(null)
+    setIdentifyDoctorId('')
+  }
+
+  const columns: DataTableColumn<KOL>[] = [
+    {
+      key: 'doctor_name',
+      label: 'Doctor',
+      render: k => <span style={{ fontWeight: 600 }}>{k.doctor_name}</span>,
+    },
+    {
+      key: 'specialty',
+      label: 'Specialty',
+      width: '160px',
+      render: k => <span className="cell-muted">{k.specialty_code || k.specialty || '—'}</span>,
+    },
+    {
+      key: 'territory',
+      label: 'Territory',
+      width: '130px',
+      render: k => <span className="cell-muted">{k.territory || '—'}</span>,
+    },
+    {
+      key: 'kol_tier',
+      label: 'Tier',
+      width: '100px',
+      render: k => k.kol_tier ? <Badge tone={kolTierTone[k.kol_tier] || 'neutral'}>{k.kol_tier}</Badge> : <span className="cell-muted">—</span>,
+    },
+    {
+      key: 'influence_score',
+      label: 'Score',
+      width: '70px',
+      align: 'right',
+      className: 'cell-num',
+      render: k => k.influence_score ?? '—',
+    },
+    {
+      key: 'advisory_board_member',
+      label: 'Adv. board',
+      width: '90px',
+      render: k => k.advisory_board_member
+        ? <Badge tone="success" icon={<Star size={11} fill="currentColor" />}>Yes</Badge>
+        : <span className="cell-muted">—</span>,
+    },
+    {
+      key: 'speaker_bureau',
+      label: 'Speaker',
+      width: '90px',
+      render: k => k.speaker_bureau
+        ? <Badge tone="info" icon={<Mic2 size={11} />}>Yes</Badge>
+        : <span className="cell-muted">—</span>,
+    },
+    {
+      key: 'publication_count',
+      label: 'Pubs',
+      width: '70px',
+      align: 'right',
+      className: 'cell-num',
+      render: k => k.publication_count,
+    },
+    {
+      key: 'sentiment',
+      label: 'Sentiment',
+      width: '110px',
+      render: k => k.sentiment_score == null
+        ? <span className="cell-muted">—</span>
+        : <Badge tone={sentimentTone(k.sentiment_score)}>{k.sentiment_score > 0 ? '+' : ''}{k.sentiment_score}</Badge>,
+    },
+    {
+      key: 'last_engagement_at',
+      label: 'Last engagement',
+      width: '140px',
+      render: k => <span className="cell-muted">{k.last_engagement_at ? new Date(k.last_engagement_at).toLocaleDateString('en-IN') : '—'}</span>,
+    },
+    {
+      key: 'identified_by',
+      label: 'Source',
+      width: '90px',
+      render: k => k.identified_by === 'ai'
+        ? <Badge tone="purple" icon={<Sparkles size={11} />}>AI</Badge>
+        : <Badge tone="neutral">Human</Badge>,
+    },
+  ]
+
   return (
     <div className="knowledge-page">
       <Header onLogout={onLogout} onMenuClick={() => setSidebarOpen(true)} onNavigateHome={onBack} />
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} userName={userName} onNavigate={onNavigate} onLogout={onLogout} currentPage="kol-dashboard" />
 
       <div className="knowledge-content">
-        <div className="entries-section">
-          <h2 style={{ marginTop: 0 }}>KOL Dashboard</h2>
-          <p style={{ color: '#6b7280', fontSize: 14 }}>Key Opinion Leaders ranked by influence score. Use AI Identify to score a candidate doctor based on visit history, RCPA, and affiliations.</p>
+        <div className="admin-page-intro">
+          <div>
+            <h2 className="admin-page-title">KOL Dashboard</h2>
+            <p className="admin-page-lead">
+              Key Opinion Leaders ranked by influence score. Use AI Identify to score a candidate doctor based on visit history, RCPA, and affiliations.
+            </p>
+          </div>
+          <button onClick={() => setShowIdentify(true)} className="btn btn-primary">
+            <Sparkles size={14} />
+            AI Identify KOL
+          </button>
+        </div>
 
-          {error && <div style={{ color: '#b91c1c', marginBottom: 12 }}>{error}</div>}
+        {error && <div className="admin-error">{error}</div>}
 
-          {stats.counters && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 12, marginBottom: 24 }}>
-              <Counter label="Total KOLs" value={stats.counters.total_kols} />
-              <Counter label="Advisory board" value={stats.counters.advisory_board_members} />
-              <Counter label="Speaker bureau" value={stats.counters.speaker_bureau_members} />
-              <Counter label="AI-suggested" value={stats.counters.ai_suggested} />
-            </div>
-          )}
+        {stats.counters && (
+          <div className="admin-stat-grid">
+            <StatCard label="Total KOLs" value={stats.counters.total_kols} icon={<Users size={12} />} />
+            <StatCard label="Advisory board" value={stats.counters.advisory_board_members} icon={<Star size={12} />} />
+            <StatCard label="Speaker bureau" value={stats.counters.speaker_bureau_members} icon={<Mic2 size={12} />} />
+            <StatCard label="AI-suggested" value={stats.counters.ai_suggested} icon={<Sparkles size={12} />} />
+          </div>
+        )}
 
-          <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
-            <select value={tierFilter} onChange={e => setTierFilter(e.target.value)} style={{ padding: 8, border: '1px solid #d1d5db', borderRadius: 4 }}>
+        <Toolbar>
+          <Toolbar.Field label="Tier">
+            <select value={tierFilter} onChange={e => setTierFilter(e.target.value)} className="admin-select" style={{ width: 140 }}>
               <option value="">All tiers</option>
               <option value="T1">T1</option>
               <option value="T2">T2</option>
               <option value="T3">T3</option>
-              <option value="emerging">emerging</option>
+              <option value="emerging">Emerging</option>
             </select>
-            <button onClick={load} className="upload-btn" style={{ padding: '8px 16px' }}>Refresh</button>
-            <button onClick={() => setShowIdentify(v => !v)} className="upload-btn" style={{ padding: '8px 16px', marginLeft: 'auto' }}>{showIdentify ? 'Cancel' : '⚡ AI Identify KOL'}</button>
+          </Toolbar.Field>
+          <button type="button" onClick={load} className="btn btn-secondary btn-sm">Refresh</button>
+          <Toolbar.Spacer />
+          <Toolbar.Count n={kols.length} noun="KOL" />
+        </Toolbar>
+
+        <DataTable
+          columns={columns}
+          rows={kols}
+          rowKey={k => k.id}
+          loading={loading}
+          empty="No KOLs identified yet. Use AI Identify to score a candidate doctor."
+        />
+      </div>
+
+      <Modal
+        open={showIdentify}
+        onClose={closeIdentify}
+        title="AI KOL Identifier"
+        subtitle="Pick a doctor; the AI bundles their DCR / RCPA / affiliation signals and suggests a tier."
+        footer={
+          suggestion ? (
+            <>
+              <button onClick={persistIdentify} disabled={identifyLoading} className="btn btn-primary btn-sm">
+                {identifyLoading ? 'Saving…' : 'Confirm and persist'}
+              </button>
+              <button onClick={() => setSuggestion(null)} className="btn btn-secondary btn-sm">Discard</button>
+              <span className="admin-modal-footer-spacer" />
+              <button onClick={closeIdentify} className="btn btn-ghost btn-sm">Cancel</button>
+            </>
+          ) : (
+            <>
+              <button onClick={runIdentify} disabled={!identifyDoctorId || identifyLoading} className="btn btn-primary btn-sm">
+                <Sparkles size={14} /> {identifyLoading ? 'Calling LLM…' : 'Run AI'}
+              </button>
+              <span className="admin-modal-footer-spacer" />
+              <button onClick={closeIdentify} className="btn btn-secondary btn-sm">Cancel</button>
+            </>
+          )
+        }
+      >
+        <div className="admin-stack-sm">
+          <div>
+            <label className="admin-field-label">Doctor</label>
+            <select value={identifyDoctorId} onChange={e => setIdentifyDoctorId(e.target.value)} className="admin-select">
+              <option value="">— select doctor —</option>
+              {doctors.map(d => (
+                <option key={d.id} value={d.id}>
+                  {d.name} ({d.specialty || 'no specialty'} · {d.territory || 'no territory'})
+                </option>
+              ))}
+            </select>
           </div>
 
-          {showIdentify && (
-            <div style={{ background: '#f9fafb', padding: 16, borderRadius: 6, marginBottom: 24 }}>
-              <h4 style={{ marginTop: 0 }}>AI KOL Identifier</h4>
-              <p style={{ fontSize: 13, color: '#6b7280' }}>Pick a doctor; the AI bundles their DCR / RCPA / affiliation signals and suggests a tier.</p>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <select value={identifyDoctorId} onChange={e => setIdentifyDoctorId(e.target.value)} style={{ flex: 1, padding: 6, border: '1px solid #d1d5db', borderRadius: 4 }}>
-                  <option value="">— select doctor —</option>
-                  {doctors.map(d => <option key={d.id} value={d.id}>{d.name} ({d.specialty || 'no specialty'} · {d.territory || 'no territory'})</option>)}
-                </select>
-                <button onClick={runIdentify} disabled={!identifyDoctorId || identifyLoading} className="upload-btn">{identifyLoading ? 'Calling LLM…' : 'Run'}</button>
-              </div>
-
-              {suggestion && (
-                <div style={{ marginTop: 16, padding: 12, background: 'white', border: '1px solid #e5e7eb', borderRadius: 4 }}>
-                  <div style={{ marginBottom: 8 }}>
-                    <strong>Tier suggestion:</strong> <span style={{ color: TIER_COLOR[suggestion.recommended_tier] || '#374151', fontWeight: 700 }}>{suggestion.recommended_tier}</span>
-                    {' · '}
-                    <strong>Score:</strong> {suggestion.influence_score}
+          {suggestion && (
+            <Banner tone="info" icon={<Sparkles size={16} />}>
+              <div className="admin-stack-sm">
+                <div className="admin-row" style={{ gap: 14 }}>
+                  <div>
+                    <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>Tier</div>
+                    <Badge tone={kolTierTone[suggestion.recommended_tier] || 'neutral'}>{suggestion.recommended_tier}</Badge>
                   </div>
-                  <div style={{ marginBottom: 8 }}><strong>Rationale:</strong> {suggestion.rationale}</div>
-                  {suggestion.key_signals?.length > 0 && (
-                    <div style={{ marginBottom: 8 }}><strong>Signals:</strong> {suggestion.key_signals.join('; ')}</div>
-                  )}
-                  {suggestion.suggested_actions?.length > 0 && (
-                    <div style={{ marginBottom: 8 }}><strong>Suggested actions:</strong>
-                      <ul style={{ margin: '4px 0 0 20px' }}>
-                        {suggestion.suggested_actions.map((a, i) => <li key={i} style={{ fontSize: 13 }}>{a}</li>)}
-                      </ul>
-                    </div>
-                  )}
-                  {suggestion.data_gaps?.length > 0 && (
-                    <div style={{ fontSize: 12, color: '#b45309' }}>Gaps: {suggestion.data_gaps.join('; ')}</div>
-                  )}
-                  <div style={{ marginTop: 12 }}>
-                    <button onClick={persistIdentify} disabled={identifyLoading} style={{ padding: '8px 14px', background: '#15803d', color: 'white', border: 'none', borderRadius: 4, cursor: 'pointer' }}>Confirm + persist</button>
-                    <button onClick={() => setSuggestion(null)} style={{ padding: '8px 14px', marginLeft: 8, background: 'white', color: '#374151', border: '1px solid #d1d5db', borderRadius: 4, cursor: 'pointer' }}>Discard</button>
+                  <div>
+                    <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>Score</div>
+                    <div style={{ fontSize: 18, fontWeight: 700 }}>{suggestion.influence_score}</div>
                   </div>
                 </div>
-              )}
-            </div>
-          )}
-
-          {loading ? <div>Loading…</div> : kols.length === 0 ? (
-            <div style={{ color: '#6b7280', padding: 24, textAlign: 'center' }}>No KOLs identified yet.</div>
-          ) : (
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ borderBottom: '2px solid #e5e7eb', textAlign: 'left' }}>
-                  <th style={{ padding: 8 }}>Doctor</th>
-                  <th style={{ padding: 8 }}>Specialty</th>
-                  <th style={{ padding: 8 }}>Territory</th>
-                  <th style={{ padding: 8 }}>Tier</th>
-                  <th style={{ padding: 8 }}>Score</th>
-                  <th style={{ padding: 8 }}>Adv. board</th>
-                  <th style={{ padding: 8 }}>Speaker</th>
-                  <th style={{ padding: 8 }}>Pubs</th>
-                  <th style={{ padding: 8 }}>Last engagement</th>
-                  <th style={{ padding: 8 }}>Source</th>
-                </tr>
-              </thead>
-              <tbody>
-                {kols.map(k => (
-                  <tr key={k.id} style={{ borderBottom: '1px solid #f3f4f6' }}>
-                    <td style={{ padding: 8, fontSize: 13, fontWeight: 600 }}>{k.doctor_name}</td>
-                    <td style={{ padding: 8, fontSize: 13 }}>{k.specialty_code || k.specialty || '—'}</td>
-                    <td style={{ padding: 8, fontSize: 13 }}>{k.territory || '—'}</td>
-                    <td style={{ padding: 8, fontSize: 13, color: k.kol_tier ? TIER_COLOR[k.kol_tier] : '#6b7280', fontWeight: 700 }}>{k.kol_tier || '—'}</td>
-                    <td style={{ padding: 8, fontSize: 13 }}>{k.influence_score ?? '—'}</td>
-                    <td style={{ padding: 8, fontSize: 13 }}>{k.advisory_board_member ? '✓' : '—'}</td>
-                    <td style={{ padding: 8, fontSize: 13 }}>{k.speaker_bureau ? '✓' : '—'}</td>
-                    <td style={{ padding: 8, fontSize: 13 }}>{k.publication_count}</td>
-                    <td style={{ padding: 8, fontSize: 12 }}>{k.last_engagement_at ? new Date(k.last_engagement_at).toLocaleDateString('en-IN') : '—'}</td>
-                    <td style={{ padding: 8, fontSize: 12 }}>{k.identified_by}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                <div>
+                  <strong>Rationale:</strong> {suggestion.rationale}
+                </div>
+                {suggestion.key_signals?.length > 0 && (
+                  <div>
+                    <strong>Signals:</strong> {suggestion.key_signals.join('; ')}
+                  </div>
+                )}
+                {suggestion.suggested_actions?.length > 0 && (
+                  <div>
+                    <strong>Suggested actions:</strong>
+                    <ul style={{ margin: '4px 0 0 20px' }}>
+                      {suggestion.suggested_actions.map((a, i) => <li key={i}>{a}</li>)}
+                    </ul>
+                  </div>
+                )}
+                {suggestion.data_gaps?.length > 0 && (
+                  <div style={{ fontSize: 12, color: '#92400e' }}>
+                    <strong>Gaps:</strong> {suggestion.data_gaps.join('; ')}
+                  </div>
+                )}
+              </div>
+            </Banner>
           )}
         </div>
-      </div>
-    </div>
-  )
-}
-
-function Counter({ label, value }: { label: string; value: number }) {
-  return (
-    <div style={{ padding: 12, background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: 6 }}>
-      <div style={{ fontSize: 12, color: '#6b7280', textTransform: 'uppercase', letterSpacing: 0.5 }}>{label}</div>
-      <div style={{ fontSize: 22, fontWeight: 700, color: '#111827' }}>{value}</div>
+      </Modal>
     </div>
   )
 }
