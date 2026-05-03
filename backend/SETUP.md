@@ -49,7 +49,9 @@ The database schema (`db/schema.sql`) is automatically applied on first start.
 
 ## 3. Run migrations and seed the database
 
-Run these commands **in order** from the `backend/` directory:
+Run these commands **in order** from the `backend/` directory.
+
+> **Tip — for the Phase B/C demo:** after running the steps below to load the base schema + Phase A data, run `bash backend/db/apply_demo_seeds.sh` (from the repo root) to populate every Phase B/C page (Compliance Inbox, Consent Register, Regulatory Docs, Audit Log, Institutions, KOL Dashboard, Medical Engagements, Medical Queries) with realistic cross-referenced data. The script is idempotent — safe to re-run.
 
 ```bash
 # Step 1: Base data — products + DCR records
@@ -299,8 +301,26 @@ backend/
 │   ├── migration_v4_pharmacies.sql # V5 — pharmacy_profiles table
 │   ├── migration_v5_doctor_requests.sql # V6 — doctor_requests table
 │   ├── seed_pharmacies.sql     # 10 pharmacy profiles across 3 territories
-│   └── seed.sql                # Legacy seed (products + DCRs, same as dummy_data.sql)
+│   ├── seed.sql                # Legacy seed (products + DCRs, same as dummy_data.sql)
+│   ├── ── Phase A backends ────────────────────────────────────────────────
+│   ├── seed_tour_plans.sql, seed_expenses.sql, seed_leaves.sql,
+│   ├── seed_orders.sql, seed_samples.sql, seed_sales_data.sql
+│   ├── ── Phase B (CLM/MLR) ───────────────────────────────────────────────
+│   ├── seed_content.sql        # 3 reviewers + 4 content assets + 6 versions + 12 reviews
+│   ├── ── Phase B + C demo bundle (apply via apply_demo_seeds.sh) ─────────
+│   ├── seed_institutions.sql   # 10 institutions + 18 hcp_affiliations
+│   ├── seed_territory_alignments.sql  # 7 versioned alignments
+│   ├── seed_consent.sql        # 26 consent rows / 8 doctors / all 3 statuses
+│   ├── seed_kols.sql           # 8 KOLs across all 4 tiers
+│   ├── seed_medical_engagements.sql   # 6 engagements + 13 attendees
+│   ├── seed_regulatory_docs.sql       # 6 regulatory docs + 7 versions
+│   ├── seed_compliance_findings.sql   # 12 AI Watchdog findings
+│   ├── seed_audit_log.sql      # 29 historical audit entries
+│   ├── seed_medical_queries.sql       # 12 doctor queries with AI prose + citations
+│   ├── apply_demo_seeds.sh     # Single-shot seeder for the Phase B+C demo bundle
+│   └── SEED_DATA_GUIDE.md      # Full migration + seed execution order
 ├── scripts/
+│   ├── seed_regulatory_files.js  # Writes placeholder PDFs for regulatory docs
 │   └── rechunk.js              # One-time script: chunk + embed existing knowledge base
 ├── docker-compose.local.yml    # Local dev compose file
 ├── docker-compose.yml          # Production compose file
