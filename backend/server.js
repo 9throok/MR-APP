@@ -34,6 +34,9 @@ const hcpRoutes = require('./routes/hcp');
 const medicalQueriesRoutes = require('./routes/medical-queries');
 const kolsRoutes = require('./routes/kols');
 const medicalEngagementsRoutes = require('./routes/medical-engagements');
+const pharmacyRoutes = require('./routes/pharmacies');
+const distributorRoutes = require('./routes/distributors');
+const usersRoutes = require('./routes/users');
 const { authenticateToken } = require('./middleware/auth');
 const { attachOrgScope } = require('./middleware/orgScope');
 
@@ -81,6 +84,9 @@ app.use('/api/hcp', authenticateToken, attachOrgScope, hcpRoutes);
 app.use('/api/medical-queries', authenticateToken, attachOrgScope, medicalQueriesRoutes);
 app.use('/api/kols', authenticateToken, attachOrgScope, kolsRoutes);
 app.use('/api/medical-engagements', authenticateToken, attachOrgScope, medicalEngagementsRoutes);
+app.use('/api/pharmacies', authenticateToken, attachOrgScope, pharmacyRoutes);
+app.use('/api/distributors', authenticateToken, attachOrgScope, distributorRoutes);
+app.use('/api/users', authenticateToken, attachOrgScope, usersRoutes);
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', message: 'Server is running' });
