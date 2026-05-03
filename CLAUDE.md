@@ -18,7 +18,13 @@ Phase C.2 (just landed) — Medical Affairs end-to-end:
 - 3 new frontend pages: [MedicalQueries.tsx](frontend/src/components/MedicalQueries.tsx) (capture form + reviewer queue + claim/answer/send modal with re-draft button), [KOLDashboard.tsx](frontend/src/components/KOLDashboard.tsx) (list + AI Identify modal with confirm/persist), [MedicalEngagements.tsx](frontend/src/components/MedicalEngagements.tsx) (list + create + add-attendee with KOL tier display). Sidebar Medical Affairs section visible to admin/manager + medical_reviewer.
 - Smoke test green: 16/16 endpoints validated against fresh Postgres incl. status-machine 409 enforcement, audit capture across all writes, attendee dup-prevent, KOL last_engagement auto-stamp.
 
-**Phase C is fully complete.** No further phase scope is on the strategic plan. Open questions for next session: tighten existing work (RLS strict mode, wire remaining Phase A frontend stubs to backend, /test.sh extension for Phase B/C.1/C.2/C.3) or polish/demo deployment.
+**Phase C is fully complete.** No further phase scope is on the strategic plan. Open questions for next session: tighten existing work (RLS strict mode, /test.sh extension for Phase B/C.1/C.2/C.3) or polish/demo deployment.
+
+**Phase A frontend wiring shipped** — every Phase A stub (TourPlans, Expenses, Leaves, OrderBooking, Samples, MRList/Detail, Doctor360, TourPlanRequests) is now wired to its backend; new read-only routes added for `/api/pharmacies`, `/api/distributors`, `/api/users`. Frontend build clean.
+
+**Phase B + C demo data shipped** — all previously-empty Phase B/C pages (Compliance Inbox, Consent Register, Regulatory Docs, Audit Log, Institutions + HCP Affiliations, Territory Alignments, KOL Profiles, Medical Engagements, Medical Queries) now have comprehensive idempotent seed coverage with cross-referenced demo data. Single-shot seeder at `bash backend/db/apply_demo_seeds.sh`.
+
+**12-month synthetic activity history shipped** — `backend/scripts/seed_synthetic_activity.js` generates `seed_synthetic_activity.sql` with ~533 DCRs, 200 RCPA records, 324 monthly sales rows, 324 monthly targets, 60 follow-up tasks, 50 content views, 13 adverse events, 20 historical compliance findings, 30 historical medical queries, 10 additional engagements, and 170 historical audit entries — all using `CURRENT_DATE` / `NOW()` arithmetic so the data shifts forward automatically as the real clock advances. Re-running regenerates "the last 12 months" relative to today (no rollover cron needed). Flagship doctors (Dr. Anil Mehta, Dr. Pradeep Joshi, Dr. Suresh Kumar) get hand-distributed scenarios for rich Doctor-360 timelines; the other 11 doctors get weighted-random scenarios covering safety/compliance edge cases. Already wired into `apply_demo_seeds.sh` as the final step.
 
 Phase C.1 deliverables (just landed):
 - [backend/db/migration_v15_compliance.sql](backend/db/migration_v15_compliance.sql) — 5 new tables: `audit_log`, `consent_records`, `regulatory_documents`, `regulatory_document_versions`, `compliance_findings`. RLS placeholders in line with v7–v14.
@@ -104,6 +110,8 @@ Phase C.1 deliverables (just landed):
 
 - **Local dev / docker / migrations / seed sequence / default logins:** [backend/SETUP.md](backend/SETUP.md) (canonical)
 - **Migration + seed execution order:** [backend/db/SEED_DATA_GUIDE.md](backend/db/SEED_DATA_GUIDE.md)
+- **Phase B + C demo seed (single-shot):** `bash backend/db/apply_demo_seeds.sh` populates all the Phase B/C tables (Compliance Inbox, Consent Register, Regulatory Docs incl. on-disk PDFs, Audit Log, Institutions + HCP Affiliations, Territory Alignments, KOL Profiles, Medical Engagements + Attendees, Medical Queries) with realistic cross-referenced demo data. Idempotent. See `backend/db/SEED_DATA_GUIDE.md` steps 31–41.
 - **Feature inventory (every page + endpoint + AI prompt):** [FEATURES.md](FEATURES.md)
 - **AI feature deep-dive / sales narrative:** [AI_FEATURES_REPORT.md](AI_FEATURES_REPORT.md)
 - **Disconnected-feature audit (drives Phase A scope):** [docs/APP_HEALTH_REPORT.md](docs/APP_HEALTH_REPORT.md)
+- **End-user walkthrough (every screen, what it captures, what AI does):** [docs/USER_GUIDE.md](docs/USER_GUIDE.md) — start here when explaining the tool to a non-technical user.

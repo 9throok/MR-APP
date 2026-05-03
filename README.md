@@ -60,9 +60,10 @@ For local dev (Docker, migrations, seed data, default logins, all API endpoints)
 
 | Doc | Purpose |
 |-----|---------|
+| [docs/USER_GUIDE.md](docs/USER_GUIDE.md) | **Start here.** End-to-end walkthrough of every screen — what it does, what it captures, what AI does behind the scenes. Aimed at users learning the tool. |
 | [backend/SETUP.md](backend/SETUP.md) | Local setup, Docker, migrations, API endpoints, default logins |
 | [backend/db/SEED_DATA_GUIDE.md](backend/db/SEED_DATA_GUIDE.md) | Migration + seed execution order |
 | [FEATURES.md](FEATURES.md) | Feature inventory — every page, endpoint, and AI prompt |
-| [AI_FEATURES_REPORT.md](AI_FEATURES_REPORT.md) | Deep-dive on the 9 AI features |
+| [AI_FEATURES_REPORT.md](AI_FEATURES_REPORT.md) | Sales-pitch narrative: the AI features and the ROI story |
 | [docs/APP_HEALTH_REPORT.md](docs/APP_HEALTH_REPORT.md) | Audit of frontend-only stubs and missing backend APIs |
 | [CLAUDE.md](CLAUDE.md) | Orientation file for Claude Code sessions |

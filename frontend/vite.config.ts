@@ -85,6 +85,15 @@ export default defineConfig({
       'Pragma': 'no-cache',
       'Expires': '0',
     },
+    // Proxy uploaded-file requests to the backend so the SPA fallback doesn't
+    // swallow them. Without this, /uploads/content/... gets rewritten to
+    // index.html which the SPA then redirects to /app.
+    proxy: {
+      '/uploads': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+      },
+    },
   },
   appType: 'spa',
   build: {
