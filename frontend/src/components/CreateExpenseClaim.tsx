@@ -8,7 +8,16 @@ import {
   dailyAllowanceType,
   transportClasses,
 } from '../constants/expenseConstants'
+import { apiPost, apiUpload } from '../services/apiService'
 import './CreateExpenseClaim.css'
+
+// UI claim-type label → backend enum value
+const CLAIM_TYPE_TO_ENUM: Record<string, 'local_conveyance' | 'travel_allowance' | 'general_expense' | 'daily_allowance'> = {
+  'Local Conveyance': 'local_conveyance',
+  'Travel Allowance': 'travel_allowance',
+  'General Expense': 'general_expense',
+  'Daily Allowance': 'daily_allowance',
+}
 
 interface CreateExpenseClaimProps {
   onLogout: () => void
@@ -68,6 +77,8 @@ const initialClaim: Claim = {
 function CreateExpenseClaim({ onLogout, onBack, userName, onNavigate }: CreateExpenseClaimProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [claims, setClaims] = useState<Claim[]>([{ ...initialClaim }])
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const handleMenuClick = () => {
     setSidebarOpen(true)
@@ -189,11 +200,116 @@ function CreateExpenseClaim({ onLogout, onBack, userName, onNavigate }: CreateEx
     }
   }
 
-  const handleSave = () => {
-    console.log('Saving claims:', claims)
-    // In real app, this would call an API
-    if (onNavigate) {
-      onNavigate('expense-claim')
+  // Map a UI claim row to the backend line-item shape.
+  const buildLineItem = (claim: Claim) => {
+    const claim_type = CLAIM_TYPE_TO_ENUM[claim.claimType]
+    const amount =
+      claim.claimType === 'Travel Allowance'
+        ? parseFloat(claim.claimamount || '0') || 0
+        : claim.totalAmount || 0
+    const line: Record<string, unknown> = {
+      claim_type,
+      amount,
+      currency: 'INR',
+      remark: claim.remark || undefined,
+    }
+
+    if (claim.claimType === 'Local Conveyance') {
+      line.from_date = claim.fromDate || undefined
+      line.to_date = claim.toDate || undefined
+      line.from_place = claim.fromPlace || undefined
+      line.to_place = claim.toPlace || undefined
+      line.conveyance_mode = (claim.conveyanceMode || '').toLowerCase() || undefined
+      line.distance_km = claim.distance ? parseFloat(claim.distance) : undefined
+      line.rate_per_km = 3.5
+      line.description = `${claim.fromPlace || ''} → ${claim.toPlace || ''}`.trim() || undefined
+    } else if (claim.claimType === 'Travel Allowance') {
+      line.from_date = claim.fromDate || undefined
+      line.to_date = claim.arrivalDate || undefined
+      line.from_place = claim.fromPlace || undefined
+      line.to_place = claim.toPlace || undefined
+      line.transport_class = claim.transportClass !== 'Select Transport Class' ? claim.transportClass : undefined
+      line.description = claim.remark || `${claim.fromPlace || ''} → ${claim.toPlace || ''}`.trim() || undefined
+    } else if (claim.claimType === 'General Expense') {
+      line.expense_date = claim.date || undefined
+      line.allowance_type = claim.allowanceType !== 'Select Allowance Type' ? claim.allowanceType : undefined
+      line.description = claim.allowanceType !== 'Select Allowance Type' ? claim.allowanceType : undefined
+    } else if (claim.claimType === 'Daily Allowance') {
+      line.allowance_type = claim.dailyAllowanceType !== 'Select Allowance Type' ? claim.dailyAllowanceType : undefined
+      line.city = claim.city || undefined
+      if (claim.dailyAllowanceType === 'HQ' || claim.dailyAllowanceType === 'EX HQ') {
+        line.expense_date = claim.date || undefined
+      } else {
+        line.from_date = claim.fromDate || undefined
+        line.to_date = claim.toDate || undefined
+      }
+      line.days = claim.days ? parseInt(claim.days, 10) : undefined
+      if (claim.dailyAllowanceType === 'Out Station Own Arrangement') {
+        line.daily_rate = 650
+      }
+    }
+
+    return line
+  }
+
+  const computePeriod = () => {
+    const dates: string[] = []
+    for (const c of claims) {
+      [c.date, c.fromDate, c.toDate, c.arrivalDate].forEach(d => { if (d) dates.push(d) })
+    }
+    if (dates.length === 0) {
+      const today = new Date().toISOString().slice(0, 10)
+      return { period_start: today, period_end: today }
+    }
+    const sorted = dates.sort()
+    return { period_start: sorted[0], period_end: sorted[sorted.length - 1] }
+  }
+
+  const handleSave = async () => {
+    setSaving(true)
+    setError(null)
+    try {
+      const { period_start, period_end } = computePeriod()
+      const line_items = claims.map(buildLineItem)
+      const res = await apiPost('/expenses', {
+        period_start,
+        period_end,
+        currency: 'INR',
+        notes: 'Created from mobile',
+        line_items,
+      })
+
+      // Offline-queued: surface a friendly note and bounce back.
+      if ('queued' in res) {
+        if (onNavigate) onNavigate('expense-claim')
+        return
+      }
+
+      const claimId = res?.data?.id
+      const createdLines: Array<{ id: number }> = res?.data?.line_items || []
+
+      // Upload attachments per-line, best effort. apiUpload throws if offline.
+      if (claimId && createdLines.length === claims.length) {
+        for (let i = 0; i < claims.length; i++) {
+          const file = claims[i].attachment
+          const lineId = createdLines[i]?.id
+          if (file && lineId) {
+            try {
+              const fd = new FormData()
+              fd.append('file', file)
+              await apiUpload(`/expenses/${claimId}/lines/${lineId}/receipt`, fd)
+            } catch (uploadErr) {
+              console.warn('Receipt upload failed:', uploadErr)
+            }
+          }
+        }
+      }
+
+      if (onNavigate) onNavigate('expense-claim')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to save claim')
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -216,6 +332,8 @@ function CreateExpenseClaim({ onLogout, onBack, userName, onNavigate }: CreateEx
           </button>
           <h1 className="create-expense-claim-title">Create Expense Claim</h1>
         </div>
+
+        {error && <div style={{ background: '#fef2f2', color: '#b91c1c', padding: 10, borderRadius: 6, marginBottom: 12 }}>{error}</div>}
 
         {claims.map((claim, index) => (
           <div key={claim.id} className="claim-card">
@@ -634,13 +752,13 @@ function CreateExpenseClaim({ onLogout, onBack, userName, onNavigate }: CreateEx
             </svg>
             <span>Add New Claim</span>
           </button>
-          <button className="save-claim-btn" onClick={handleSave}>
+          <button className="save-claim-btn" onClick={handleSave} disabled={saving}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H16L21 8V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               <path d="M17 21V13H7V21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               <path d="M7 3V8H15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
-            <span>Save Expense Claim</span>
+            <span>{saving ? 'Saving…' : 'Save Expense Claim'}</span>
           </button>
         </div>
       </main>

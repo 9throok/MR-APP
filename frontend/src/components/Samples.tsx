@@ -1,110 +1,19 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Header from './Header'
 import Sidebar from './Sidebar'
+import { apiGet } from '../services/apiService'
 import './Samples.css'
 
-interface InventoryItem {
+interface StockRow {
   id: number
-  brand: string
-  product: string
+  user_id: string
+  product_id: number
+  product_name: string
+  lot_number: string
   quantity: number
-  batchNumber: string
-  expiryDate: string
-  distributor: string
+  expiry_date: string | null
+  last_movement_at: string | null
 }
-
-const inventoryData: InventoryItem[] = [
-  {
-    id: 1,
-    brand: 'ZenX Global',
-    product: 'CardioMax 500mg',
-    quantity: 150,
-    batchNumber: 'ZA-2025-001',
-    expiryDate: '2027-06-30',
-    distributor: 'MediDistributors Pvt Ltd',
-  },
-  {
-    id: 2,
-    brand: 'ZenX Global',
-    product: 'AntibioPro 250mg',
-    quantity: 200,
-    batchNumber: 'ZA-2025-002',
-    expiryDate: '2026-12-31',
-    distributor: 'HealthCare Supplies',
-  },
-  {
-    id: 3,
-    brand: 'Virbac',
-    product: 'DiabetoCare 1000mg',
-    quantity: 180,
-    batchNumber: 'VB-2025-015',
-    expiryDate: '2027-03-15',
-    distributor: 'Pharma Distributors',
-  },
-  {
-    id: 4,
-    brand: 'Virbac',
-    product: 'RespiraMax 400mg',
-    quantity: 120,
-    batchNumber: 'VB-2025-016',
-    expiryDate: '2026-11-20',
-    distributor: 'MedEquip Distributors',
-  },
-  {
-    id: 5,
-    brand: 'ZenX Global',
-    product: 'PainRelief 200mg',
-    quantity: 95,
-    batchNumber: 'ZA-2025-003',
-    expiryDate: '2027-01-10',
-    distributor: 'MediDistributors Pvt Ltd',
-  },
-  {
-    id: 6,
-    brand: 'Virbac',
-    product: 'NeuroCare 500mg',
-    quantity: 110,
-    batchNumber: 'VB-2025-017',
-    expiryDate: '2027-08-25',
-    distributor: 'HealthCare Supplies',
-  },
-  {
-    id: 7,
-    brand: 'ZenX Global',
-    product: 'PediatriCare 100mg',
-    quantity: 175,
-    batchNumber: 'ZA-2025-004',
-    expiryDate: '2026-09-30',
-    distributor: 'Pharma Distributors',
-  },
-  {
-    id: 8,
-    brand: 'Virbac',
-    product: 'GastroRelief 300mg',
-    quantity: 140,
-    batchNumber: 'VB-2025-018',
-    expiryDate: '2027-04-18',
-    distributor: 'MedEquip Distributors',
-  },
-  {
-    id: 9,
-    brand: 'ZenX Global',
-    product: 'DermatoCare 250mg',
-    quantity: 85,
-    batchNumber: 'ZA-2025-005',
-    expiryDate: '2026-10-15',
-    distributor: 'MediDistributors Pvt Ltd',
-  },
-  {
-    id: 10,
-    brand: 'Virbac',
-    product: 'OncoCare 1000mg',
-    quantity: 60,
-    batchNumber: 'VB-2025-019',
-    expiryDate: '2027-07-22',
-    distributor: 'HealthCare Supplies',
-  },
-]
 
 interface SamplesProps {
   onLogout: () => void
@@ -113,25 +22,50 @@ interface SamplesProps {
   onNavigate?: (page: string) => void
 }
 
+function formatDate(s: string | null): string {
+  if (!s) return '-'
+  const d = new Date(s)
+  if (Number.isNaN(d.getTime())) return s
+  return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+}
+
+function brandOf(productName: string): string {
+  return (productName.split(' ')[0] || productName).trim()
+}
+
 function Samples({ onLogout, onBack, userName, onNavigate }: SamplesProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [stock, setStock] = useState<StockRow[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  const handleMenuClick = () => {
-    setSidebarOpen(true)
+  const loadStock = async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const res = await apiGet('/samples/stock')
+      setStock(res.data || [])
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load samples')
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const handleSidebarClose = () => {
-    setSidebarOpen(false)
-  }
+  useEffect(() => { loadStock() }, [])
 
-  const filteredInventory = inventoryData.filter(item => {
-    const matchesSearch = 
-      item.brand.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.product.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.batchNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.distributor.toLowerCase().includes(searchQuery.toLowerCase())
-    return matchesSearch
+  const handleMenuClick = () => setSidebarOpen(true)
+  const handleSidebarClose = () => setSidebarOpen(false)
+
+  const q = searchQuery.toLowerCase()
+  const filteredInventory = stock.filter(item => {
+    if (!q) return true
+    return (
+      item.product_name.toLowerCase().includes(q) ||
+      item.lot_number.toLowerCase().includes(q) ||
+      brandOf(item.product_name).toLowerCase().includes(q)
+    )
   })
 
   return (
@@ -148,6 +82,8 @@ function Samples({ onLogout, onBack, userName, onNavigate }: SamplesProps) {
           <h1 className="samples-title">Sample Management</h1>
         </div>
 
+        {error && <div style={{ background: '#fef2f2', color: '#b91c1c', padding: 10, borderRadius: 6, margin: '8px 16px' }}>{error}</div>}
+
         <div className="samples-controls">
           <div className="search-bar">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -156,7 +92,7 @@ function Samples({ onLogout, onBack, userName, onNavigate }: SamplesProps) {
             </svg>
             <input
               type="text"
-              placeholder="Search by brand, product, batch number, or distributor..."
+              placeholder="Search by product or batch number..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="search-input"
@@ -174,25 +110,27 @@ function Samples({ onLogout, onBack, userName, onNavigate }: SamplesProps) {
                   <th>Quantity</th>
                   <th>Batch Number</th>
                   <th>Expiry Date</th>
-                  <th>Distributor</th>
                 </tr>
               </thead>
               <tbody>
-                {filteredInventory.length === 0 ? (
+                {loading ? (
+                  <tr><td colSpan={5} className="no-data">Loading…</td></tr>
+                ) : filteredInventory.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="no-data">
-                      No inventory found matching your search criteria.
+                    <td colSpan={5} className="no-data">
+                      {stock.length === 0
+                        ? 'No samples allocated. Your manager allocates stock via Sample Inventory in Admin.'
+                        : 'No inventory found matching your search criteria.'}
                     </td>
                   </tr>
                 ) : (
                   filteredInventory.map((item) => (
                     <tr key={item.id}>
-                      <td>{item.brand}</td>
-                      <td>{item.product}</td>
+                      <td>{brandOf(item.product_name)}</td>
+                      <td>{item.product_name}</td>
                       <td>{item.quantity}</td>
-                      <td>{item.batchNumber}</td>
-                      <td>{item.expiryDate}</td>
-                      <td>{item.distributor}</td>
+                      <td>{item.lot_number}</td>
+                      <td>{formatDate(item.expiry_date)}</td>
                     </tr>
                   ))
                 )}

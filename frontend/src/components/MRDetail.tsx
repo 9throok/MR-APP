@@ -3,19 +3,33 @@ import Header from './Header'
 import Sidebar from './Sidebar'
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, LineElement, PointElement, Title, Tooltip, Legend, Filler, ArcElement, RadialLinearScale } from 'chart.js'
 import { Bar, Line, Pie, Radar } from 'react-chartjs-2'
+import { apiGet } from '../services/apiService'
+import { useAuth } from '../contexts/AuthContext'
 import './MRDetail.css'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, LineElement, PointElement, Title, Tooltip, Legend, Filler, ArcElement, RadialLinearScale)
 
+// MR shape returned by /api/users.
 interface MR {
-  id: string
-  empId: string
+  id: number
+  user_id: string
+  username: string
+  email: string | null
+  role: string
   name: string
-  email: string
-  mobile: string
-  designation: string
-  region: string
-  status: 'Active' | 'Inactive'
+  territory: string | null
+  created_at: string | null
+}
+
+interface DcrRow {
+  id: number
+  user_id: string
+  name: string  // doctor name
+  date: string
+  product: string
+  call_summary: string | null
+  doctor_feedback: string | null
+  samples: unknown
 }
 
 interface MRDetailProps {
@@ -26,21 +40,50 @@ interface MRDetailProps {
 }
 
 function MRDetail({ onLogout, onBack, userName, onNavigate }: MRDetailProps) {
+  const { user } = useAuth()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [selectedMR, setSelectedMR] = useState<MR | null>(null)
+  const [dcrs, setDcrs] = useState<DcrRow[]>([])
+  const [dcrsLoading, setDcrsLoading] = useState(false)
   const [activeTab, setActiveTab] = useState<'overview' | 'sales' | 'visits' | 'dcr' | 'rcpa' | 'commission'>('overview')
 
+  const isManagerOrAdmin = user?.role === 'manager' || user?.role === 'admin'
+
   useEffect(() => {
-    // Get MR data from sessionStorage
+    if (!isManagerOrAdmin) {
+      if (onNavigate) onNavigate('home')
+      return
+    }
+    // Restore from sessionStorage if a row was clicked, otherwise no-op.
     try {
       const stored = sessionStorage.getItem('selectedMR')
-      if (stored) {
-        setSelectedMR(JSON.parse(stored))
-      }
+      if (stored) setSelectedMR(JSON.parse(stored))
     } catch (error) {
       console.error('Error loading MR data:', error)
     }
-  }, [])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isManagerOrAdmin])
+
+  // Pull this MR's DCRs and recent orders so the Visits/DCR tabs aren't
+  // empty. The dashboards (sales/commission) stay hardcoded for now —
+  // analytics aggregation is a future phase.
+  useEffect(() => {
+    if (!selectedMR) return
+    let cancelled = false
+    const loadActivity = async () => {
+      setDcrsLoading(true)
+      try {
+        const res = await apiGet(`/dcr?user_id=${encodeURIComponent(selectedMR.user_id)}`)
+        if (!cancelled) setDcrs((res.data || []).slice(0, 50))
+      } catch (err) {
+        console.warn('[MRDetail] DCR load error:', err)
+      } finally {
+        if (!cancelled) setDcrsLoading(false)
+      }
+    }
+    loadActivity()
+    return () => { cancelled = true }
+  }, [selectedMR])
 
   const handleMenuClick = () => {
     setSidebarOpen(true)
@@ -352,7 +395,9 @@ function MRDetail({ onLogout, onBack, userName, onNavigate }: MRDetailProps) {
     }
   }
 
-  // Mock data for reports
+  // Sales summary stays hardcoded — there's no per-MR sales dashboard endpoint
+  // surfaced here yet (manager-side aggregation is a future analytics phase).
+  // TODO: derive from /api/sales/performance once available per-user.
   const salesData = [
     { month: 'January', sales: 125000, target: 150000, achievement: 83.3 },
     { month: 'February', sales: 145000, target: 150000, achievement: 96.7 },
@@ -360,23 +405,26 @@ function MRDetail({ onLogout, onBack, userName, onNavigate }: MRDetailProps) {
     { month: 'April', sales: 138000, target: 150000, achievement: 92.0 },
   ]
 
-  const visitData = [
-    { date: '2024-01-15', doctor: 'Dr. Anil Doshi', type: 'Doctor', status: 'Completed' },
-    { date: '2024-01-16', doctor: 'MedPlus Pharmacy', type: 'Pharmacy', status: 'Completed' },
-    { date: '2024-01-17', doctor: 'Dr. Navin Chaddha', type: 'Doctor', status: 'Completed' },
-    { date: '2024-01-18', doctor: 'Apollo Pharmacy', type: 'Pharmacy', status: 'Pending' },
-  ]
+  // Visits + DCR tabs derive from the MR's actual DCR feed.
+  const visitData = dcrs.map(d => ({
+    date: d.date,
+    doctor: d.name,
+    type: 'Doctor',
+    status: 'Completed',
+  }))
 
-  const dcrData = [
-    { date: '2024-01-15', doctor: 'Dr. Anil Doshi', products: 'Derise 10mg, Rilast Tablet', samples: 'Sample A', status: 'Submitted' },
-    { date: '2024-01-16', doctor: 'MedPlus Pharmacy', products: 'Bevaas 5mg', samples: 'Sample B', status: 'Submitted' },
-    { date: '2024-01-17', doctor: 'Dr. Navin Chaddha', products: 'Derise 20mg', samples: 'Sample C', status: 'Submitted' },
-  ]
+  const dcrData = dcrs.map(d => ({
+    date: d.date,
+    doctor: d.name,
+    products: d.product,
+    samples: '-',
+    status: 'Submitted',
+  }))
 
+  // RCPA tab still placeholder — could derive from /api/rcpa filtered by user_id
+  // in a follow-up; today the endpoint isn't user-scoped at the read layer.
   const rcpaData = [
-    { date: '2024-01-15', doctor: 'Dr. Anil Doshi', product: 'Derise 10mg', quantity: 50, status: 'Approved' },
-    { date: '2024-01-20', doctor: 'Dr. Navin Chaddha', product: 'Rilast Tablet', quantity: 30, status: 'Pending' },
-    { date: '2024-01-25', doctor: 'Dr. Surbhi Rel', product: 'Bevaas 10mg', quantity: 40, status: 'Approved' },
+    { date: new Date().toISOString(), doctor: '-', product: '-', quantity: 0, status: 'Awaiting RCPA endpoint per user' },
   ]
 
   // Commission data by month - previous months of current year only
@@ -436,6 +484,8 @@ function MRDetail({ onLogout, onBack, userName, onNavigate }: MRDetailProps) {
   const totalEarning = commissionData.reduce((sum, item) => sum + item.totalEarning, 0)
   const achievedMonths = commissionData.filter(item => item.status === 'Achieved').length
 
+  if (!isManagerOrAdmin) return null
+
   if (!selectedMR) {
     return (
       <div className="mr-detail-container">
@@ -464,25 +514,28 @@ function MRDetail({ onLogout, onBack, userName, onNavigate }: MRDetailProps) {
           </button>
           <div className="header-info">
             <h1 className="mr-detail-title">{selectedMR.name}</h1>
-            <p className="mr-detail-subtitle">{selectedMR.designation} • {selectedMR.region}</p>
+            <p className="mr-detail-subtitle">{selectedMR.role.toUpperCase()} • {selectedMR.territory || 'No territory'}</p>
           </div>
         </div>
 
         <div className="mr-info-card">
           <div className="info-grid">
             <div className="info-item">
-              <span className="info-label">Employee ID</span>
-              <span className="info-value">{selectedMR.empId}</span>
+              <span className="info-label">User ID</span>
+              <span className="info-value">{selectedMR.user_id}</span>
+            </div>
+            <div className="info-item">
+              <span className="info-label">Username</span>
+              <span className="info-value">{selectedMR.username}</span>
             </div>
             <div className="info-item">
               <span className="info-label">Email</span>
-              <span className="info-value">{selectedMR.email}</span>
+              <span className="info-value">{selectedMR.email || '-'}</span>
             </div>
             <div className="info-item">
-              <span className="info-label">Mobile</span>
-              <span className="info-value">{selectedMR.mobile}</span>
+              <span className="info-label">Joined</span>
+              <span className="info-value">{selectedMR.created_at ? new Date(selectedMR.created_at).toLocaleDateString('en-GB') : '-'}</span>
             </div>
-            {/* Status removed from MR view as requested */}
           </div>
         </div>
 
@@ -690,24 +743,30 @@ function MRDetail({ onLogout, onBack, userName, onNavigate }: MRDetailProps) {
           {activeTab === 'visits' && (
             <div className="report-section">
               <div className="report-table-container">
-                <table className="report-table">
-                  <thead>
-                    <tr>
-                      <th>Date</th>
-                      <th>Customer Name</th>
-                      <th>Type</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {visitData.map((row, index) => (
-                      <tr key={index}>
-                        <td>{new Date(row.date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })}</td>
-                        <td>{row.doctor}</td>
-                        <td>{row.type}</td>
+                {dcrsLoading ? (
+                  <p style={{ padding: 16, color: '#64748b' }}>Loading visits…</p>
+                ) : visitData.length === 0 ? (
+                  <p style={{ padding: 16, color: '#64748b' }}>No customer visits recorded yet.</p>
+                ) : (
+                  <table className="report-table">
+                    <thead>
+                      <tr>
+                        <th>Date</th>
+                        <th>Customer Name</th>
+                        <th>Type</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {visitData.map((row, index) => (
+                        <tr key={index}>
+                          <td>{new Date(row.date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })}</td>
+                          <td>{row.doctor}</td>
+                          <td>{row.type}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
               </div>
             </div>
           )}
@@ -715,26 +774,32 @@ function MRDetail({ onLogout, onBack, userName, onNavigate }: MRDetailProps) {
           {activeTab === 'dcr' && (
             <div className="report-section">
               <div className="report-table-container">
-                <table className="report-table">
-                  <thead>
-                    <tr>
-                      <th>Date</th>
-                      <th>Doctor/Customer</th>
-                      <th>Products Discussed</th>
-                      <th>Samples Given</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {dcrData.map((row, index) => (
-                      <tr key={index}>
-                        <td>{new Date(row.date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })}</td>
-                        <td>{row.doctor}</td>
-                        <td>{row.products}</td>
-                        <td>{row.samples}</td>
+                {dcrsLoading ? (
+                  <p style={{ padding: 16, color: '#64748b' }}>Loading DCRs…</p>
+                ) : dcrData.length === 0 ? (
+                  <p style={{ padding: 16, color: '#64748b' }}>No DCRs submitted by this MR yet.</p>
+                ) : (
+                  <table className="report-table">
+                    <thead>
+                      <tr>
+                        <th>Date</th>
+                        <th>Doctor/Customer</th>
+                        <th>Products Discussed</th>
+                        <th>Samples Given</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {dcrData.map((row, index) => (
+                        <tr key={index}>
+                          <td>{new Date(row.date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })}</td>
+                          <td>{row.doctor}</td>
+                          <td>{row.products}</td>
+                          <td>{row.samples}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
               </div>
             </div>
           )}

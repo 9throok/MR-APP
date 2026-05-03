@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import Header from './Header'
 import Sidebar from './Sidebar'
+import { apiGet, apiPost } from '../services/apiService'
 import './OrderBooking.css'
 
 interface Customer {
@@ -9,22 +10,45 @@ interface Customer {
   type: 'doctor' | 'pharmacy' | 'distributor'
 }
 
+interface Product {
+  id: number
+  name: string  // e.g. "Derise 10mg"
+}
+
 interface OrderRow {
-  id: string
-  brand: string
-  product: string
-  sku: string
+  id: string                // local row key
+  productId: number | null  // -> product_id
+  brand: string             // derived from product name (first word)
+  product: string           // the full product name
+  sku: string               // free-text — server stores this on the line
   price: number
   qty: number
 }
 
-interface OrderHistoryItem {
-  id: string
-  customerType: string
-  customerName: string
-  items: OrderRow[]
-  date: string
-  total: number
+interface BackendOrderLine {
+  id: number
+  product_id: number | null
+  product_name: string
+  sku: string | null
+  quantity: number
+  unit_price: string
+  line_total: string
+}
+
+interface BackendOrder {
+  id: number
+  user_id: string
+  customer_type: 'doctor' | 'pharmacy' | 'distributor'
+  customer_name: string
+  doctor_id: number | null
+  pharmacy_id: number | null
+  distributor_id: number | null
+  order_date: string
+  currency: string
+  status: 'draft' | 'placed' | 'fulfilled' | 'cancelled'
+  total_amount: string
+  notes: string | null
+  line_items?: BackendOrderLine[]
 }
 
 interface OrderBookingProps {
@@ -34,51 +58,10 @@ interface OrderBookingProps {
   onNavigate?: (page: string) => void
 }
 
-// Customer data - same as Clients component
-const customers: Customer[] = [
-  // Doctors
-  { id: 1, name: 'Dr. Anil Doshi', type: 'doctor' },
-  { id: 2, name: 'Dr. Navin Chaddha', type: 'doctor' },
-  { id: 3, name: 'Dr. Surbhi Rel', type: 'doctor' },
-  { id: 4, name: 'Dr. Naresh Patil', type: 'doctor' },
-  { id: 5, name: 'Dr. Surekha Rane', type: 'doctor' },
-  { id: 6, name: 'Dr. Rajesh Kumar', type: 'doctor' },
-  { id: 7, name: 'Dr. Priya Sharma', type: 'doctor' },
-  { id: 8, name: 'Dr. Amit Verma', type: 'doctor' },
-  // Pharmacy
-  { id: 9, name: 'MedPlus Pharmacy', type: 'pharmacy' },
-  { id: 10, name: 'Apollo Pharmacy', type: 'pharmacy' },
-  { id: 11, name: 'Wellness Forever', type: 'pharmacy' },
-  { id: 12, name: 'Guardian Pharmacy', type: 'pharmacy' },
-  { id: 13, name: 'Health Plus Pharmacy', type: 'pharmacy' },
-  { id: 14, name: 'Care Pharmacy', type: 'pharmacy' },
-  // Distributors
-  { id: 15, name: 'MediDistributors Pvt Ltd', type: 'distributor' },
-  { id: 16, name: 'HealthCare Supplies', type: 'distributor' },
-  { id: 17, name: 'Pharma Distributors', type: 'distributor' },
-  { id: 18, name: 'MedEquip Distributors', type: 'distributor' },
-  { id: 19, name: 'Global Medical Supplies', type: 'distributor' },
-]
-
-// Brand, Product, SKU data structure
-const brands = ['Derise', 'Rilast', 'Bevaas']
-
-const productsByBrand: Record<string, string[]> = {
-  'Derise': ['Derise 10mg', 'Derise 20mg', 'Derise 50mg'],
-  'Rilast': ['Rilast Tablet', 'Rilast Capsule', 'Rilast Syrup'],
-  'Bevaas': ['Bevaas 5mg', 'Bevaas 10mg', 'Bevaas 20mg'],
-}
-
-const skusByProduct: Record<string, string[]> = {
-  'Derise 10mg': ['SKU-DER-10-001', 'SKU-DER-10-002', 'SKU-DER-10-003'],
-  'Derise 20mg': ['SKU-DER-20-001', 'SKU-DER-20-002', 'SKU-DER-20-003'],
-  'Derise 50mg': ['SKU-DER-50-001', 'SKU-DER-50-002', 'SKU-DER-50-003'],
-  'Rilast Tablet': ['SKU-RIL-TAB-001', 'SKU-RIL-TAB-002'],
-  'Rilast Capsule': ['SKU-RIL-CAP-001', 'SKU-RIL-CAP-002'],
-  'Rilast Syrup': ['SKU-RIL-SYR-001', 'SKU-RIL-SYR-002'],
-  'Bevaas 5mg': ['SKU-BEV-5-001', 'SKU-BEV-5-002'],
-  'Bevaas 10mg': ['SKU-BEV-10-001', 'SKU-BEV-10-002'],
-  'Bevaas 20mg': ['SKU-BEV-20-001', 'SKU-BEV-20-002'],
+// Derive brand from product name's leading token. Works for the seeded
+// products ("Derise 10mg" -> "Derise"). Fallback to the full name.
+function brandOf(productName: string): string {
+  return (productName.split(' ')[0] || productName).trim()
 }
 
 function OrderBooking({ onLogout, onBack, userName, onNavigate }: OrderBookingProps) {
@@ -87,31 +70,61 @@ function OrderBooking({ onLogout, onBack, userName, onNavigate }: OrderBookingPr
   const [selectedCustomer, setSelectedCustomer] = useState<string>('')
   const [orderRows, setOrderRows] = useState<OrderRow[]>([])
   const [showOrderTable, setShowOrderTable] = useState(false)
-  const [orderHistory, setOrderHistory] = useState<OrderHistoryItem[]>([])
 
-  useEffect(() => {
-    // Load order history from localStorage
+  const [doctors, setDoctors] = useState<Customer[]>([])
+  const [pharmacies, setPharmacies] = useState<Customer[]>([])
+  const [distributors, setDistributors] = useState<Customer[]>([])
+  const [products, setProducts] = useState<Product[]>([])
+  const [orderHistory, setOrderHistory] = useState<BackendOrder[]>([])
+  const [loading, setLoading] = useState(true)
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const loadAll = async () => {
+    setLoading(true)
+    setError(null)
     try {
-      const savedHistory = localStorage.getItem('orderHistory')
-      if (savedHistory) {
-        setOrderHistory(JSON.parse(savedHistory))
-      }
-    } catch (error) {
-      console.error('Error loading order history:', error)
+      const [docsRes, pharmRes, distRes, prodRes, ordersRes] = await Promise.all([
+        apiGet('/doctors'),
+        apiGet('/pharmacies').catch(() => ({ data: [] })),
+        apiGet('/distributors').catch(() => ({ data: [] })),
+        apiGet('/products'),
+        apiGet('/orders'),
+      ])
+      setDoctors((docsRes.data || []).map((d: { id: number; name: string }) => ({ id: d.id, name: d.name, type: 'doctor' as const })))
+      setPharmacies((pharmRes.data || []).map((p: { id: number; name: string }) => ({ id: p.id, name: p.name, type: 'pharmacy' as const })))
+      setDistributors((distRes.data || []).map((d: { id: number; name: string }) => ({ id: d.id, name: d.name, type: 'distributor' as const })))
+      setProducts(prodRes.data || [])
+      setOrderHistory(ordersRes.data || [])
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load order data')
+    } finally {
+      setLoading(false)
     }
-  }, [])
-
-  const handleMenuClick = () => {
-    setSidebarOpen(true)
   }
 
-  const handleSidebarClose = () => {
-    setSidebarOpen(false)
-  }
+  useEffect(() => { loadAll() }, [])
 
-  const filteredCustomers = customerType
-    ? customers.filter(c => c.type === customerType)
-    : []
+  const handleMenuClick = () => setSidebarOpen(true)
+  const handleSidebarClose = () => setSidebarOpen(false)
+
+  // Distinct brand list derived from product names.
+  const brands = useMemo(() => {
+    const set = new Set<string>()
+    for (const p of products) set.add(brandOf(p.name))
+    return Array.from(set).sort()
+  }, [products])
+
+  const productsForBrand = (brand: string): Product[] =>
+    products.filter(p => brandOf(p.name) === brand)
+
+  const filteredCustomers: Customer[] = customerType === 'doctor'
+    ? doctors
+    : customerType === 'pharmacy'
+      ? pharmacies
+      : customerType === 'distributor'
+        ? distributors
+        : []
 
   const handleCustomerTypeChange = (type: 'doctor' | 'pharmacy' | 'distributor' | '') => {
     setCustomerType(type)
@@ -127,9 +140,7 @@ function OrderBooking({ onLogout, onBack, userName, onNavigate }: OrderBookingPr
   }
 
   const handleTakeOrder = () => {
-    if (!selectedCustomer) {
-      return
-    }
+    if (!selectedCustomer) return
     setShowOrderTable(true)
     if (orderRows.length === 0) {
       addOrderRow()
@@ -139,30 +150,33 @@ function OrderBooking({ onLogout, onBack, userName, onNavigate }: OrderBookingPr
   const addOrderRow = () => {
     const newRow: OrderRow = {
       id: `row-${Date.now()}-${Math.random()}`,
+      productId: null,
       brand: '',
       product: '',
       sku: '',
       price: 0,
       qty: 0,
     }
-    setOrderRows([...orderRows, newRow])
+    setOrderRows(prev => [...prev, newRow])
   }
 
-  const handleRowChange = (id: string, field: keyof OrderRow, value: string | number) => {
+  const handleRowChange = (id: string, field: keyof OrderRow, value: string | number | null) => {
     setOrderRows(prev =>
       prev.map(row => {
-        if (row.id === id) {
-          const updated = { ...row, [field]: value }
-          // Reset dependent fields when parent changes
-          if (field === 'brand') {
-            updated.product = ''
-            updated.sku = ''
-          } else if (field === 'product') {
-            updated.sku = ''
-          }
-          return updated
+        if (row.id !== id) return row
+        const updated = { ...row, [field]: value } as OrderRow
+        if (field === 'brand') {
+          updated.product = ''
+          updated.productId = null
+          updated.sku = ''
+        } else if (field === 'product') {
+          // Resolve productId by name within this brand.
+          const found = products.find(p => p.name === value)
+          updated.productId = found?.id ?? null
+          // Default the SKU to the product name unless user has typed one.
+          if (!updated.sku) updated.sku = String(value)
         }
-        return row
+        return updated
       })
     )
   }
@@ -171,61 +185,80 @@ function OrderBooking({ onLogout, onBack, userName, onNavigate }: OrderBookingPr
     setOrderRows(prev => prev.filter(row => row.id !== id))
   }
 
-  const getProductsForBrand = (brand: string): string[] => {
-    return productsByBrand[brand] || []
-  }
+  const handleConfirmOrder = async () => {
+    if (!selectedCustomer || orderRows.length === 0) return
 
-  const getSkusForProduct = (product: string): string[] => {
-    return skusByProduct[product] || []
-  }
-
-  const handleConfirmOrder = () => {
-    if (!selectedCustomer) {
-      return
-    }
-    if (orderRows.length === 0) {
-      return
-    }
-    
-    // Validate all rows
-    const invalidRows = orderRows.filter(row => !row.brand || !row.product || !row.sku || row.price <= 0 || row.qty <= 0)
+    const invalidRows = orderRows.filter(row => !row.brand || !row.product || row.price <= 0 || row.qty <= 0)
     if (invalidRows.length > 0) {
+      setError('Each row needs a brand, product, price, and quantity.')
       return
     }
 
-    const customer = customers.find(c => c.id.toString() === selectedCustomer)
-    const total = orderRows.reduce((sum, row) => sum + (row.price * row.qty), 0)
-
-    const orderData: OrderHistoryItem = {
-      id: `order-${Date.now()}`,
-      customerType: customerType,
-      customerName: customer?.name || '',
-      items: [...orderRows],
-      date: new Date().toISOString(),
-      total: total,
-    }
-
-    // Add to history
-    const newHistory = [orderData, ...orderHistory]
-    setOrderHistory(newHistory)
-
-    // Save to localStorage
+    setSubmitting(true)
+    setError(null)
     try {
-      localStorage.setItem('orderHistory', JSON.stringify(newHistory))
-    } catch (error) {
-      console.error('Error saving order history:', error)
+      const customerId = parseInt(selectedCustomer, 10)
+      const body = {
+        customer_type: customerType,
+        customer_id: customerId,
+        order_date: new Date().toISOString().slice(0, 10),
+        currency: 'INR',
+        notes: 'Created via mobile order booking',
+        line_items: orderRows.map(row => ({
+          product_id: row.productId ?? undefined,
+          product_name: row.product,
+          sku: row.sku || undefined,
+          quantity: row.qty,
+          unit_price: row.price,
+        })),
+      }
+      const res = await apiPost('/orders', body)
+      if ('queued' in res) {
+        // Optimistic: prepend a synthetic queued row so the user sees it.
+        const customer = filteredCustomers.find(c => c.id === customerId)
+        const total = orderRows.reduce((sum, r) => sum + r.price * r.qty, 0)
+        setOrderHistory(prev => [
+          {
+            id: -Date.now(),
+            user_id: '',
+            customer_type: customerType as 'doctor' | 'pharmacy' | 'distributor',
+            customer_name: customer?.name || '',
+            doctor_id: null, pharmacy_id: null, distributor_id: null,
+            order_date: new Date().toISOString().slice(0, 10),
+            currency: 'INR',
+            status: 'placed',
+            total_amount: String(total),
+            notes: 'queued offline',
+            line_items: orderRows.map((r, i) => ({
+              id: -i,
+              product_id: r.productId,
+              product_name: r.product,
+              sku: r.sku,
+              quantity: r.qty,
+              unit_price: String(r.price),
+              line_total: String(r.price * r.qty),
+            })),
+          },
+          ...prev,
+        ])
+      } else {
+        await loadAll()
+      }
+      // Clear form
+      setOrderRows([])
+      setShowOrderTable(false)
+      setSelectedCustomer('')
+      setCustomerType('')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to place order')
+    } finally {
+      setSubmitting(false)
     }
-
-    // Clear form
-    setOrderRows([])
-    setShowOrderTable(false)
-    setSelectedCustomer('')
-    setCustomerType('')
   }
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
-    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
   }
 
   return (
@@ -241,6 +274,9 @@ function OrderBooking({ onLogout, onBack, userName, onNavigate }: OrderBookingPr
           </button>
           <h1 className="order-booking-title">Order Booking</h1>
         </div>
+
+        {error && <div style={{ background: '#fef2f2', color: '#b91c1c', padding: 10, borderRadius: 6, margin: '8px 0' }}>{error}</div>}
+        {loading && <div style={{ color: '#64748b', padding: 8 }}>Loading…</div>}
 
         <div className="order-booking-form">
           {/* Customer Type Selection */}
@@ -274,6 +310,9 @@ function OrderBooking({ onLogout, onBack, userName, onNavigate }: OrderBookingPr
                   </option>
                 ))}
               </select>
+              {filteredCustomers.length === 0 && (
+                <p style={{ marginTop: 6, color: '#64748b', fontSize: 13 }}>No {customerType}s found in your territory.</p>
+              )}
             </div>
           )}
 
@@ -331,23 +370,20 @@ function OrderBooking({ onLogout, onBack, userName, onNavigate }: OrderBookingPr
                             disabled={!row.brand}
                           >
                             <option value="">Select Product</option>
-                            {row.brand && getProductsForBrand(row.brand).map((product) => (
-                              <option key={product} value={product}>{product}</option>
+                            {row.brand && productsForBrand(row.brand).map((product) => (
+                              <option key={product.id} value={product.name}>{product.name}</option>
                             ))}
                           </select>
                         </td>
                         <td>
-                          <select
-                            className="order-select"
+                          <input
+                            type="text"
+                            className="order-input"
                             value={row.sku}
                             onChange={(e) => handleRowChange(row.id, 'sku', e.target.value)}
+                            placeholder="SKU"
                             disabled={!row.product}
-                          >
-                            <option value="">Select SKU</option>
-                            {row.product && getSkusForProduct(row.product).map((sku) => (
-                              <option key={sku} value={sku}>{sku}</option>
-                            ))}
-                          </select>
+                          />
                         </td>
                         <td>
                           <input
@@ -414,11 +450,12 @@ function OrderBooking({ onLogout, onBack, userName, onNavigate }: OrderBookingPr
                 type="button"
                 className="confirm-order-btn"
                 onClick={handleConfirmOrder}
+                disabled={submitting}
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M20 6L9 17L4 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
-                <span>Confirm Order</span>
+                <span>{submitting ? 'Placing…' : 'Confirm Order'}</span>
               </button>
             </div>
           )}
@@ -429,47 +466,53 @@ function OrderBooking({ onLogout, onBack, userName, onNavigate }: OrderBookingPr
           <div className="order-history-section">
             <h2 className="section-title">Order History</h2>
             <div className="order-history-list">
-              {orderHistory.map((order) => (
-                <div key={order.id} className="order-history-item">
-                  <div className="order-history-header">
-                    <div>
-                      <h3 className="order-history-customer">{order.customerName}</h3>
-                      <p className="order-history-type">{order.customerType.charAt(0).toUpperCase() + order.customerType.slice(1)}</p>
-                      <p className="order-history-date">{formatDate(order.date)}</p>
+              {orderHistory.map((order) => {
+                const items = order.line_items || []
+                const total = parseFloat(order.total_amount) || 0
+                return (
+                  <div key={order.id} className="order-history-item">
+                    <div className="order-history-header">
+                      <div>
+                        <h3 className="order-history-customer">{order.customer_name}</h3>
+                        <p className="order-history-type">
+                          {order.customer_type.charAt(0).toUpperCase() + order.customer_type.slice(1)} · {order.status}
+                        </p>
+                        <p className="order-history-date">{formatDate(order.order_date)}</p>
+                      </div>
+                      <div className="order-total">
+                        <span className="total-label">Total:</span>
+                        <span className="total-value">₹{total.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                      </div>
                     </div>
-                    <div className="order-total">
-                      <span className="total-label">Total:</span>
-                      <span className="total-value">₹{order.total.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
-                    </div>
+                    {items.length > 0 && (
+                      <div className="order-history-table-wrapper">
+                        <table className="order-history-table">
+                          <thead>
+                            <tr>
+                              <th>Product</th>
+                              <th>SKU</th>
+                              <th>Price</th>
+                              <th>Qty</th>
+                              <th>Subtotal</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {items.map((item) => (
+                              <tr key={item.id}>
+                                <td>{item.product_name}</td>
+                                <td>{item.sku || '-'}</td>
+                                <td>₹{parseFloat(item.unit_price).toFixed(2)}</td>
+                                <td>{item.quantity}</td>
+                                <td>₹{parseFloat(item.line_total).toFixed(2)}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
                   </div>
-                  <div className="order-history-table-wrapper">
-                    <table className="order-history-table">
-                      <thead>
-                        <tr>
-                          <th>Brand</th>
-                          <th>Product</th>
-                          <th>SKU</th>
-                          <th>Price</th>
-                          <th>Qty</th>
-                          <th>Subtotal</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {order.items.map((item, index) => (
-                          <tr key={index}>
-                            <td>{item.brand}</td>
-                            <td>{item.product}</td>
-                            <td>{item.sku}</td>
-                            <td>₹{item.price.toFixed(2)}</td>
-                            <td>{item.qty}</td>
-                            <td>₹{(item.price * item.qty).toFixed(2)}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           </div>
         )}

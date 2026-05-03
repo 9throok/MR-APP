@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Header from './Header'
 import Sidebar from './Sidebar'
 import TourPlanModal from './TourPlanModal'
 import type { TourPlanFormData } from './TourPlanModal'
 import { useLanguage } from '../contexts/LanguageContext'
+import { apiGet, apiPost, apiPatch } from '../services/apiService'
 import './TourPlans.css'
 
 interface TourPlansProps {
@@ -13,9 +14,61 @@ interface TourPlansProps {
   onNavigate?: (page: string) => void
 }
 
-interface SavedTourPlan {
-  date: string
-  data: TourPlanFormData
+interface BackendVisit {
+  id: number
+  doctor_id: number | null
+  doctor_name: string | null
+  visit_order: number
+  notes: string | null
+  status?: string
+}
+
+interface BackendPlan {
+  id: number
+  user_id: string
+  plan_date: string  // YYYY-MM-DD
+  type_of_tour: 'field_work' | 'meeting' | 'training' | 'conference' | 'other' | null
+  station: string | null
+  start_time: string | null  // HH:MM:SS
+  end_time: string | null
+  notes: string | null
+  status: 'draft' | 'submitted' | 'approved' | 'rejected'
+  visits?: BackendVisit[]
+}
+
+const TYPE_TO_BACKEND: Record<string, BackendPlan['type_of_tour']> = {
+  'Field Work': 'field_work',
+  Meeting: 'meeting',
+  Training: 'training',
+  Conference: 'conference',
+  Other: 'other',
+}
+
+const TYPE_TO_UI: Record<string, string> = {
+  field_work: 'Field Work',
+  meeting: 'Meeting',
+  training: 'Training',
+  conference: 'Conference',
+  other: 'Other',
+}
+
+function pad(n: number) { return String(n).padStart(2, '0') }
+function dateKey(d: Date): string { return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}` }
+
+// Pull HH:MM out of a backend time string like "09:00:00".
+function timeToHHMM(t: string | null, fallback: string): string {
+  if (!t) return fallback
+  return t.slice(0, 5)
+}
+
+function planToFormData(plan: BackendPlan): TourPlanFormData {
+  return {
+    typeOfTour: plan.type_of_tour ? TYPE_TO_UI[plan.type_of_tour] : 'Field Work',
+    station: plan.station || '',
+    startTime: timeToHHMM(plan.start_time, '09:00'),
+    endTime: timeToHHMM(plan.end_time, '18:00'),
+    doctors: (plan.visits || []).map(v => v.doctor_name || '').filter(Boolean),
+  }
 }
 
 function TourPlans({ onLogout, onBack, userName, onNavigate }: TourPlansProps) {
@@ -24,112 +77,157 @@ function TourPlans({ onLogout, onBack, userName, onNavigate }: TourPlansProps) {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [currentMonth, setCurrentMonth] = useState(new Date())
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [savedTourPlans, setSavedTourPlans] = useState<SavedTourPlan[]>([])
+  const [plans, setPlans] = useState<BackendPlan[]>([])
   const [viewMode, setViewMode] = useState<'calendar' | 'weekly'>('weekly')
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [submitting, setSubmitting] = useState(false)
+  const [selectedPlanDetail, setSelectedPlanDetail] = useState<BackendPlan | null>(null)
 
-  const handleMenuClick = () => {
-    setSidebarOpen(true)
+  // Range covers the visible month/week with a small buffer for the weekly view.
+  const loadPlans = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      // Pull a generous window — the visible month plus +/- 7 days for week view.
+      const first = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1)
+      first.setDate(first.getDate() - 7)
+      const last = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0)
+      last.setDate(last.getDate() + 7)
+      const fromDate = dateKey(first)
+      const toDate = dateKey(last)
+      const res = await apiGet(`/tour-plans?from_date=${fromDate}&to_date=${toDate}`)
+      setPlans(res.data || [])
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load tour plans')
+    } finally {
+      setLoading(false)
+    }
+  }, [currentMonth])
+
+  useEffect(() => { loadPlans() }, [loadPlans])
+
+  const handleMenuClick = () => setSidebarOpen(true)
+  const handleSidebarClose = () => setSidebarOpen(false)
+
+  const findPlan = (date: Date): BackendPlan | undefined => {
+    const key = dateKey(date)
+    return plans.find(p => p.plan_date.slice(0, 10) === key)
   }
 
-  const handleSidebarClose = () => {
-    setSidebarOpen(false)
-  }
-
-  const handleDateClick = (date: Date) => {
+  // Visits aren't loaded by the list endpoint — fetch detail on demand for the modal.
+  const handleDateClick = async (date: Date) => {
     setSelectedDate(date)
+    const existing = findPlan(date)
+    if (existing) {
+      try {
+        const res = await apiGet(`/tour-plans/${existing.id}`)
+        setSelectedPlanDetail(res.data || existing)
+      } catch (err) {
+        // Fallback: open with whatever we have.
+        setSelectedPlanDetail(existing)
+      }
+    } else {
+      setSelectedPlanDetail(null)
+    }
     setIsModalOpen(true)
-  }
-
-  const getExistingTourPlan = (date: Date) => {
-    const dateString = formatDate(date)
-    return savedTourPlans.find(plan => plan.date === dateString)
   }
 
   const handleModalClose = () => {
     setIsModalOpen(false)
     setSelectedDate(null)
+    setSelectedPlanDetail(null)
   }
 
-  const handleModalSave = (formData: TourPlanFormData) => {
-    if (selectedDate) {
-      const dateString = formatDate(selectedDate)
-      const existingIndex = savedTourPlans.findIndex(plan => plan.date === dateString)
-      
-      // Create a deep copy of formData to ensure doctors array is properly saved
-      const formDataCopy: TourPlanFormData = {
-        ...formData,
-        doctors: [...formData.doctors]
+  const handleModalSave = async (formData: TourPlanFormData) => {
+    if (!selectedDate) return handleModalClose()
+    setError(null)
+    try {
+      const planDate = dateKey(selectedDate)
+      const visits = (formData.doctors || []).map((doctor_name, i) => ({
+        doctor_name,
+        visit_order: i + 1,
+      }))
+      const body: Record<string, unknown> = {
+        plan_date: planDate,
+        type_of_tour: TYPE_TO_BACKEND[formData.typeOfTour] || 'field_work',
+        station: formData.station || undefined,
+        start_time: formData.startTime ? `${formData.startTime}:00` : undefined,
+        end_time: formData.endTime ? `${formData.endTime}:00` : undefined,
+        visits,
       }
-      
-      if (existingIndex >= 0) {
-        // Update existing tour plan
-        const updated = [...savedTourPlans]
-        updated[existingIndex] = { date: dateString, data: formDataCopy }
-        setSavedTourPlans(updated)
-      } else {
-        // Add new tour plan
-        setSavedTourPlans([...savedTourPlans, { date: dateString, data: formDataCopy }])
-      }
-      
-      console.log('Saved tour plan:', { date: dateString, data: formDataCopy })
-    }
-    handleModalClose()
-  }
+      const existing = selectedPlanDetail
+      const res = existing
+        ? await apiPatch(`/tour-plans/${existing.id}`, body)
+        : await apiPost('/tour-plans', body)
 
-  const handleRemoveDoctor = (date: Date, doctorName: string) => {
-    const dateString = formatDate(date)
-    const existingIndex = savedTourPlans.findIndex(plan => plan.date === dateString)
-    
-    if (existingIndex >= 0) {
-      const updated = [...savedTourPlans]
-      const updatedData = {
-        ...updated[existingIndex].data,
-        doctors: updated[existingIndex].data.doctors.filter(d => d !== doctorName)
+      if ('queued' in res) {
+        // Optimistic refresh — re-fetch when back online.
       }
-      updated[existingIndex] = { date: dateString, data: updatedData }
-      setSavedTourPlans(updated)
+      await loadPlans()
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed to save'
+      // Surface 409 (UNIQUE conflict) helpfully.
+      setError(msg.includes('already') ? 'A tour plan already exists for this date.' : msg)
+    } finally {
+      handleModalClose()
     }
   }
 
-  const handleSubmitTourPlans = () => {
-    // if (savedTourPlans.length === 0) {
-    //   alert('No tour plans to submit. Please create at least one tour plan.')
-    //   return
-    // }
-
-    // Get current month's tour plans
-    const currentYear = currentMonth.getFullYear()
-    const currentMonthIndex = currentMonth.getMonth()
-    const monthTourPlans = savedTourPlans.filter(plan => {
-      const planDate = new Date(plan.date)
-      return planDate.getFullYear() === currentYear && planDate.getMonth() === currentMonthIndex
-    })
-
-    if (monthTourPlans.length === 0) {
-      return
+  const handleRemoveDoctor = async (date: Date, doctorName: string) => {
+    const existing = findPlan(date)
+    if (!existing) return
+    try {
+      const res = await apiGet(`/tour-plans/${existing.id}`)
+      const detail = res.data as BackendPlan
+      const visits = (detail.visits || [])
+        .filter(v => (v.doctor_name || '') !== doctorName)
+        .map((v, i) => ({ doctor_name: v.doctor_name || '', visit_order: i + 1, notes: v.notes || undefined }))
+      await apiPatch(`/tour-plans/${existing.id}`, { visits })
+      await loadPlans()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update plan')
     }
+  }
 
-    // Here you can add API call to submit tour plans
-    console.log('Submitting tour plans:', monthTourPlans)
-    
-    // Show confirmation
-    // if (window.confirm(`Are you sure you want to submit ${monthTourPlans.length} tour plan(s) for ${currentMonthName} ${currentYear}?`)) {
-      // TODO: Replace with actual API call
-      // await submitTourPlansAPI(monthTourPlans)
-      
-      // alert(`Successfully submitted ${monthTourPlans.length} tour plan(s)!`)
-      // Optionally clear submitted plans or mark them as submitted
-    // }
+  const handleSubmitTourPlans = async () => {
+    setSubmitting(true)
+    setError(null)
+    try {
+      const currentYear = currentMonth.getFullYear()
+      const currentMonthIndex = currentMonth.getMonth()
+      const monthDrafts = plans.filter(p => {
+        const d = new Date(p.plan_date)
+        return p.status === 'draft' && d.getFullYear() === currentYear && d.getMonth() === currentMonthIndex
+      })
+
+      if (monthDrafts.length === 0) {
+        setError('No draft tour plans to submit for this month.')
+        return
+      }
+
+      // Submit each draft sequentially. Server transitions draft → submitted.
+      for (const plan of monthDrafts) {
+        try {
+          await apiPost(`/tour-plans/${plan.id}/submit`, {})
+        } catch (innerErr) {
+          console.warn(`Failed to submit plan ${plan.id}:`, innerErr)
+        }
+      }
+      await loadPlans()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to submit plans')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   const getWeekDates = (date: Date) => {
-    const week = []
+    const week: Date[] = []
     const startOfWeek = new Date(date)
     const day = startOfWeek.getDay()
-    // Calculate Monday (day 1) of the week
-    const diff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1)
+    const diff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1) // Monday-start
     startOfWeek.setDate(diff)
-    
     for (let i = 0; i < 7; i++) {
       const currentDate = new Date(startOfWeek)
       currentDate.setDate(startOfWeek.getDate() + i)
@@ -138,27 +236,18 @@ function TourPlans({ onLogout, onBack, userName, onNavigate }: TourPlansProps) {
     return week
   }
 
-  const goToPreviousWeek = () => {
-    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth(), currentMonth.getDate() - 7))
+  const goToPreviousWeek = () => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth(), currentMonth.getDate() - 7))
+  const goToNextWeek = () => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth(), currentMonth.getDate() + 7))
+
+  // Doctor names for a given date — comes from the in-memory list; if we need
+  // visit detail (e.g. during modal open) we fetch detail at click-time.
+  const getDoctorsForDate = (date: Date): string[] => {
+    const plan = findPlan(date)
+    if (!plan || plan.type_of_tour !== 'field_work') return []
+    if (plan.visits) return plan.visits.map(v => v.doctor_name || '').filter(Boolean)
+    return []
   }
 
-  const goToNextWeek = () => {
-    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth(), currentMonth.getDate() + 7))
-  }
-
-  const formatDate = (date: Date) => {
-    const year = date.getFullYear()
-    const month = String(date.getMonth() + 1).padStart(2, '0')
-    const day = String(date.getDate()).padStart(2, '0')
-    return `${year}-${month}-${day}`
-  }
-
-  const getTourPlanForDate = (date: Date) => {
-    const dateString = formatDate(date)
-    return savedTourPlans.find(plan => plan.date === dateString)
-  }
-
-  // Get days in month
   const getDaysInMonth = (date: Date) => {
     const year = date.getFullYear()
     const month = date.getMonth()
@@ -166,35 +255,16 @@ function TourPlans({ onLogout, onBack, userName, onNavigate }: TourPlansProps) {
     const lastDay = new Date(year, month + 1, 0)
     const daysInMonth = lastDay.getDate()
     const startingDayOfWeek = firstDay.getDay()
-
-    const days = []
-    
-    // Add empty cells for days before the first day of the month
-    for (let i = 0; i < startingDayOfWeek; i++) {
-      days.push(null)
-    }
-    
-    // Add all days of the month
-    for (let day = 1; day <= daysInMonth; day++) {
-      days.push(new Date(year, month, day))
-    }
-    
+    const days: (Date | null)[] = []
+    for (let i = 0; i < startingDayOfWeek; i++) days.push(null)
+    for (let day = 1; day <= daysInMonth; day++) days.push(new Date(year, month, day))
     return days
   }
 
-  const goToPreviousMonth = () => {
-    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1))
-  }
+  const goToPreviousMonth = () => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1))
+  const goToNextMonth = () => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1))
 
-  const goToNextMonth = () => {
-    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1))
-  }
-
-  const monthNames = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'
-  ]
-
+  const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
   const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
   const dayNamesShort = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su']
 
@@ -231,6 +301,9 @@ function TourPlans({ onLogout, onBack, userName, onNavigate }: TourPlansProps) {
           </div>
         </div>
 
+        {error && <div style={{ background: '#fef2f2', color: '#b91c1c', padding: 10, borderRadius: 6, margin: '8px 0' }}>{error}</div>}
+        {loading && <div style={{ color: '#64748b', padding: 8 }}>Loading…</div>}
+
         {viewMode === 'weekly' ? (
           <div className="weekly-view-container">
             <div className="weekly-header">
@@ -251,14 +324,13 @@ function TourPlans({ onLogout, onBack, userName, onNavigate }: TourPlansProps) {
 
             <div className="weekly-grid">
               {weekDates.map((date, dayIndex) => {
-                const dateString = formatDate(date)
-                const tourPlan = getTourPlanForDate(date)
-                const doctors = tourPlan && tourPlan.data.typeOfTour === 'Field Work' ? tourPlan.data.doctors : []
-                // Map day index to day name (0=Monday, 6=Sunday)
+                const dKey = dateKey(date)
+                const doctors = getDoctorsForDate(date)
+                const plan = findPlan(date)
                 const dayName = dayNamesShort[dayIndex]
-                
+
                 return (
-                  <div key={dateString} className="weekly-day-column">
+                  <div key={dKey} className="weekly-day-column">
                     <div className="weekly-day-header">
                       <div className="day-name">{dayName}</div>
                       <div className="day-date">{String(date.getDate()).padStart(2, '0')}</div>
@@ -271,22 +343,29 @@ function TourPlans({ onLogout, onBack, userName, onNavigate }: TourPlansProps) {
                           <span>{doctors.length}</span>
                         </div>
                       )}
+                      {plan && (
+                        <div style={{ fontSize: 10, color: '#64748b', marginTop: 4 }}>
+                          {plan.status}
+                        </div>
+                      )}
                     </div>
                     <div className="weekly-day-content">
                       {doctors.length > 0 ? (
                         <div className="doctors-list-full">
                           {doctors.map((doctor, idx) => (
-                            <div key={`${dateString}-${idx}-${doctor}`} className="doctor-entry-full">
+                            <div key={`${dKey}-${idx}-${doctor}`} className="doctor-entry-full">
                               <span className="doctor-name-full">{doctor}</span>
-                              <button
-                                className="remove-doctor-btn-full"
-                                onClick={() => handleRemoveDoctor(date, doctor)}
-                                aria-label={`Remove ${doctor}`}
-                              >
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                  <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                                </svg>
-                              </button>
+                              {plan?.status === 'draft' && (
+                                <button
+                                  className="remove-doctor-btn-full"
+                                  onClick={() => handleRemoveDoctor(date, doctor)}
+                                  aria-label={`Remove ${doctor}`}
+                                >
+                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                  </svg>
+                                </button>
+                              )}
                             </div>
                           ))}
                         </div>
@@ -296,9 +375,9 @@ function TourPlans({ onLogout, onBack, userName, onNavigate }: TourPlansProps) {
                       <button
                         className="add-tour-plan-btn"
                         onClick={() => handleDateClick(date)}
-                        aria-label={`Add tour plan for ${dateString}`}
+                        aria-label={`Add tour plan for ${dKey}`}
                       >
-                        + Add Plan
+                        {plan ? 'Edit Plan' : '+ Add Plan'}
                       </button>
                     </div>
                   </div>
@@ -334,35 +413,39 @@ function TourPlans({ onLogout, onBack, userName, onNavigate }: TourPlansProps) {
               if (date === null) {
                 return <div key={`empty-${index}`} className="calendar-day empty"></div>
               }
-              
+
               const isToday = date.toDateString() === new Date().toDateString()
-              const dateString = formatDate(date)
-              const tourPlan = getTourPlanForDate(date)
-              const hasTourPlan = !!tourPlan
-              
+              const dKey = dateKey(date)
+              const plan = findPlan(date)
+              const doctors = getDoctorsForDate(date)
+              const hasTourPlan = !!plan
+
               return (
                 <button
-                  key={dateString}
+                  key={dKey}
                   className={`calendar-day ${isToday ? 'today' : ''} ${hasTourPlan ? 'has-tour-plan' : ''}`}
                   onClick={() => handleDateClick(date)}
                 >
                   <span className="day-number">{date.getDate()}</span>
-                  {hasTourPlan && tourPlan && tourPlan.data && tourPlan.data.typeOfTour === 'Field Work' && tourPlan.data.doctors && tourPlan.data.doctors.length > 0 && (
+                  {hasTourPlan && doctors.length > 0 && (
                     <div className="tour-plan-doctors">
-                      {tourPlan.data.doctors.slice(0, 2).map((doctor, idx) => {
+                      {doctors.slice(0, 2).map((doctor, idx) => {
                         const lastName = doctor.split(' ').slice(-1)[0] || doctor
                         return (
-                          <span key={`${dateString}-${idx}-${doctor}`} className="doctor-badge" title={doctor}>
+                          <span key={`${dKey}-${idx}-${doctor}`} className="doctor-badge" title={doctor}>
                             {lastName}
                           </span>
                         )
                       })}
-                      {tourPlan.data.doctors.length > 2 && (
-                        <span className="doctor-badge more" title={tourPlan.data.doctors.slice(2).join(', ')}>
-                          +{tourPlan.data.doctors.length - 2}
+                      {doctors.length > 2 && (
+                        <span className="doctor-badge more" title={doctors.slice(2).join(', ')}>
+                          +{doctors.length - 2}
                         </span>
                       )}
                     </div>
+                  )}
+                  {hasTourPlan && doctors.length === 0 && plan && (
+                    <span className="doctor-badge" style={{ fontSize: 10 }}>{plan.type_of_tour}</span>
                   )}
                 </button>
               )
@@ -372,18 +455,18 @@ function TourPlans({ onLogout, onBack, userName, onNavigate }: TourPlansProps) {
         )}
 
         <div className="tour-plans-footer">
-          <button className="submit-tour-plans-btn" onClick={handleSubmitTourPlans}>
+          <button className="submit-tour-plans-btn" onClick={handleSubmitTourPlans} disabled={submitting}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M22 2L11 13M22 2L15 22L11 13M22 2L2 9L11 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
-            <span>Submit Plan</span>
+            <span>{submitting ? 'Submitting…' : 'Submit Plan'}</span>
           </button>
         </div>
 
         {isModalOpen && selectedDate && (
           <TourPlanModal
             date={selectedDate}
-            existingData={getExistingTourPlan(selectedDate)?.data}
+            existingData={selectedPlanDetail ? planToFormData(selectedPlanDetail) : undefined}
             onClose={handleModalClose}
             onSave={handleModalSave}
           />
@@ -394,4 +477,3 @@ function TourPlans({ onLogout, onBack, userName, onNavigate }: TourPlansProps) {
 }
 
 export default TourPlans
-

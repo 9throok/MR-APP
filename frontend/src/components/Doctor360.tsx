@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import Header from './Header'
 import Sidebar from './Sidebar'
+import { apiGet } from '../services/apiService'
 import './Doctor360.css'
 
 interface Doctor360Props {
@@ -21,14 +22,73 @@ interface HistoryItem {
   amount?: number
 }
 
+interface DcrRow {
+  id: number
+  name: string  // doctor name on the DCR
+  date: string
+  product: string
+  call_summary: string | null
+  doctor_feedback: string | null
+  samples: unknown
+}
+
+interface OrderRow {
+  id: number
+  customer_type: string
+  customer_name: string
+  doctor_id: number | null
+  order_date: string
+  total_amount: string
+  status: string
+}
+
 function Doctor360({ onLogout, onBack, userName, onNavigate }: Doctor360Props) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [client] = useState<any>(() => {
     try {
       const stored = sessionStorage.getItem('doctor360Client')
       return stored ? JSON.parse(stored) : null
     } catch { return null }
   })
+  const [dcrs, setDcrs] = useState<DcrRow[]>([])
+  const [orders, setOrders] = useState<OrderRow[]>([])
+  const [activityLoading, setActivityLoading] = useState(false)
+
+  // Load this doctor's activity from the API. DCRs are filtered client-side
+  // by name (the DCR endpoint doesn't accept a doctor filter); orders are
+  // filtered by doctor_id when the client carries one.
+  useEffect(() => {
+    if (!client) return
+    let cancelled = false
+    const load = async () => {
+      setActivityLoading(true)
+      try {
+        const [dcrRes, orderRes] = await Promise.all([
+          apiGet('/dcr').catch(() => ({ data: [] })),
+          apiGet('/orders?customer_type=doctor').catch(() => ({ data: [] })),
+        ])
+        if (cancelled) return
+        const allDcrs: DcrRow[] = dcrRes.data || []
+        const filteredDcrs = allDcrs.filter(d =>
+          (d.name || '').toLowerCase() === (client.name || '').toLowerCase()
+        )
+        const allOrders: OrderRow[] = orderRes.data || []
+        const filteredOrders = allOrders.filter(o => {
+          if (client.id && typeof client.id === 'number') return o.doctor_id === client.id
+          return (o.customer_name || '').toLowerCase() === (client.name || '').toLowerCase()
+        })
+        setDcrs(filteredDcrs)
+        setOrders(filteredOrders)
+      } catch (err) {
+        console.warn('[Doctor360] Activity load error:', err)
+      } finally {
+        if (!cancelled) setActivityLoading(false)
+      }
+    }
+    load()
+    return () => { cancelled = true }
+  }, [client])
 
   const handleMenuClick = () => {
     setSidebarOpen(true)
@@ -87,75 +147,79 @@ function Doctor360({ onLogout, onBack, userName, onNavigate }: Doctor360Props) {
     }
   }
 
-  const historyData: HistoryItem[] = [
-    {
-      id: 1,
-      date: '2024-01-15',
-      type: 'visit',
-      title: 'Product Discussion',
-      description: 'Discussed new cardiovascular medication benefits and protocols',
-      brand: 'Cardiovascular Health',
-      samples: ['Sample A - Cardiovascular (Qty: 5)'],
-    },
-    {
-      id: 2,
-      date: '2024-01-10',
-      type: 'call',
-      title: 'Follow-up Call',
-      description: 'Followed up on previous visit and answered queries',
-      brand: 'Diabetes Care',
-    },
-    {
-      id: 3,
-      date: '2024-01-05',
-      type: 'sample',
-      title: 'Samples Provided',
-      description: 'Provided samples for patient trial',
-      samples: ['Sample A - Cardiovascular (Qty: 10)', 'Sample B - Diabetes (Qty: 8)'],
-    },
-    {
-      id: 4,
-      date: '2023-12-28',
-      type: 'order',
+  // Derive a unified activity feed from real DCRs and orders.
+  const historyData: HistoryItem[] = useMemo(() => {
+    const dcrEntries: HistoryItem[] = dcrs.map(d => {
+      const sampleArr = Array.isArray(d.samples)
+        ? (d.samples as Array<{ name?: string; product?: string; quantity?: number; qty?: number }>)
+            .map(s => `${s.name || s.product || 'Sample'}${s.quantity ?? s.qty ? ` (Qty: ${s.quantity ?? s.qty})` : ''}`)
+        : []
+      return {
+        id: d.id,
+        date: d.date,
+        type: 'visit' as const,
+        title: 'Product Discussion',
+        description: d.call_summary || d.doctor_feedback || `Discussed ${d.product}`,
+        brand: d.product,
+        samples: sampleArr.length > 0 ? sampleArr : undefined,
+      }
+    })
+    const orderEntries: HistoryItem[] = orders.map(o => ({
+      id: 1_000_000 + o.id,
+      date: o.order_date,
+      type: 'order' as const,
       title: 'Order Placed',
-      description: 'Placed order for cardiovascular medications',
-      brand: 'Cardiovascular Health',
-      amount: 125000,
-    },
-    {
-      id: 5,
-      date: '2023-12-20',
-      type: 'meeting',
-      title: 'Joint Working',
-      description: 'Joint working session with manager Sarah Williams',
-      brand: 'Neurological Disorders',
-    },
-    {
-      id: 6,
-      date: '2023-12-15',
-      type: 'visit',
-      title: 'Product Presentation',
-      description: 'Presented new product line and clinical data',
-      brand: 'Respiratory Care',
-      samples: ['Sample F - Respiratory (Qty: 3)'],
-    },
-  ]
+      description: `Order ${o.status} · ₹${parseFloat(o.total_amount || '0').toLocaleString('en-IN')}`,
+      amount: parseFloat(o.total_amount || '0'),
+    }))
+    return [...dcrEntries, ...orderEntries].sort((a, b) =>
+      new Date(b.date).getTime() - new Date(a.date).getTime()
+    )
+  }, [dcrs, orders])
 
-  const callFrequencyData = [
-    { month: 'Jan', calls: 8 },
-    { month: 'Feb', calls: 12 },
-    { month: 'Mar', calls: 10 },
-    { month: 'Apr', calls: 9 },
-    { month: 'May', calls: 11 },
-    { month: 'Jun', calls: 10 },
-  ]
+  // Last 6 months of visit counts derived from DCR history. Uses an absolute
+  // YYYY-MM key so months land in the right bucket even across year boundaries.
+  const callFrequencyData = useMemo(() => {
+    const now = new Date()
+    const buckets: { month: string; key: string; calls: number }[] = []
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+      const monthLabel = d.toLocaleString('en-US', { month: 'short' })
+      buckets.push({ month: monthLabel, key, calls: 0 })
+    }
+    for (const d of dcrs) {
+      const dt = new Date(d.date)
+      if (Number.isNaN(dt.getTime())) continue
+      const key = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}`
+      const bucket = buckets.find(b => b.key === key)
+      if (bucket) bucket.calls += 1
+    }
+    return buckets.map(({ month, calls }) => ({ month, calls }))
+  }, [dcrs])
 
-
-  const samplesGivenData = [
-    { sample: 'Sample A - Cardiovascular', quantity: 45 },
-    { sample: 'Sample B - Diabetes', quantity: 32 },
-    { sample: 'Sample F - Respiratory', quantity: 18 },
-  ]
+  // Samples-given chart: aggregate from DCR samples arrays. If samples arrays
+  // are missing or empty across the feed, show a neutral placeholder.
+  const samplesGivenData = useMemo(() => {
+    const tally: Record<string, number> = {}
+    for (const d of dcrs) {
+      if (!Array.isArray(d.samples)) continue
+      for (const s of d.samples as Array<{ name?: string; product?: string; quantity?: number; qty?: number }>) {
+        const name = s.name || s.product
+        const qty = s.quantity ?? s.qty
+        if (!name || !qty) continue
+        tally[name] = (tally[name] || 0) + Number(qty)
+      }
+    }
+    const rows = Object.entries(tally)
+      .map(([sample, quantity]) => ({ sample, quantity }))
+      .sort((a, b) => b.quantity - a.quantity)
+      .slice(0, 5)
+    if (rows.length === 0) {
+      return [{ sample: 'No sample distribution recorded', quantity: 0 }]
+    }
+    return rows
+  }, [dcrs])
 
   const getHistoryIcon = (type: HistoryItem['type']) => {
     switch (type) {
@@ -202,8 +266,8 @@ function Doctor360({ onLogout, onBack, userName, onNavigate }: Doctor360Props) {
     return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
   }
 
-  const maxCalls = Math.max(...callFrequencyData.map(d => d.calls))
-  const maxSamples = Math.max(...samplesGivenData.map(d => d.quantity))
+  const maxCalls = Math.max(...callFrequencyData.map(d => d.calls), 1)
+  const maxSamples = Math.max(...samplesGivenData.map(d => d.quantity), 1)
 
   return (
     <div className="doctor360-container">
@@ -465,6 +529,12 @@ function Doctor360({ onLogout, onBack, userName, onNavigate }: Doctor360Props) {
         {/* History Timeline */}
         <div className="history-section">
           <h2 className="section-title">Interaction History</h2>
+          {activityLoading && historyData.length === 0 && (
+            <p style={{ color: '#64748b', padding: 12 }}>Loading interaction history…</p>
+          )}
+          {!activityLoading && historyData.length === 0 && (
+            <p style={{ color: '#64748b', padding: 12 }}>No interactions recorded with this customer yet.</p>
+          )}
           <div className="timeline">
             {historyData.map((item) => (
               <div key={item.id} className="timeline-item">

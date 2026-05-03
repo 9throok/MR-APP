@@ -10,6 +10,8 @@ export interface LeaveFormData {
   leaveType: string
   fromDate: string
   toDate: string
+  fromSession: string
+  toSession: string
   contactDetails: string
   file?: File
   reason: string
@@ -33,14 +35,14 @@ function ApplyLeaveModal({ onClose, onSubmit }: ApplyLeaveModalProps) {
     leaveType: '',
     fromDate: '',
     toDate: '',
+    fromSession: '',
+    toSession: '',
     contactDetails: '',
     reason: '',
   })
   const [showLeaveTypeDropdown, setShowLeaveTypeDropdown] = useState(false)
   const [showFromSessionDropdown, setShowFromSessionDropdown] = useState(false)
   const [showToSessionDropdown, setShowToSessionDropdown] = useState(false)
-  const [fromSession, setFromSession] = useState('')
-  const [toSession, setToSession] = useState('')
   const [fileName, setFileName] = useState('')
   const leaveTypeRef = useRef<HTMLDivElement>(null)
   const fromSessionRef = useRef<HTMLDivElement>(null)
@@ -144,7 +146,7 @@ function ApplyLeaveModal({ onClose, onSubmit }: ApplyLeaveModalProps) {
             </div>
 
             <div className="form-group">
-              <label className="form-label">Select Leave Type</label>
+              <label className="form-label">From Session</label>
               <div className="dropdown-wrapper" ref={fromSessionRef}>
                 <button
                   type="button"
@@ -155,7 +157,7 @@ function ApplyLeaveModal({ onClose, onSubmit }: ApplyLeaveModalProps) {
                     setShowToSessionDropdown(false)
                   }}
                 >
-                  <span>{fromSession || 'Select Leave Type'}</span>
+                  <span>{formData.fromSession || 'Select Session'}</span>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M6 9L12 15L18 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
@@ -168,7 +170,7 @@ function ApplyLeaveModal({ onClose, onSubmit }: ApplyLeaveModalProps) {
                         type="button"
                         className="dropdown-item"
                         onClick={() => {
-                          setFromSession(session)
+                          handleInputChange('fromSession', session)
                           setShowFromSessionDropdown(false)
                         }}
                       >
@@ -200,7 +202,7 @@ function ApplyLeaveModal({ onClose, onSubmit }: ApplyLeaveModalProps) {
             </div>
 
             <div className="form-group">
-              <label className="form-label">Select Leave Type</label>
+              <label className="form-label">To Session</label>
               <div className="dropdown-wrapper" ref={toSessionRef}>
                 <button
                   type="button"
@@ -211,7 +213,7 @@ function ApplyLeaveModal({ onClose, onSubmit }: ApplyLeaveModalProps) {
                     setShowFromSessionDropdown(false)
                   }}
                 >
-                  <span>{toSession || 'Select Leave Type'}</span>
+                  <span>{formData.toSession || 'Select Session'}</span>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M6 9L12 15L18 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
@@ -224,7 +226,7 @@ function ApplyLeaveModal({ onClose, onSubmit }: ApplyLeaveModalProps) {
                         type="button"
                         className="dropdown-item"
                         onClick={() => {
-                          setToSession(session)
+                          handleInputChange('toSession', session)
                           setShowToSessionDropdown(false)
                         }}
                       >
