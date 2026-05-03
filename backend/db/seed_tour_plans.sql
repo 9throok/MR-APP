@@ -51,3 +51,37 @@ VALUES
 INSERT INTO tour_plan_visits (tour_plan_id, doctor_id, doctor_name, visit_order, notes)
 VALUES
   (3, 13, 'Dr. Pooja Singh', 1, 'Quarterly KOL discussion');
+
+-- ── Robert (Delhi NCR): SUBMITTED plan pending review, 2 visits ────────────
+-- Top-up for the Tour Plan Requests manager queue: gives the demo a 2nd MR
+-- whose plan is pending review alongside Priya's.
+INSERT INTO tour_plans
+  (user_id, plan_date, type_of_tour, station, start_time, end_time, status,
+   submitted_at, notes)
+VALUES
+  ('mr_robert_003', CURRENT_DATE + INTERVAL '5 days', 'field_work', 'Delhi',
+   '09:30', '17:30', 'submitted',
+   NOW() - INTERVAL '6 hours',
+   'AIIMS cluster route — Derise launch follow-ups');
+
+INSERT INTO tour_plan_visits (tour_plan_id, doctor_id, doctor_name, visit_order, notes)
+VALUES
+  (4, 11, 'Dr. Neha Sharma', 1, 'Derise dosing follow-up'),
+  (4, 12, 'Dr. Amit Gupta',  2, 'Bevaas combination data');
+
+-- ── Rahul (Mumbai North): SUBMITTED plan pending review, 2 visits ─────────
+-- Second additional submitted plan so the manager queue shows multiple personas
+-- and the demo never sees an empty Tour Plan Requests page.
+INSERT INTO tour_plans
+  (user_id, plan_date, type_of_tour, station, start_time, end_time, status,
+   submitted_at, notes)
+VALUES
+  ('mr_rahul_001', CURRENT_DATE + INTERVAL '7 days', 'field_work', 'Mumbai',
+   '10:00', '18:00', 'submitted',
+   NOW() - INTERVAL '1 day',
+   'South Mumbai cardiology coverage — Bevaas detailing');
+
+INSERT INTO tour_plan_visits (tour_plan_id, doctor_id, doctor_name, visit_order, notes)
+VALUES
+  (5, 7, 'Dr. Meena Shah',   1, 'Bevaas head-to-head data'),
+  (5, 9, 'Dr. Anita Patel',  2, 'New patient population deck');

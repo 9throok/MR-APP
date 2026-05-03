@@ -61,12 +61,12 @@ INSERT INTO content_versions
   (asset_id, version_number, file_url, mime_type, file_size_bytes, status,
    submitted_by, submitted_at, published_at, change_notes)
 VALUES
-  (1, 1, '/uploads/content/1/derise-detail-aid-v1.pdf',
-   'application/pdf', 1457280, 'published',
+  (1, 1, '/uploads/content/1/derise-detail-aid-v1.txt',
+   'text/plain', 1457280, 'published',
    'admin_001', NOW() - INTERVAL '60 days', NOW() - INTERVAL '45 days',
    'Initial release.'),
-  (1, 2, '/uploads/content/1/derise-detail-aid-v2.pdf',
-   'application/pdf', 1620992, 'in_review',
+  (1, 2, '/uploads/content/1/derise-detail-aid-v2.txt',
+   'text/plain', 1620992, 'in_review',
    'admin_001', NOW() - INTERVAL '3 days', NULL,
    'Updated ARIA trial citations + added drowsiness-rate comparison.');
 
@@ -87,8 +87,8 @@ INSERT INTO content_versions
   (asset_id, version_number, file_url, mime_type, file_size_bytes, status,
    submitted_by, submitted_at, change_notes)
 VALUES
-  (3, 1, '/uploads/content/3/rilast-kol-brochure-v1.pdf',
-   'application/pdf', 982016, 'changes_requested',
+  (3, 1, '/uploads/content/3/rilast-kol-brochure-v1.txt',
+   'text/plain', 982016, 'changes_requested',
    'admin_001', NOW() - INTERVAL '5 days',
    'KOL brochure draft.');
 
@@ -97,10 +97,10 @@ VALUES
 INSERT INTO content_versions
   (asset_id, version_number, file_url, mime_type, file_size_bytes, status, change_notes)
 VALUES
-  (4, 1, '/uploads/content/4/fair-balance-trainer-v1.pdf',
-   'application/pdf', 524288, 'draft', 'First cut.'),
-  (4, 2, '/uploads/content/4/fair-balance-trainer-v2.pdf',
-   'application/pdf', 612000, 'draft', 'Added more examples.');
+  (4, 1, '/uploads/content/4/fair-balance-trainer-v1.txt',
+   'text/plain', 524288, 'draft', 'First cut.'),
+  (4, 2, '/uploads/content/4/fair-balance-trainer-v2.txt',
+   'text/plain', 612000, 'draft', 'Added more examples.');
 
 -- Set current_version_id on the 1 asset that has a published version (asset 1)
 UPDATE content_assets SET current_version_id = 1 WHERE id = 1;
